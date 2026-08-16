@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Щит-МСП: калькулятор остаточного риска</title>
+<style>
+  :root {
+    --primary: #1B4B66;
+    --primary-dark: #123448;
+    --accent: #0F766E;
+    --amber: #B3821E;
+    --bg-soft: #F2F6F9;
+    --border: #DCE6EC;
+    --text-soft: #4A5A66;
+    --low-bg: #E3F4E1;
+    --low-fg: #1E7B34;
+    --mid-bg: #FDF1D6;
+    --mid-fg: #8A5B00;
+    --high-bg: #FBE1E1;
+    --high-fg: #B3261E;
+    --layer-technical: #1B4B66;
+    --layer-org-legal: #0F766E;
+    --layer-econ: #B3821E;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    margin: 0;
+    background: #FFFFFF;
+    color: #1F2933;
+    line-height: 1.45;
+  }
+
+  h1, h2, h3 { color: var(--primary); }
+  h2 {
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0.35rem;
+    margin-top: 1.8rem;
+  }
+  h3 { margin-bottom: 0.6rem; }
+
+  .app-shell {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 1.2rem 1.5rem 3rem 1.5rem;
+  }
+
+  .app-hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #FFFFFF;
+    border-radius: 14px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.2rem;
+  }
+  .app-hero h1 { color: #FFFFFF; margin: 0 0 0.3rem 0; font-size: 1.7rem; }
+  .app-hero p { color: #E6EEF3; margin: 0; font-size: 1.02rem; }
+
+  .intro-text { font-size: 0.98rem; color: #1F2933; margin-bottom: 1rem; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1.8rem;
+    align-items: start;
+  }
+
+  aside.sidebar {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.1rem 1.4rem 1.1rem;
+    position: sticky;
+    top: 1rem;
+  }
+  aside.sidebar h2 {
+    font-size: 1.05rem;
+    margin-top: 1.1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  aside.sidebar h2:first-child { margin-top: 0; }
+
+  .field { margin-bottom: 0.95rem; }
+  .field label {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-soft);
+    margin-bottom: 0.25rem;
+  }
+  .field .help {
+    font-size: 0.76rem;
+    color: #6B7A85;
+    margin-top: 0.15rem;
+  }
+  .field select,
+  .field input[type="number"] {
+    width: 100%;
+    padding: 0.4rem 0.55rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.92rem;
+    background: #FFFFFF;
+    color: #1F2933;
+  }
+  .field input[type="range"] {
+    width: 100%;
+    accent-color: var(--primary);
+  }
+  .range-value {
+    font-size: 0.85rem;
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+  .field.checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .field.checkbox-field label {
+    margin-bottom: 0;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #1F2933;
+  }
+  .field.checkbox-field input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--primary);
+  }
+
+  main { min-width: 0; }
+
+  .chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-soft);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.32rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #FFFFFF;
+    color: var(--text-soft);
+    font-size: 0.85rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .chip input { display: none; }
+  .chip.selected {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #FFFFFF;
+  }
+
+  details.explainer {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.55rem 0.9rem;
+    margin-top: 0.7rem;
+    color: var(--text-soft);
+    font-size: 0.9rem;
+  }
+  details.explainer summary { cursor: pointer; font-weight: 600; color: var(--primary); }
+
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem 1.4rem;
+    margin-top: 0.8rem;
+  }
+  .control-item label {
+    display: block;
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: #1F2933;
+    margin-bottom: 0.3rem;
+    min-height: 2.4em;
+  }
+  .control-item select {
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.88rem;
+  }
+
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.6rem 0; }
+
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 0.6rem;
+  }
+  .metric-card {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1rem 0.7rem 1rem;
+  }
+  .metric-card .metric-label {
+    font-weight: 600;
+    color: var(--text-soft);
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+  }
+  .metric-card .metric-value {
+    font-size: 1.55rem;
+    font-weight: 600;
+    color: #1F2933;
+    line-height: 1.25;
+  }
+  .metric-card .metric-delta {
+    font-size: 0.8rem;
+    color: var(--low-fg);
+    margin-top: 0.15rem;
+  }
+  .metric-card .metric-delta.up { color: var(--high-fg); }
+
+  .risk-badge {
+    display: inline-block;
+    padding: 0.18rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 0.4rem;
+  }
+  .risk-badge--low { background: var(--low-bg); color: var(--low-fg); }
+  .risk-badge--mid { background: var(--mid-bg); color: var(--mid-fg); }
+  .risk-badge--high { background: var(--high-bg); color: var(--high-fg); }
+
+  .caption { font-size: 0.85rem; color: #6B7A85; margin: 0.5rem 0 1rem 0; }
+
+  .segmented-control {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .segmented-control button {
+    padding: 0.45rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #FFFFFF;
+    color: #1F2933;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .segmented-control button.active {
+    background: var(--bg-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .before-after { font-size: 0.92rem; margin: 0.6rem 0 1.1rem 0; }
+  .before-after .label { font-weight: 700; color: var(--primary); }
+
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin: 0.6rem 0 1.2rem 0;
+  }
+  table.data-table th, table.data-table td {
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+  }
+  table.data-table th { background: var(--bg-soft); color: var(--text-soft); font-weight: 600; }
+  table.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .progress-cell { display: flex; align-items: center; gap: 0.4rem; }
+  .progress-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-bar > span {
+    display: block;
+    height: 100%;
+    background: var(--primary);
+  }
+  .progress-cell .progress-num { font-size: 0.78rem; color: var(--text-soft); min-width: 2.6em; }
+
+  .table-caption-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 1rem;
+  }
+  .table-caption-row .table-title { font-weight: 700; text-align: center; flex: 1; }
+  .table-caption-row .table-number { color: var(--text-soft); font-size: 0.85rem; }
+
+  .info-box, .warning-box {
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.9rem;
+    margin: 0.6rem 0;
+  }
+  .info-box { background: #E8F1F8; color: #16384F; border: 1px solid #C4DCEC; }
+  .warning-box { background: var(--mid-bg); color: var(--mid-fg); border: 1px solid #F0D89A; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.6rem;
+  }
+
+  .plan-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 0.7rem; }
+
+  ol.limits-list { font-size: 0.94rem; padding-left: 1.3rem; }
+  ol.limits-list li { margin-bottom: 0.55rem; }
+
+  .chart-wrap { margin: 0.6rem 0 0.3rem 0; }
+  .chart-legend { display: flex; gap: 1.1rem; flex-wrap: wrap; margin-top: 0.5rem; font-size: 0.82rem; color: var(--text-soft); }
+  .chart-legend .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+  .chart-legend .legend-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+  svg.bar-chart text { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  svg.bar-chart .axis-line { stroke: var(--border); stroke-width: 1; }
+  svg.bar-chart .grid-line { stroke: var(--border); stroke-width: 1; opacity: 0.6; }
+  svg.bar-chart .axis-label { font-size: 10.5px; fill: var(--text-soft); }
+  svg.bar-chart .cat-label { font-size: 11.5px; fill: #1F2933; }
+  svg.bar-chart .value-label { font-size: 10.5px; fill: var(--text-soft); }
+  svg.bar-chart .axis-title { font-size: 11px; fill: var(--text-soft); }
+
+  .tooltip-box {
+    position: fixed;
+    pointer-events: none;
+    background: #1F2933;
+    color: #FFFFFF;
+    font-size: 0.78rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    max-width: 280px;
+    z-index: 50;
+    display: none;
+    line-height: 1.4;
+  }
+
+  footer.app-footer {
+    margin-top: 2.2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: #8797A2;
+  }
+
+  @media print {
+    aside.sidebar,
+    .layout > main > h2,
+    .layout > main > #asset-chip-grid,
+    .layout > main > details.explainer,
+    .layout > main > #controls-grid,
+    .layout > main > hr.divider,
+    .layout > main > #metrics-row,
+    .layout > main > .caption,
+    .layout > main > .segmented-control,
+    .layout > main > #section-content {
+      display: none !important;
+    }
+    .layout { display: block !important; }
+    .print-only { display: block !important; }
+    .app-hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .metric-card, .app-hero { break-inside: avoid; }
+    h2 { break-after: avoid; }
+    body { font-size: 11.5px; }
+  }
+  .print-only { display: none; }
+
+  @media (max-width: 980px) {
+    .layout { grid-template-columns: 1fr; }
+    aside.sidebar { position: static; }
+    .controls-grid { grid-template-columns: repeat(2, 1fr); }
+    .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <div class="app-hero">
+    <h1>🛡️ Щит-МСП</h1>
+    <p>Калькулятор остаточного информационного риска после защитных затрат</p>
+  </div>
+
+  <p class="intro-text">
+    Инструмент считает не «доходность» информационной безопасности, а <strong>остаточный риск после
+    превентивных, правовых, обнаруживающих и восстановительных затрат</strong>.
+    ИБ здесь рассматривается как защитная функция бизнеса: она не создаёт самостоятельный актив,
+    а снижает вероятность и тяжесть неплановых потерь.
+  </p>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"><!-- заполняется скриптом --></aside>
+
+    <main id="main-content">
+      <h2>3. Карта активов</h2>
+      <div id="asset-chip-grid" class="chip-grid"><!-- заполняется скриптом --></div>
+      <details class="explainer">
+        <summary>Пояснение к карте активов</summary>
+        <p>Активы нужны, чтобы калькулятор считал риск не абстрактно, а через реальные точки выручки,
+        данных, платежей и правового режима.</p>
+      </details>
+
+      <h2>4. Текущие меры и качество внедрения</h2>
+      <div id="controls-grid" class="controls-grid"><!-- заполняется скриптом --></div>
+
+      <hr class="divider" />
+
+      <h2>5. Итоговый результат</h2>
+      <div class="metrics-row" id="metrics-row"><!-- заполняется скриптом --></div>
+      <p class="caption">
+        Индекс критического ущерба — управленческий показатель вероятности тяжёлого сценария относительно
+        заданного порога устойчивости. Он не является юридической или страховой гарантией.
+      </p>
+
+      <div class="segmented-control" id="segmented-control">
+        <button data-section="layers" class="active">📊 Риск по слоям</button>
+        <button data-section="factors">🔍 Факторы риска</button>
+        <button data-section="costs">💰 Защитные затраты</button>
+        <button data-section="plan">🎯 Что усилить первым</button>
+        <button data-section="limits">⚠️ Ограничения методики</button>
+      </div>
+
+      <div id="section-content"><!-- заполняется скриптом --></div>
+
+      <div class="print-only" id="print-full-report"></div>
+    </main>
+  </div>
+
+  <footer class="app-footer">
+    Щит-МСП — прототип управленческого калькулятора остаточного информационного риска. Все коэффициенты
+    настраиваемые и требуют уточнения по данным конкретной отрасли и статистике инцидентов.
+  </footer>
+</div>
+
+<div class="tooltip-box" id="tooltip"></div>
+
+<script>
+/* ====================== ДАННЫЕ КАТАЛОГА ====================== */
+const CATALOG = {"ASSETS":[{"id":"email","name":"Корпоративная почта и мессенджеры","category":"communications","layer_weight":{"technical":0.45,"org_legal":0.35,"economic_management":0.2},"default_criticality":0.82,"revenue_dependency":0.65,"legal_dependency":0.35},{"id":"website","name":"Сайт, формы заявок, интернет-магазин","category":"sales","layer_weight":{"technical":0.55,"org_legal":0.2,"economic_management":0.25},"default_criticality":0.78,"revenue_dependency":0.85,"legal_dependency":0.3},{"id":"pos","name":"Онлайн-касса, терминалы, эквайринг","category":"payments","layer_weight":{"technical":0.45,"org_legal":0.15,"economic_management":0.4},"default_criticality":0.86,"revenue_dependency":0.9,"legal_dependency":0.15},{"id":"crm","name":"CRM и клиентская база","category":"data","layer_weight":{"technical":0.35,"org_legal":0.45,"economic_management":0.2},"default_criticality":0.88,"revenue_dependency":0.7,"legal_dependency":0.8},{"id":"personal_data","name":"Персональные данные клиентов и сотрудников","category":"regulated_data","layer_weight":{"technical":0.25,"org_legal":0.6,"economic_management":0.15},"default_criticality":0.9,"revenue_dependency":0.3,"legal_dependency":1.0},{"id":"cloud","name":"Облачные сервисы, файлы, SaaS","category":"infrastructure","layer_weight":{"technical":0.45,"org_legal":0.3,"economic_management":0.25},"default_criticality":0.76,"revenue_dependency":0.6,"legal_dependency":0.45},{"id":"bank","name":"Банк-клиент и платёжные кабинеты","category":"finance","layer_weight":{"technical":0.5,"org_legal":0.2,"economic_management":0.3},"default_criticality":0.95,"revenue_dependency":0.75,"legal_dependency":0.25},{"id":"employees","name":"Сотрудники, подрядчики, внутренние доступы","category":"people","layer_weight":{"technical":0.2,"org_legal":0.55,"economic_management":0.25},"default_criticality":0.8,"revenue_dependency":0.45,"legal_dependency":0.7}],"THREATS":[{"id":"phishing_email","name":"Фишинг и захват корпоративной почты","asset_ids":["email","bank","crm"],"mechanism":"fraud","layer":"technical","base_likelihood":0.52,"default_loss_share":0.22,"heavy_tail":1.45,"description":"Риск компрометации почты, платёжных инструкций, договорной переписки и доступа к кабинетам."},{"id":"ransomware","name":"Шифровальщик и блокировка рабочих данных","asset_ids":["cloud","crm","personal_data"],"mechanism":"availability","layer":"technical","base_likelihood":0.22,"default_loss_share":0.28,"heavy_tail":1.85,"description":"Редкое, но тяжёлое событие: остановка процессов, восстановление данных, простой."},{"id":"website_outage","name":"Падение сайта или интернет-магазина","asset_ids":["website"],"mechanism":"availability","layer":"technical","base_likelihood":0.38,"default_loss_share":0.18,"heavy_tail":1.25,"description":"Потеря заявок, рекламного трафика и доверия клиентов."},{"id":"pos_outage","name":"Остановка кассы, терминалов или эквайринга","asset_ids":["pos"],"mechanism":"availability","layer":"economic_management","base_likelihood":0.34,"default_loss_share":0.2,"heavy_tail":1.15,"description":"Прямой простой продаж, особенно критичен для торговли, услуг и HoReCa."},{"id":"insider_leak","name":"Инсайдерская выгрузка клиентской базы","asset_ids":["crm","personal_data","employees"],"mechanism":"confidentiality","layer":"org_legal","base_likelihood":0.2,"default_loss_share":0.31,"heavy_tail":1.95,"description":"Скрытый конкурентный ущерб: уход клиентов, копирование базы, снижение маржинальности."},{"id":"pdn_leak","name":"Утечка персональных данных","asset_ids":["personal_data","crm","cloud"],"mechanism":"confidentiality","layer":"org_legal","base_likelihood":0.18,"default_loss_share":0.36,"heavy_tail":2.1,"description":"Правовой, репутационный и восстановительный ущерб."},{"id":"account_takeover","name":"Захват облачных, рекламных или платёжных кабинетов","asset_ids":["cloud","website","bank","email"],"mechanism":"integrity","layer":"technical","base_likelihood":0.3,"default_loss_share":0.24,"heavy_tail":1.55,"description":"Потеря контроля над каналами продаж, платежами и данными."},{"id":"legal_gap_pdn","name":"Правовой разрыв в обработке персональных данных","asset_ids":["personal_data","website","employees"],"mechanism":"legal_noncompliance","layer":"org_legal","base_likelihood":0.46,"default_loss_share":0.26,"heavy_tail":1.6,"description":"Отсутствие документов, уведомлений, оснований обработки, договоров и процедур реагирования."},{"id":"supplier_failure","name":"Отказ ИТ-поставщика, хостинга или облачного сервиса","asset_ids":["cloud","website","pos","crm"],"mechanism":"availability","layer":"economic_management","base_likelihood":0.28,"default_loss_share":0.19,"heavy_tail":1.35,"description":"Зависимость от внешнего сервиса без резервного сценария."}],"CONTROLS":[{"id":"mfa","name":"MFA для почты, облаков, банка и администраторов","layer":"technical","cost_type":"preventive","annual_cost":18000,"affected_threats":["phishing_email","account_takeover"],"probability_reduction":0.42,"loss_reduction":0.12,"downtime_reduction":0.0,"min_business_size":"micro"},{"id":"backup_tested","name":"Резервное копирование с проверкой восстановления","layer":"technical","cost_type":"recovery","annual_cost":42000,"affected_threats":["ransomware","supplier_failure"],"probability_reduction":0.1,"loss_reduction":0.48,"downtime_reduction":0.38,"min_business_size":"micro"},{"id":"email_hardening","name":"Настройка домена почты, антифишинг, SPF/DKIM/DMARC","layer":"technical","cost_type":"preventive","annual_cost":26000,"affected_threats":["phishing_email","account_takeover"],"probability_reduction":0.28,"loss_reduction":0.1,"downtime_reduction":0.0,"min_business_size":"micro"},{"id":"access_control","name":"Разграничение доступов к CRM, файлам и клиентской базе","layer":"org_legal","cost_type":"preventive","annual_cost":36000,"affected_threats":["insider_leak","pdn_leak","account_takeover"],"probability_reduction":0.26,"loss_reduction":0.3,"downtime_reduction":0.0,"min_business_size":"micro"},{"id":"offboarding","name":"Порядок увольнения: отзыв доступов, акты, контроль выгрузок","layer":"org_legal","cost_type":"preventive","annual_cost":22000,"affected_threats":["insider_leak","pdn_leak"],"probability_reduction":0.22,"loss_reduction":0.24,"downtime_reduction":0.0,"min_business_size":"micro"},{"id":"pdn_compliance","name":"Правовой комплект ПДн: политика, основания, уведомления, договоры","layer":"org_legal","cost_type":"legal_compliance","annual_cost":65000,"affected_threats":["legal_gap_pdn","pdn_leak"],"probability_reduction":0.35,"loss_reduction":0.42,"downtime_reduction":0.0,"min_business_size":"micro"},{"id":"incident_procedure","name":"Процедура реагирования на инциденты и утечки","layer":"org_legal","cost_type":"detection","annual_cost":32000,"affected_threats":["pdn_leak","legal_gap_pdn","ransomware"],"probability_reduction":0.14,"loss_reduction":0.32,"downtime_reduction":0.2,"min_business_size":"micro"},{"id":"employee_training","name":"Практическое обучение сотрудников фишингу и работе с данными","layer":"org_legal","cost_type":"preventive","annual_cost":24000,"affected_threats":["phishing_email","insider_leak","pdn_leak"],"probability_reduction":0.24,"loss_reduction":0.15,"downtime_reduction":0.0,"min_business_size":"micro"},{"id":"web_monitoring","name":"Мониторинг сайта, обновлений CMS и форм заявок","layer":"technical","cost_type":"detection","annual_cost":30000,"affected_threats":["website_outage","account_takeover","pdn_leak"],"probability_reduction":0.18,"loss_reduction":0.16,"downtime_reduction":0.22,"min_business_size":"micro"},{"id":"reserve_internet_pos","name":"Резервный интернет и сценарий продаж при отказе терминала","layer":"economic_management","cost_type":"recovery","annual_cost":28000,"affected_threats":["pos_outage","supplier_failure"],"probability_reduction":0.12,"loss_reduction":0.2,"downtime_reduction":0.45,"min_business_size":"micro"},{"id":"supplier_contracts","name":"Договорные SLA и резервные поставщики критичных сервисов","layer":"economic_management","cost_type":"preventive","annual_cost":45000,"affected_threats":["supplier_failure","website_outage","pos_outage"],"probability_reduction":0.2,"loss_reduction":0.24,"downtime_reduction":0.28,"min_business_size":"micro"},{"id":"crisis_fund","name":"Резерв затрат на восстановление после ИБ-инцидента","layer":"economic_management","cost_type":"recovery","annual_cost":80000,"affected_threats":["ransomware","pdn_leak","website_outage","supplier_failure"],"probability_reduction":0.0,"loss_reduction":0.34,"downtime_reduction":0.18,"min_business_size":"micro"}],"QUALITY_LEVELS":{"none":{"label":"Мера отсутствует","q":0.0},"paid":{"label":"Оплачена, но не внедрена","q":0.15},"formal":{"label":"Внедрена формально","q":0.35},"working":{"label":"Работает и проверяется","q":0.65},"embedded":{"label":"Встроена в процесс","q":0.9}},"SECTOR_PROFILES":{"Розничная торговля":{"email":0.7,"website":0.45,"pos":1.0,"crm":0.65,"personal_data":0.7,"cloud":0.55,"bank":0.85,"employees":0.7},"Интернет-магазин":{"email":0.85,"website":1.0,"pos":0.7,"crm":0.9,"personal_data":0.9,"cloud":0.85,"bank":0.8,"employees":0.75},"Услуги":{"email":0.8,"website":0.65,"pos":0.75,"crm":0.75,"personal_data":0.8,"cloud":0.65,"bank":0.7,"employees":0.75},"B2B-компания":{"email":0.95,"website":0.55,"pos":0.25,"crm":0.9,"personal_data":0.65,"cloud":0.8,"bank":0.85,"employees":0.85},"Производство":{"email":0.75,"website":0.45,"pos":0.2,"crm":0.6,"personal_data":0.55,"cloud":0.55,"bank":0.75,"employees":0.8},"Медицина / образование":{"email":0.85,"website":0.7,"pos":0.5,"crm":0.75,"personal_data":1.0,"cloud":0.8,"bank":0.65,"employees":0.85}}};
+const ASSETS = CATALOG.ASSETS;
+const THREATS = CATALOG.THREATS;
+const CONTROLS = CATALOG.CONTROLS;
+const QUALITY_LEVELS = CATALOG.QUALITY_LEVELS;
+const SECTOR_PROFILES = CATALOG.SECTOR_PROFILES;
+
+const LAYER_LABELS = {
+  technical: "Технический слой",
+  org_legal: "Организационно-правовой слой",
+  economic_management: "Экономико-управленческий слой",
+};
+
+const LAYER_COLORS = {
+  "Технический слой": "#1B4B66",
+  "Организационно-правовой слой": "#0F766E",
+  "Экономико-управленческий слой": "#B3821E",
+};
+
+/* ====================== РАСЧЁТНОЕ ЯДРО (портировано из risk_engine.py) ====================== */
+
+function clamp(value, low = 0.0, high = 1.0) {
+  return Math.max(low, Math.min(high, value));
+}
+
+function assetMap(selectedAssetIds) {
+  const selected = new Set(selectedAssetIds);
+  const map = {};
+  for (const asset of ASSETS) {
+    if (selected.has(asset.id)) map[asset.id] = asset;
+  }
+  return map;
+}
+
+function calculateBaseLoss({
+  monthlyRevenue,
+  criticalLossThreshold,
+  downtimeHours,
+  pdnSubjects,
+  threatDefaultLossShare,
+  heavyTail,
+  assetDependency,
+}) {
+  const dailyRevenue = monthlyRevenue / 30.0;
+  // downtimeHours — "допустимый простой" (индикатор устойчивости бизнеса), а не
+  // длительность инцидента. Чем выше допустимый простой, тем устойчивее бизнес —
+  // тем меньше должен быть вклад простоя в ожидаемый ущерб. Обратная зависимость
+  // откалибрована так, что при downtimeHours = 8 (значение по умолчанию) вклад
+  // равен ровно одной дневной выручке.
+  const downtimeLoss = (dailyRevenue * 8.0) / Math.max(downtimeHours, 1.0);
+  const legalScale = clamp(pdnSubjects / 1000.0, 0.0, 25.0) * 10000.0;
+  const businessLoss = monthlyRevenue * threatDefaultLossShare * assetDependency;
+  const tailComponent = criticalLossThreshold * 0.05 * heavyTail;
+  return Math.max(10000.0, businessLoss + downtimeLoss + legalScale + tailComponent);
+}
+
+function threatVulnerability({ threatId, staffWithAccess, hasRemoteWork, hasContractors, hasPdn, onlineShare }) {
+  let v = 0.65;
+  if (staffWithAccess >= 5) v += 0.08;
+  if (staffWithAccess >= 15) v += 0.1;
+  if (hasRemoteWork) v += 0.06;
+  if (hasContractors) v += 0.07;
+  if (hasPdn && ["pdn_leak", "legal_gap_pdn", "insider_leak"].includes(threatId)) v += 0.12;
+  if (onlineShare >= 50 && ["website_outage", "account_takeover", "phishing_email"].includes(threatId)) v += 0.1;
+  return clamp(v, 0.25, 1.35);
+}
+
+function sectorAssetDependency(sector, assetIds) {
+  const profile = SECTOR_PROFILES[sector] || {};
+  if (!assetIds.length) return 0.7;
+  const values = assetIds.map((id) => (id in profile ? profile[id] : 0.65));
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+function activeControlsQuality(selectedQuality) {
+  const qualities = {};
+  for (const control of CONTROLS) {
+    const level = selectedQuality[control.id] || "none";
+    qualities[control.id] = (QUALITY_LEVELS[level] || { q: 0.0 }).q;
+  }
+  return qualities;
+}
+
+function calculateRiskTable({
+  sector,
+  selectedAssetIds,
+  monthlyRevenue,
+  criticalLossThreshold,
+  toleratedDowntimeHours,
+  staffWithAccess,
+  hasRemoteWork,
+  hasContractors,
+  hasPdn,
+  pdnSubjects,
+  onlineShare,
+  selectedQuality,
+}) {
+  const selectedAssets = assetMap(selectedAssetIds);
+  const qualities = activeControlsQuality(selectedQuality);
+  const rows = [];
+
+  for (const threat of THREATS) {
+    const relevantAssetIds = threat.asset_ids.filter((id) => id in selectedAssets);
+    if (!relevantAssetIds.length) continue;
+
+    const dep = sectorAssetDependency(sector, relevantAssetIds);
+    const vulnerability = threatVulnerability({
+      threatId: threat.id,
+      staffWithAccess,
+      hasRemoteWork,
+      hasContractors,
+      hasPdn,
+      onlineShare,
+    });
+    const likelihood = clamp(threat.base_likelihood * (0.75 + dep * 0.55), 0.01, 0.95);
+    const loss = calculateBaseLoss({
+      monthlyRevenue,
+      criticalLossThreshold,
+      downtimeHours: toleratedDowntimeHours,
+      pdnSubjects: hasPdn ? pdnSubjects : 0,
+      threatDefaultLossShare: threat.default_loss_share,
+      heavyTail: threat.heavy_tail,
+      assetDependency: dep,
+    });
+    const baseRisk = likelihood * vulnerability * loss;
+
+    let residualMultiplier = 1.0;
+    const appliedControls = [];
+    let preventiveCosts = 0;
+
+    for (const control of CONTROLS) {
+      if (!control.affected_threats.includes(threat.id)) continue;
+      const q = qualities[control.id] || 0.0;
+      if (q <= 0) continue;
+
+      let combinedEffect =
+        1.0 -
+        (1.0 - control.probability_reduction * q) *
+          (1.0 - control.loss_reduction * q) *
+          (1.0 - control.downtime_reduction * q * 0.45);
+      combinedEffect = clamp(combinedEffect, 0.0, 0.92);
+      residualMultiplier *= 1.0 - combinedEffect;
+      appliedControls.push(control.name);
+      preventiveCosts += Math.trunc(control.annual_cost * q);
+    }
+
+    const residualRisk = baseRisk * residualMultiplier;
+    const riskReduction = baseRisk - residualRisk;
+
+    rows.push({
+      id: threat.id,
+      threat: threat.name,
+      layer: LAYER_LABELS[threat.layer],
+      mechanism: threat.mechanism,
+      assets: relevantAssetIds.join(", "),
+      likelihood,
+      vulnerability,
+      loss,
+      baseRisk,
+      residualRisk,
+      riskReduction,
+      residualPercent: baseRisk ? (residualRisk / baseRisk) * 100.0 : 0.0,
+      appliedControls: appliedControls.length ? appliedControls.join("; ") : "нет",
+      accountedCosts: preventiveCosts,
+      heavyTail: threat.heavy_tail,
+    });
+  }
+
+  return rows;
+}
+
+function calculateSummary(riskRows, criticalLossThreshold) {
+  if (!riskRows.length) {
+    return { baseRisk: 0, residualRisk: 0, residualPercent: 0, reducedPercent: 0, criticalExceedanceProxy: 0 };
+  }
+  const base = riskRows.reduce((s, r) => s + r.baseRisk, 0);
+  const residual = riskRows.reduce((s, r) => s + r.residualRisk, 0);
+  const residualPercent = base ? (residual / base) * 100.0 : 0.0;
+
+  const tailWeighted = riskRows.reduce((s, r) => s + r.residualRisk * r.heavyTail, 0);
+  let criticalProxy = 1.0 - Math.exp(-tailWeighted / Math.max(criticalLossThreshold, 1.0));
+  criticalProxy = clamp(criticalProxy, 0.0, 0.95);
+
+  return {
+    baseRisk: base,
+    residualRisk: residual,
+    residualPercent,
+    reducedPercent: 100.0 - residualPercent,
+    criticalExceedanceProxy: criticalProxy * 100.0,
+  };
+}
+
+function layerSummary(riskRows) {
+  if (!riskRows.length) return [];
+  const groups = {};
+  for (const r of riskRows) {
+    if (!groups[r.layer]) groups[r.layer] = { layer: r.layer, baseRisk: 0, residualRisk: 0 };
+    groups[r.layer].baseRisk += r.baseRisk;
+    groups[r.layer].residualRisk += r.residualRisk;
+  }
+  const result = Object.values(groups).map((g) => ({
+    ...g,
+    residualPercent: g.baseRisk ? (g.residualRisk / g.baseRisk) * 100.0 : 0.0,
+  }));
+  result.sort((a, b) => b.residualPercent - a.residualPercent);
+  return result;
+}
+
+function protectionCosts(selectedQuality) {
+  return CONTROLS.map((control) => {
+    const levelId = selectedQuality[control.id] || "none";
+    const level = QUALITY_LEVELS[levelId] || { label: "Мера отсутствует", q: 0.0 };
+    return {
+      name: control.name,
+      layer: LAYER_LABELS[control.layer],
+      costType: control.cost_type,
+      qualityLabel: level.label,
+      q: level.q,
+      baseCost: control.annual_cost,
+      accountedCost: Math.trunc(control.annual_cost * level.q),
+    };
+  });
+}
+
+function marginalControlEffect({
+  currentQuality,
+  sector,
+  selectedAssetIds,
+  monthlyRevenue,
+  criticalLossThreshold,
+  toleratedDowntimeHours,
+  staffWithAccess,
+  hasRemoteWork,
+  hasContractors,
+  hasPdn,
+  pdnSubjects,
+  onlineShare,
+}) {
+  const baseRows = calculateRiskTable({
+    sector,
+    selectedAssetIds,
+    monthlyRevenue,
+    criticalLossThreshold,
+    toleratedDowntimeHours,
+    staffWithAccess,
+    hasRemoteWork,
+    hasContractors,
+    hasPdn,
+    pdnSubjects,
+    onlineShare,
+    selectedQuality: currentQuality,
+  });
+  const baseSummary = calculateSummary(baseRows, criticalLossThreshold);
+  const baseResidual = baseSummary.residualRisk;
+
+  const rows = [];
+  for (const control of CONTROLS) {
+    const currentLevel = currentQuality[control.id] || "none";
+    if (["working", "embedded"].includes(currentLevel)) continue;
+
+    const candidateQuality = { ...currentQuality, [control.id]: "working" };
+    const candidateRows = calculateRiskTable({
+      sector,
+      selectedAssetIds,
+      monthlyRevenue,
+      criticalLossThreshold,
+      toleratedDowntimeHours,
+      staffWithAccess,
+      hasRemoteWork,
+      hasContractors,
+      hasPdn,
+      pdnSubjects,
+      onlineShare,
+      selectedQuality: candidateQuality,
+    });
+    const candidateSummary = calculateSummary(candidateRows, criticalLossThreshold);
+    const delta = baseResidual - candidateSummary.residualRisk;
+
+    const currentQ = (QUALITY_LEVELS[currentLevel] || { q: 0.0 }).q;
+    const targetQ = QUALITY_LEVELS["working"].q;
+    const additionalCost = Math.max(0, Math.trunc(control.annual_cost * (targetQ - currentQ)));
+
+    rows.push({
+      name: control.name,
+      layer: LAYER_LABELS[control.layer],
+      additionalCost,
+      riskReduction: delta,
+      effectPerRub: additionalCost ? delta / additionalCost : 0.0,
+    });
+  }
+
+  rows.sort((a, b) => b.effectPerRub - a.effectPerRub);
+  return rows;
+}
+
+function greedyCostPlan(effectRows, maxBudget) {
+  if (!effectRows.length) return [];
+  const selected = [];
+  let spent = 0;
+  for (const row of effectRows) {
+    const cost = Math.trunc(row.additionalCost);
+    if (cost <= 0) continue;
+    if (spent + cost <= maxBudget) {
+      selected.push(row);
+      spent += cost;
+    }
+  }
+  return selected;
+}
+
+/* ====================== ОФОРМЛЕНИЕ / ФОРМАТИРОВАНИЕ ====================== */
+
+function fmtRub(value) {
+  const rounded = Math.round(value);
+  const withNbsp = Math.abs(rounded).toLocaleString("ru-RU");
+  const plain = withNbsp.replace(/ /g, " ");
+  return (rounded < 0 ? "-" : "") + plain + " руб.";
+}
+
+function fmtInt(value) {
+  return Math.round(value)
+    .toLocaleString("ru-RU")
+    .replace(/ /g, " ");
+}
+
+function riskBadgeHtml(percent) {
+  let cls, label;
+  if (percent < 20) {
+    cls = "risk-badge--low";
+    label = "низкий";
+  } else if (percent < 45) {
+    cls = "risk-badge--mid";
+    label = "средний";
+  } else {
+    cls = "risk-badge--high";
+    label = "высокий";
+  }
+  return `<span class="risk-badge ${cls}">индикативно: ${label}</span>`;
+}
+
+function escapeXml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function escapeHtml(s) {
+  return escapeXml(s);
+}
+
+function truncateLabel(s, n) {
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
+}
+
+/* ====================== SVG-ДИАГРАММЫ (горизонтальные столбчатые) ====================== */
+
+function computeNiceAxis(maxVal, tickCountTarget = 5) {
+  if (maxVal <= 0) return { axisMax: 1, step: 0.2 };
+  const roughStep = (maxVal * 1.05) / tickCountTarget;
+  const mag = Math.pow(10, Math.floor(Math.log10(roughStep)));
+  const norm = roughStep / mag;
+  let niceNorm;
+  if (norm < 1.5) niceNorm = 1;
+  else if (norm < 3) niceNorm = 2;
+  else if (norm < 7) niceNorm = 5;
+  else niceNorm = 10;
+  const step = niceNorm * mag;
+  const axisMax = Math.ceil((maxVal * 1.05) / step) * step;
+  return { axisMax, step };
+}
+
+function buildHorizontalBarChart(items, opts) {
+  const {
+    xTitle = "",
+    width = 760,
+    barHeight = 30,
+    gap = 16,
+    leftMargin = 220,
+    rightMargin = 60,
+    topMargin = 10,
+  } = opts;
+
+  const n = items.length;
+  const maxVal = Math.max(...items.map((i) => i.value), 1e-9);
+  const { axisMax, step } = computeNiceAxis(maxVal, 5);
+  const plotWidth = Math.max(80, width - leftMargin - rightMargin);
+  const xScale = (v) => (v / axisMax) * plotWidth;
+
+  const rowHeight = barHeight + gap;
+  const plotBottom = topMargin + n * rowHeight - gap;
+
+  let bars = "";
+  let labels = "";
+  items.forEach((item, idx) => {
+    const y = topMargin + idx * rowHeight;
+    const barW = Math.max(2, xScale(item.value));
+    bars += `<rect x="${leftMargin}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barHeight}" rx="4" fill="${item.color}"><title>${escapeXml(
+      item.tooltip || item.label
+    )}</title></rect>`;
+    labels += `<text class="cat-label" x="${leftMargin - 10}" y="${(y + barHeight / 2 + 4).toFixed(
+      1
+    )}" text-anchor="end">${escapeXml(truncateLabel(item.label, 40))}</text>`;
+    labels += `<text class="value-label" x="${(leftMargin + barW + 8).toFixed(1)}" y="${(
+      y +
+      barHeight / 2 +
+      4
+    ).toFixed(1)}" text-anchor="start">${escapeXml(item.valueLabel)}</text>`;
+  });
+
+  let axisTicks = "";
+  for (let val = 0; val <= axisMax + step * 0.001; val += step) {
+    const x = leftMargin + xScale(val);
+    axisTicks += `<line class="grid-line" x1="${x.toFixed(1)}" y1="${topMargin}" x2="${x.toFixed(
+      1
+    )}" y2="${plotBottom.toFixed(1)}" />`;
+    axisTicks += `<text class="axis-label" x="${x.toFixed(1)}" y="${(plotBottom + 16).toFixed(
+      1
+    )}" text-anchor="middle">${escapeXml(opts.tickFormatter ? opts.tickFormatter(val) : Math.round(val))}</text>`;
+  }
+  axisTicks += `<line class="axis-line" x1="${leftMargin}" y1="${plotBottom.toFixed(1)}" x2="${leftMargin}" y2="${topMargin}" />`;
+
+  const axisTitleY = plotBottom + 36;
+  const totalHeight = axisTitleY + 10;
+
+  return `<svg class="bar-chart" viewBox="0 0 ${width} ${totalHeight}" width="100%" style="height:auto;display:block;" role="img" aria-label="${escapeXml(
+    xTitle
+  )}">
+    ${axisTicks}
+    ${bars}
+    ${labels}
+    <text class="axis-title" x="${(leftMargin + plotWidth / 2).toFixed(1)}" y="${(totalHeight - 2).toFixed(
+    1
+  )}" text-anchor="middle">${escapeXml(xTitle)}</text>
+  </svg>`;
+}
+
+function legendHtml(layerNames) {
+  return `<div class="chart-legend">${layerNames
+    .map(
+      (l) =>
+        `<span class="legend-item"><span class="legend-swatch" style="background:${LAYER_COLORS[l] || "#888"}"></span>${escapeHtml(
+          l
+        )}</span>`
+    )
+    .join("")}</div>`;
+}
+
+/* ====================== СОСТОЯНИЕ ПРИЛОЖЕНИЯ ====================== */
+
+const state = {
+  activeSection: "layers",
+  maxBudget: 150000,
+  tableCounter: 0,
+};
+
+/* ====================== ПОСТРОЕНИЕ СТАТИЧНОЙ РАЗМЕТКИ ====================== */
+
+function buildSidebar() {
+  const sectorOptions = Object.keys(SECTOR_PROFILES)
+    .map((s, idx) => `<option value="${escapeHtml(s)}"${idx === 0 ? " selected" : ""}>${escapeHtml(s)}</option>`)
+    .join("");
+
+  document.getElementById("sidebar").innerHTML = `
+    <h2>1. Профиль МСП</h2>
+    <div class="field">
+      <label for="sector">Сфера деятельности</label>
+      <select id="sector">${sectorOptions}</select>
+      <div class="help">Отраслевой профиль задаёт зависимость активов от угроз — какие активы для этой сферы наиболее чувствительны.</div>
+    </div>
+    <div class="field">
+      <label for="monthlyRevenue">Средняя месячная выручка, руб.</label>
+      <input type="number" id="monthlyRevenue" min="100000" max="500000000" step="100000" value="3000000" />
+      <div class="help">Используется как база для расчёта ущерба от простоя и потери операционной деятельности.</div>
+    </div>
+    <div class="field">
+      <label>Доля онлайн-продаж / цифровых заявок, % — <span class="range-value" id="onlineShareVal">35</span></label>
+      <input type="range" id="onlineShare" min="0" max="100" value="35" />
+      <div class="help">Чем выше доля цифровых каналов, тем сильнее бизнес зависит от доступности ИТ-систем.</div>
+    </div>
+    <div class="field">
+      <label>Допустимый простой, часов — <span class="range-value" id="downtimeHoursVal">8</span></label>
+      <input type="range" id="downtimeHours" min="1" max="120" value="8" />
+      <div class="help">Время простоя, которое бизнес может выдержать без критических последствий.</div>
+    </div>
+    <div class="field">
+      <label for="criticalThreshold">Критический ущерб для устойчивости МСП, руб.</label>
+      <input type="number" id="criticalThreshold" min="50000" max="500000000" step="50000" value="1500000" />
+      <div class="help">Порог, после которого ущерб считается угрожающим для дальнейшей работы бизнеса.</div>
+    </div>
+
+    <h2>2. Люди и данные</h2>
+    <div class="field">
+      <label>Сотрудников с доступом к данным / кабинетам — <span class="range-value" id="staffVal">8</span></label>
+      <input type="range" id="staffWithAccess" min="1" max="250" value="8" />
+    </div>
+    <div class="field checkbox-field">
+      <input type="checkbox" id="hasRemoteWork" checked />
+      <label for="hasRemoteWork">Есть удалённый доступ</label>
+    </div>
+    <div class="field checkbox-field">
+      <input type="checkbox" id="hasContractors" checked />
+      <label for="hasContractors">Есть подрядчики с доступом к данным или сервисам</label>
+    </div>
+    <div class="field checkbox-field">
+      <input type="checkbox" id="hasPdn" checked />
+      <label for="hasPdn">Обрабатываются персональные данные</label>
+    </div>
+    <div class="field">
+      <label for="pdnSubjects">Оценка числа субъектов ПДн</label>
+      <input type="number" id="pdnSubjects" min="0" max="5000000" step="100" value="1200" />
+      <div class="help">Влияет на оценку правового риска несоблюдения режима обработки персональных данных.</div>
+    </div>
+  `;
+}
+
+function buildAssetChips() {
+  document.getElementById("asset-chip-grid").innerHTML = ASSETS.map(
+    (asset) => `
+    <label class="chip selected" data-asset-id="${asset.id}">
+      <input type="checkbox" value="${asset.id}" checked />
+      ${escapeHtml(asset.name)}
+    </label>`
+  ).join("");
+}
+
+function buildControlsGrid() {
+  const optionsHtml = Object.entries(QUALITY_LEVELS)
+    .map(([key, v]) => `<option value="${key}">${escapeHtml(v.label)}</option>`)
+    .join("");
+  document.getElementById("controls-grid").innerHTML = CONTROLS.map(
+    (control) => `
+    <div class="control-item">
+      <label for="quality_${control.id}">${escapeHtml(control.name)}</label>
+      <select id="quality_${control.id}" data-control-id="${control.id}">${optionsHtml}</select>
+    </div>`
+  ).join("");
+}
+
+/* ====================== СБОР ВХОДНЫХ ДАННЫХ ИЗ ФОРМЫ ====================== */
+
+function readInputs() {
+  const selectedAssetIds = Array.from(document.querySelectorAll("#asset-chip-grid input:checked")).map(
+    (el) => el.value
+  );
+  const selectedQuality = {};
+  for (const control of CONTROLS) {
+    const el = document.getElementById(`quality_${control.id}`);
+    selectedQuality[control.id] = el ? el.value : "none";
+  }
+  const hasPdn = document.getElementById("hasPdn").checked;
+
+  return {
+    sector: document.getElementById("sector").value,
+    monthlyRevenue: Number(document.getElementById("monthlyRevenue").value) || 0,
+    onlineShare: Number(document.getElementById("onlineShare").value),
+    toleratedDowntimeHours: Number(document.getElementById("downtimeHours").value),
+    criticalLossThreshold: Number(document.getElementById("criticalThreshold").value) || 0,
+    staffWithAccess: Number(document.getElementById("staffWithAccess").value),
+    hasRemoteWork: document.getElementById("hasRemoteWork").checked,
+    hasContractors: document.getElementById("hasContractors").checked,
+    hasPdn,
+    pdnSubjects: Number(document.getElementById("pdnSubjects").value) || 0,
+    selectedAssetIds,
+    selectedQuality,
+  };
+}
+
+/* ====================== РЕНДЕР ИТОГОВЫХ МЕТРИК ====================== */
+
+function renderMetrics(summary) {
+  const delta = summary.residualRisk - summary.baseRisk;
+  const deltaHtml =
+    delta < 0
+      ? `<div class="metric-delta">↓ ${fmtRub(Math.abs(delta))}</div>`
+      : `<div class="metric-delta up">↑ ${fmtRub(Math.abs(delta))}</div>`;
+
+  document.getElementById("metrics-row").innerHTML = `
+    <div class="metric-card">
+      <div class="metric-label">Исходный риск</div>
+      <div class="metric-value">${fmtRub(summary.baseRisk)}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Остаточный риск</div>
+      <div class="metric-value">${fmtRub(summary.residualRisk)}</div>
+      ${deltaHtml}
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Остаточный риск, % <span title="Процент остаточного риска от исходного (до применения защитных мер).">ⓘ</span></div>
+      <div class="metric-value">${summary.residualPercent.toFixed(1)}%</div>
+      ${riskBadgeHtml(summary.residualPercent)}
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Индекс критического ущерба</div>
+      <div class="metric-value">${summary.criticalExceedanceProxy.toFixed(1)}%</div>
+    </div>
+  `;
+}
+
+/* ====================== РЕНДЕР РАЗДЕЛОВ РЕЗУЛЬТАТА ====================== */
+
+function progressCell(value) {
+  const pct = clamp(value, 0, 1) * 100;
+  return `<div class="progress-cell"><span class="progress-num">${value.toFixed(2)}</span><div class="progress-bar"><span style="width:${pct.toFixed(
+    1
+  )}%"></span></div></div>`;
+}
+
+function tableCaptionRow(title) {
+  state.tableCounter += 1;
+  return `<div class="table-caption-row"><span></span><span class="table-title">${escapeHtml(
+    title
+  )}</span><span class="table-number">Таблица ${state.tableCounter}</span></div>`;
+}
+
+function renderLayersSection(layers) {
+  if (!layers.length) {
+    return `<div class="info-box">Выберите хотя бы один актив, чтобы увидеть распределение риска по слоям.</div>`;
+  }
+  const items = layers.map((l) => ({
+    label: l.layer,
+    value: l.residualPercent,
+    valueLabel: l.residualPercent.toFixed(1) + "%",
+    color: LAYER_COLORS[l.layer] || "#888",
+    tooltip: `${l.layer} — исходный риск ${fmtRub(l.baseRisk)}, остаточный риск ${fmtRub(
+      l.residualRisk
+    )} (${l.residualPercent.toFixed(1)}%)`,
+  }));
+  const chart = buildHorizontalBarChart(items, {
+    xTitle: "Остаточный риск, %",
+    width: 760,
+    barHeight: 36,
+    gap: 18,
+    leftMargin: 220,
+    tickFormatter: (v) => v.toFixed(0) + "%",
+  });
+  return `
+    <p class="caption"><strong>ДО:</strong> три слоя — технический, организационно-правовой и экономико-управленческий — вносят разный вклад в остаточный риск.</p>
+    <div class="chart-wrap">${chart}</div>
+    <p class="caption"><strong>ПОСЛЕ:</strong> диаграмма показывает, какой слой сейчас наименее защищён и с какого стоит начинать усиление мер.</p>
+  `;
+}
+
+function renderFactorsSection(riskRows) {
+  if (!riskRows.length) {
+    return `<div class="warning-box">Выберите хотя бы один актив, чтобы рассчитать риск.</div>`;
+  }
+  const topResidual = [...riskRows].sort((a, b) => b.residualRisk - a.residualRisk).slice(0, 10);
+  const items = topResidual.map((r) => ({
+    label: r.threat,
+    value: r.residualRisk,
+    valueLabel: fmtInt(r.residualRisk) + " руб.",
+    color: LAYER_COLORS[r.layer] || "#888",
+    tooltip: `${r.threat} (${r.layer}) — остаточный риск ${fmtRub(r.residualRisk)}, применённые меры: ${r.appliedControls}`,
+  }));
+  const chart = buildHorizontalBarChart(items, {
+    xTitle: "Остаточный риск, руб.",
+    width: 800,
+    barHeight: 26,
+    gap: 14,
+    leftMargin: 260,
+    tickFormatter: (v) => fmtInt(v),
+  });
+  const layersUsed = [...new Set(topResidual.map((r) => r.layer))];
+
+  const sortedAll = [...riskRows].sort((a, b) => b.residualRisk - a.residualRisk);
+  const rowsHtml = sortedAll
+    .map(
+      (r) => `
+    <tr>
+      <td>${escapeHtml(r.threat)}</td>
+      <td>${escapeHtml(r.layer)}</td>
+      <td>${progressCell(r.likelihood)}</td>
+      <td>${progressCell(r.vulnerability)}</td>
+      <td class="num">${fmtInt(r.loss)} руб.</td>
+      <td class="num">${fmtInt(r.baseRisk)} руб.</td>
+      <td class="num">${fmtInt(r.residualRisk)} руб.</td>
+      <td class="num">${r.residualPercent.toFixed(1)}%</td>
+      <td>${escapeHtml(r.appliedControls)}</td>
+    </tr>`
+    )
+    .join("");
+
+  return `
+    <p class="caption"><strong>ДО:</strong> ниже — десять факторов с наибольшим остаточным риском в рублях.</p>
+    <div class="chart-wrap">${chart}</div>
+    ${legendHtml(layersUsed)}
+    <p class="caption"><strong>ПОСЛЕ:</strong> диаграмма показывает, какие угрозы сейчас вносят наибольший вклад в остаточный риск и на что стоит обратить внимание в первую очередь.</p>
+    <p class="caption"><strong>ДО:</strong> таблица ниже детализирует вероятность, уязвимость и применённые меры по каждому фактору риска.</p>
+    ${tableCaptionRow("Детализация факторов остаточного риска")}
+    <table class="data-table">
+      <thead><tr>
+        <th>Угроза / правовой разрыв</th><th>Слой</th><th>Вероятность</th><th>Уязвимость</th>
+        <th>Оценка ущерба</th><th>Исходный риск</th><th>Остаточный риск</th><th>Остаточный риск, %</th><th>Применённые меры</th>
+      </tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    <p class="caption"><strong>ПОСЛЕ:</strong> таблица подтверждает, что наибольший остаточный риск сосредоточен в факторах без применённых защитных мер, и позволяет проверить вклад вероятности и уязвимости по каждой угрозе.</p>
+  `;
+}
+
+function renderCostsSection(costs) {
+  const total = costs.reduce((s, c) => s + c.accountedCost, 0);
+  const rowsHtml = costs
+    .map(
+      (c) => `
+    <tr>
+      <td>${escapeHtml(c.name)}</td>
+      <td>${escapeHtml(c.layer)}</td>
+      <td>${escapeHtml(c.costType)}</td>
+      <td>${escapeHtml(c.qualityLabel)}</td>
+      <td class="num">${fmtInt(c.baseCost)} руб.</td>
+      <td class="num">${fmtInt(c.accountedCost)} руб.</td>
+    </tr>`
+    )
+    .join("");
+
+  return `
+    <p class="caption"><strong>ДО:</strong> сумма ниже — то, что уже фактически потрачено на текущее качество внедрения мер.</p>
+    <div class="metric-card" style="max-width:340px;margin-bottom:0.8rem;">
+      <div class="metric-label">Учтённые годовые защитные затраты</div>
+      <div class="metric-value">${fmtRub(total)}</div>
+    </div>
+    ${tableCaptionRow("Защитные затраты по мерам")}
+    <table class="data-table">
+      <thead><tr><th>Мера</th><th>Слой</th><th>Тип затрат</th><th>Качество внедрения</th><th>Базовые годовые затраты</th><th>Учтённые годовые затраты</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    <p class="caption"><strong>ПОСЛЕ:</strong> таблица раскладывает итоговую сумму затрат по конкретным мерам защиты и показывает, какая часть базовой стоимости меры фактически учтена при текущем качестве внедрения.</p>
+  `;
+}
+
+function renderPlanSection(inputs, interactive = true) {
+  const effect = marginalControlEffect({
+    currentQuality: inputs.selectedQuality,
+    sector: inputs.sector,
+    selectedAssetIds: inputs.selectedAssetIds,
+    monthlyRevenue: inputs.monthlyRevenue,
+    criticalLossThreshold: inputs.criticalLossThreshold,
+    toleratedDowntimeHours: inputs.toleratedDowntimeHours,
+    staffWithAccess: inputs.staffWithAccess,
+    hasRemoteWork: inputs.hasRemoteWork,
+    hasContractors: inputs.hasContractors,
+    hasPdn: inputs.hasPdn,
+    pdnSubjects: inputs.pdnSubjects,
+    onlineShare: inputs.onlineShare,
+  });
+  const plan = greedyCostPlan(effect, state.maxBudget);
+
+  const effectRowsHtml = effect
+    .slice(0, 12)
+    .map(
+      (r) => `
+    <tr>
+      <td>${escapeHtml(r.name)}</td>
+      <td>${escapeHtml(r.layer)}</td>
+      <td class="num">${fmtInt(r.additionalCost)} руб.</td>
+      <td class="num">${fmtInt(r.riskReduction)} руб.</td>
+      <td class="num">${r.effectPerRub.toFixed(2)}</td>
+    </tr>`
+    )
+    .join("");
+
+  let planBlock;
+  if (!plan.length) {
+    planBlock = `<div class="info-box">В заданный предел затрат не вошла ни одна дополнительная мера.</div>`;
+  } else {
+    const planRowsHtml = plan
+      .map(
+        (r) => `
+      <tr>
+        <td>${escapeHtml(r.name)}</td>
+        <td>${escapeHtml(r.layer)}</td>
+        <td class="num">${fmtInt(r.additionalCost)} руб.</td>
+        <td class="num">${fmtInt(r.riskReduction)} руб.</td>
+      </tr>`
+      )
+      .join("");
+    const sumCost = plan.reduce((s, r) => s + r.additionalCost, 0);
+    const sumReduction = plan.reduce((s, r) => s + r.riskReduction, 0);
+    planBlock = `
+      <table class="data-table">
+        <thead><tr><th>Мера</th><th>Слой</th><th>Доп. затраты</th><th>Снижение риска</th></tr></thead>
+        <tbody>${planRowsHtml}</tbody>
+      </table>
+      <div class="plan-metrics">
+        <div class="metric-card"><div class="metric-label">Сумма дополнительных затрат</div><div class="metric-value">${fmtRub(
+          sumCost
+        )}</div></div>
+        <div class="metric-card"><div class="metric-label">Расчётное снижение остаточного риска</div><div class="metric-value">${fmtRub(
+          sumReduction
+        )}</div></div>
+      </div>`;
+  }
+
+  const budgetControlHtml = interactive
+    ? `<div class="field" style="max-width:420px;">
+      <label for="maxBudget">Предел дополнительных защитных затрат на ближайший период, руб.</label>
+      <input type="number" id="maxBudget" min="0" max="50000000" step="10000" value="${state.maxBudget}" />
+    </div>`
+    : `<p><strong>Предел дополнительных защитных затрат на ближайший период:</strong> ${fmtRub(state.maxBudget)}</p>`;
+
+  return `
+    ${budgetControlHtml}
+    <p class="caption"><strong>ДО:</strong> слева — все доступные меры, отсортированные по эффекту на рубль затрат; справа — жадный портфель мер в пределах заданного бюджета.</p>
+    <div class="two-col">
+      <div>
+        <h3>Очередность мер</h3>
+        ${tableCaptionRow("Очередность мер по эффекту на рубль затрат")}
+        <table class="data-table">
+          <thead><tr><th>Мера</th><th>Слой</th><th>Доп. затраты</th><th>Снижение риска</th><th>Эффект на 1 руб.</th></tr></thead>
+          <tbody>${effectRowsHtml}</tbody>
+        </table>
+      </div>
+      <div>
+        <h3>Портфель в пределах заданных затрат</h3>
+        ${tableCaptionRow("Портфель мер в пределах бюджета")}
+        ${planBlock}
+      </div>
+    </div>
+    <p class="caption"><strong>ПОСЛЕ:</strong> портфель справа подтверждает, какие меры дают наибольшее снижение остаточного риска на рубль затрат в пределах заданного бюджета.</p>
+  `;
+}
+
+function renderLimitsSection() {
+  return `
+    <ol class="limits-list">
+      <li>Калькулятор не заменяет технический аудит, юридическое заключение или расследование инцидента.</li>
+      <li>Итоговый процент — это нормированный индекс остаточного риска, а не абсолютная вероятность взлома.</li>
+      <li>Штрафы и правовые последствия считаются как часть правового ущерба и стоимости несоблюдения режима информации.</li>
+      <li>Защитные меры учитываются только через фактическое качество внедрения, а не через факт оплаты.</li>
+      <li>Все коэффициенты в прототипе являются настраиваемыми и должны уточняться по данным конкретной отрасли, судебной практике, статистике инцидентов и экспертной проверке.</li>
+    </ol>
+  `;
+}
+
+const SECTIONS = [
+  { key: "layers", title: "📊 Риск по слоям", render: (ctx) => renderLayersSection(ctx.layers) },
+  { key: "factors", title: "🔍 Факторы риска", render: (ctx) => renderFactorsSection(ctx.riskRows) },
+  { key: "costs", title: "💰 Защитные затраты", render: (ctx) => renderCostsSection(ctx.costs) },
+  { key: "plan", title: "🎯 Что усилить первым", render: (ctx) => renderPlanSection(ctx.inputs) },
+  { key: "limits", title: "⚠️ Ограничения методики", render: () => renderLimitsSection() },
+];
+
+/* ====================== ГЛАВНЫЙ ЦИКЛ ПЕРЕСЧЁТА ====================== */
+
+function recomputeAndRender() {
+  const inputs = readInputs();
+
+  const riskRows = calculateRiskTable(inputs);
+  const summary = calculateSummary(riskRows, inputs.criticalLossThreshold);
+  const layers = layerSummary(riskRows);
+  const costs = protectionCosts(inputs.selectedQuality);
+
+  renderMetrics(summary);
+
+  const ctx = { inputs, riskRows, summary, layers, costs };
+
+  state.tableCounter = 0;
+  const activeDef = SECTIONS.find((s) => s.key === state.activeSection);
+  document.getElementById("section-content").innerHTML = activeDef.render(ctx);
+
+  renderFullPrintReport(ctx);
+}
+
+function renderFullPrintReport(ctx) {
+  state.tableCounter = 0;
+  const paramsSummaryHtml = `
+    <h2>Параметры расчёта</h2>
+    <table class="data-table">
+      <tbody>
+        <tr><td>Сфера деятельности</td><td class="num">${escapeHtml(ctx.inputs.sector)}</td></tr>
+        <tr><td>Средняя месячная выручка</td><td class="num">${fmtRub(ctx.inputs.monthlyRevenue)}</td></tr>
+        <tr><td>Доля онлайн-продаж / цифровых заявок</td><td class="num">${ctx.inputs.onlineShare}%</td></tr>
+        <tr><td>Допустимый простой</td><td class="num">${ctx.inputs.toleratedDowntimeHours} ч</td></tr>
+        <tr><td>Критический ущерб для устойчивости МСП</td><td class="num">${fmtRub(
+          ctx.inputs.criticalLossThreshold
+        )}</td></tr>
+        <tr><td>Сотрудников с доступом к данным / кабинетам</td><td class="num">${ctx.inputs.staffWithAccess}</td></tr>
+        <tr><td>Удалённый доступ</td><td class="num">${ctx.inputs.hasRemoteWork ? "да" : "нет"}</td></tr>
+        <tr><td>Подрядчики с доступом</td><td class="num">${ctx.inputs.hasContractors ? "да" : "нет"}</td></tr>
+        <tr><td>Обрабатываются персональные данные</td><td class="num">${ctx.inputs.hasPdn ? "да" : "нет"}${
+    ctx.inputs.hasPdn ? ` (≈ ${fmtInt(ctx.inputs.pdnSubjects)} субъектов)` : ""
+  }</td></tr>
+        <tr><td>Выбрано активов</td><td class="num">${ctx.inputs.selectedAssetIds.length} из ${ASSETS.length}</td></tr>
+      </tbody>
+    </table>
+  `;
+
+  const metricsHtml = `
+    <h2>Итоговый результат</h2>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-label">Исходный риск</div><div class="metric-value">${fmtRub(
+        ctx.summary.baseRisk
+      )}</div></div>
+      <div class="metric-card"><div class="metric-label">Остаточный риск</div><div class="metric-value">${fmtRub(
+        ctx.summary.residualRisk
+      )}</div></div>
+      <div class="metric-card"><div class="metric-label">Остаточный риск, %</div><div class="metric-value">${ctx.summary.residualPercent.toFixed(
+        1
+      )}%</div>${riskBadgeHtml(ctx.summary.residualPercent)}</div>
+      <div class="metric-card"><div class="metric-label">Индекс критического ущерба</div><div class="metric-value">${ctx.summary.criticalExceedanceProxy.toFixed(
+        1
+      )}%</div></div>
+    </div>
+  `;
+
+  const sectionsHtml = SECTIONS.map((s) => {
+    const body = s.key === "plan" ? renderPlanSection(ctx.inputs, false) : s.render(ctx);
+    const cleanTitle = s.title.replace(/^[^\wа-яА-ЯёЁ]+/u, "").trim();
+    return `<h2>${escapeHtml(cleanTitle)}</h2>${body}`;
+  }).join("");
+
+  document.getElementById("print-full-report").innerHTML = `
+    <h1 style="color:var(--primary);">Щит-МСП — полный отчёт по расчёту остаточного риска</h1>
+    ${paramsSummaryHtml}
+    ${metricsHtml}
+    ${sectionsHtml}
+  `;
+}
+
+/* ====================== ПРИВЯЗКА СОБЫТИЙ ====================== */
+
+function wireEvents() {
+  document.getElementById("sidebar").addEventListener("input", (e) => {
+    if (e.target.id === "onlineShare") document.getElementById("onlineShareVal").textContent = e.target.value;
+    if (e.target.id === "downtimeHours") document.getElementById("downtimeHoursVal").textContent = e.target.value;
+    if (e.target.id === "staffWithAccess") document.getElementById("staffVal").textContent = e.target.value;
+    recomputeAndRender();
+  });
+  document.getElementById("sidebar").addEventListener("change", (e) => {
+    if (e.target.id === "hasPdn") {
+      document.getElementById("pdnSubjects").disabled = !e.target.checked;
+    }
+    recomputeAndRender();
+  });
+
+  document.getElementById("asset-chip-grid").addEventListener("change", (e) => {
+    const chip = e.target.closest(".chip");
+    if (chip) chip.classList.toggle("selected", e.target.checked);
+    recomputeAndRender();
+  });
+
+  document.getElementById("controls-grid").addEventListener("change", () => recomputeAndRender());
+
+  document.getElementById("segmented-control").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-section]");
+    if (!btn) return;
+    state.activeSection = btn.dataset.section;
+    document
+      .querySelectorAll("#segmented-control button")
+      .forEach((b) => b.classList.toggle("active", b === btn));
+    recomputeAndRender();
+  });
+
+  // Пересчёт по полю бюджета — по событию change (после потери фокуса/Enter),
+  // а не input (на каждое нажатие клавиши): это поле лежит внутри
+  // #section-content, чей innerHTML целиком перестраивается при пересчёте,
+  // поэтому пересборка DOM на каждый символ обрывала бы набор текста.
+  document.getElementById("section-content").addEventListener("change", (e) => {
+    if (e.target.id === "maxBudget") {
+      state.maxBudget = Number(e.target.value) || 0;
+      recomputeAndRender();
+    }
+  });
+}
+
+/* ====================== ИНИЦИАЛИЗАЦИЯ ====================== */
+
+function init() {
+  buildSidebar();
+  buildAssetChips();
+  buildControlsGrid();
+  wireEvents();
+  recomputeAndRender();
+}
+
+init();
+</script>
+</body>
+</html>
