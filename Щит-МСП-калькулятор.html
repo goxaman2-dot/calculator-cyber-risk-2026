@@ -195,6 +195,60 @@
     font-size: 0.88rem;
   }
 
+  @keyframes blink-highlight {
+    0%, 100% { background-color: rgba(179, 38, 30, 0.07); box-shadow: 0 0 0 0 rgba(179, 38, 30, 0.28); }
+    50% { background-color: rgba(179, 38, 30, 0.22); box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.12); }
+  }
+  .control-item.control-critical {
+    border-radius: 8px;
+    padding: 0.45rem 0.55rem;
+    margin: -0.45rem -0.55rem 0.55rem -0.55rem;
+    animation: blink-highlight 1.3s ease-in-out infinite;
+  }
+  .control-item.control-critical label { color: var(--high-fg); }
+  .critical-tag { display: none; }
+  .control-item.control-critical .critical-tag {
+    display: block;
+    color: var(--high-fg);
+    font-weight: 700;
+    font-size: 0.74rem;
+    margin-top: 0.1rem;
+  }
+  .control-item.control-critical select { border-color: var(--high-fg); }
+
+  tr.row-critical-missing { animation: blink-highlight 1.3s ease-in-out infinite; }
+  tr.row-critical-missing td:first-child { font-weight: 600; }
+
+  .critical-legend {
+    font-size: 0.82rem;
+    color: var(--high-fg);
+    background: var(--high-bg);
+    border: 1px solid #F0C7C4;
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
+    margin: 0.6rem 0;
+    display: none;
+  }
+  .critical-legend.visible { display: block; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .control-item.control-critical,
+    tr.row-critical-missing {
+      animation: none;
+      background-color: rgba(179, 38, 30, 0.16);
+    }
+  }
+
+  @media print {
+    .control-item.control-critical,
+    tr.row-critical-missing {
+      animation: none !important;
+      background-color: rgba(179, 38, 30, 0.14) !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+
   hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.6rem 0; }
 
   .metrics-row {
@@ -419,6 +473,10 @@
       </details>
 
       <h2>4. Текущие меры и качество внедрения</h2>
+      <div class="critical-legend" id="controls-critical-legend">
+        ⚠ Мигающие поля — меры, которые методика относит к обязательным для вашей отрасли и текущего набора активов
+        (они закрывают угрозы, формирующие основную долю остаточного риска) и которые пока не внедрены.
+      </div>
       <div id="controls-grid" class="controls-grid"><!-- заполняется скриптом --></div>
 
       <hr class="divider" />
@@ -988,7 +1046,7 @@ function buildControlsGrid() {
   document.getElementById("controls-grid").innerHTML = CONTROLS.map(
     (control) => `
     <div class="control-item">
-      <label for="quality_${control.id}">${escapeHtml(control.name)}</label>
+      <label for="quality_${control.id}">${escapeHtml(control.name)}<span class="critical-tag">⚠ обязательно для вашей отрасли</span></label>
       <select id="quality_${control.id}" data-control-id="${control.id}">${optionsHtml}</select>
     </div>`
   ).join("");
@@ -1098,10 +1156,66 @@ function renderLayersSection(layers) {
   `;
 }
 
-function renderFactorsSection(riskRows) {
+/**
+ * Определяет меры и угрозы, "точно нужные" для данного МСП с учётом его
+ * отраслевой специфики и текущего набора активов.
+ *
+ * Критерий — ABC/Парето-анализ (стандартный приём в риск-менеджменте):
+ * угрозы сортируются по убыванию остаточного риска, и в "критическую" зону
+ * попадает минимальный набор угроз, накопленная доля которых достигает
+ * CUMULATIVE_SHARE_THRESHOLD (70%) от суммарного остаточного риска. Это не
+ * произвольный "топ-N", а порог, зависящий от фактического распределения
+ * риска — оно, в свою очередь, определяется отраслевым профилем
+ * (sector_asset_dependency) и выбранными активами, то есть отражает
+ * специфику конкретного бизнеса, а не общий список угроз.
+ *
+ * Мера считается "критической и непокрытой", если она относится хотя бы
+ * к одной угрозе из этой зоны и её текущее качество внедрения — "Мера
+ * отсутствует" (пользователь её вообще не выбирал).
+ */
+const CUMULATIVE_SHARE_THRESHOLD = 0.7;
+
+function computeCriticalControls(riskRows, selectedQuality) {
+  if (!riskRows.length) return { criticalControlIds: new Set(), criticalThreatIds: new Set() };
+
+  const sorted = [...riskRows].sort((a, b) => b.residualRisk - a.residualRisk);
+  const total = sorted.reduce((s, r) => s + r.residualRisk, 0);
+
+  const criticalThreatIds = new Set();
+  let cumulative = 0;
+  for (const r of sorted) {
+    criticalThreatIds.add(r.id);
+    cumulative += r.residualRisk;
+    if (total > 0 && cumulative / total >= CUMULATIVE_SHARE_THRESHOLD) break;
+  }
+
+  const criticalControlIds = new Set();
+  for (const control of CONTROLS) {
+    const touchesCriticalThreat = control.affected_threats.some((tid) => criticalThreatIds.has(tid));
+    if (!touchesCriticalThreat) continue;
+    const level = selectedQuality[control.id] || "none";
+    if (level === "none") criticalControlIds.add(control.id);
+  }
+
+  return { criticalControlIds, criticalThreatIds };
+}
+
+function updateControlsCriticality(criticalControlIds) {
+  const legend = document.getElementById("controls-critical-legend");
+  if (legend) legend.classList.toggle("visible", criticalControlIds.size > 0);
+
+  for (const control of CONTROLS) {
+    const select = document.getElementById(`quality_${control.id}`);
+    const item = select ? select.closest(".control-item") : null;
+    if (item) item.classList.toggle("control-critical", criticalControlIds.has(control.id));
+  }
+}
+
+function renderFactorsSection(riskRows, criticalThreatIds) {
   if (!riskRows.length) {
     return `<div class="warning-box">Выберите хотя бы один актив, чтобы рассчитать риск.</div>`;
   }
+  const critical = criticalThreatIds || new Set();
   const topResidual = [...riskRows].sort((a, b) => b.residualRisk - a.residualRisk).slice(0, 10);
   const items = topResidual.map((r) => ({
     label: r.threat,
@@ -1121,10 +1235,13 @@ function renderFactorsSection(riskRows) {
   const layersUsed = [...new Set(topResidual.map((r) => r.layer))];
 
   const sortedAll = [...riskRows].sort((a, b) => b.residualRisk - a.residualRisk);
+  let anyRowCritical = false;
   const rowsHtml = sortedAll
-    .map(
-      (r) => `
-    <tr>
+    .map((r) => {
+      const isCriticalMissing = critical.has(r.id) && r.appliedControls === "нет";
+      if (isCriticalMissing) anyRowCritical = true;
+      return `
+    <tr${isCriticalMissing ? ' class="row-critical-missing"' : ""}>
       <td>${escapeHtml(r.threat)}</td>
       <td>${escapeHtml(r.layer)}</td>
       <td>${progressCell(r.likelihood)}</td>
@@ -1134,9 +1251,12 @@ function renderFactorsSection(riskRows) {
       <td class="num">${fmtInt(r.residualRisk)} руб.</td>
       <td class="num">${r.residualPercent.toFixed(1)}%</td>
       <td>${escapeHtml(r.appliedControls)}</td>
-    </tr>`
-    )
+    </tr>`;
+    })
     .join("");
+  const criticalRowsLegend = anyRowCritical
+    ? `<div class="critical-legend visible">⚠ Мигающие строки — угрозы, формирующие основную долю остаточного риска для вашей отрасли и активов, по которым пока не применена ни одна защитная мера.</div>`
+    : "";
 
   return `
     <p class="caption"><strong>ДО:</strong> ниже — десять факторов с наибольшим остаточным риском в рублях.</p>
@@ -1144,6 +1264,7 @@ function renderFactorsSection(riskRows) {
     ${legendHtml(layersUsed)}
     <p class="caption"><strong>ПОСЛЕ:</strong> диаграмма показывает, какие угрозы сейчас вносят наибольший вклад в остаточный риск и на что стоит обратить внимание в первую очередь.</p>
     <p class="caption"><strong>ДО:</strong> таблица ниже детализирует вероятность, уязвимость и применённые меры по каждому фактору риска.</p>
+    ${criticalRowsLegend}
     ${tableCaptionRow("Детализация факторов остаточного риска")}
     <table class="data-table">
       <thead><tr>
@@ -1293,7 +1414,7 @@ function renderLimitsSection() {
 
 const SECTIONS = [
   { key: "layers", title: "📊 Риск по слоям", render: (ctx) => renderLayersSection(ctx.layers) },
-  { key: "factors", title: "🔍 Факторы риска", render: (ctx) => renderFactorsSection(ctx.riskRows) },
+  { key: "factors", title: "🔍 Факторы риска", render: (ctx) => renderFactorsSection(ctx.riskRows, ctx.criticalThreatIds) },
   { key: "costs", title: "💰 Защитные затраты", render: (ctx) => renderCostsSection(ctx.costs) },
   { key: "plan", title: "🎯 Что усилить первым", render: (ctx) => renderPlanSection(ctx.inputs) },
   { key: "limits", title: "⚠️ Ограничения методики", render: () => renderLimitsSection() },
@@ -1308,10 +1429,12 @@ function recomputeAndRender() {
   const summary = calculateSummary(riskRows, inputs.criticalLossThreshold);
   const layers = layerSummary(riskRows);
   const costs = protectionCosts(inputs.selectedQuality);
+  const { criticalControlIds, criticalThreatIds } = computeCriticalControls(riskRows, inputs.selectedQuality);
 
   renderMetrics(summary);
+  updateControlsCriticality(criticalControlIds);
 
-  const ctx = { inputs, riskRows, summary, layers, costs };
+  const ctx = { inputs, riskRows, summary, layers, costs, criticalControlIds, criticalThreatIds };
 
   state.tableCounter = 0;
   const activeDef = SECTIONS.find((s) => s.key === state.activeSection);
