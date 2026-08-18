@@ -95,6 +95,22 @@
     color: #6B7A85;
     margin-top: 0.15rem;
   }
+  .threshold-hint {
+    font-weight: 400;
+    color: #6B7A85;
+    font-size: 0.8rem;
+  }
+  .threshold-suggest-btn {
+    margin-top: 0.35rem;
+    padding: 0.28rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #FFFFFF;
+    color: var(--primary);
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  .threshold-suggest-btn:hover { background: var(--bg-soft); }
   .field select,
   .field input[type="number"] {
     width: 100%;
@@ -1250,16 +1266,25 @@ function renderStrategyComparison(ctx) {
   delete baseInputs.selectedQuality;
 
   const currentPercent = ctx.summary.residualPercent;
+  const currentCritical = ctx.summary.criticalExceedanceProxy;
   const currentCost = ctx.costs.reduce((s, c) => s + c.accountedCost, 0);
 
   const colorFor = (p) => (p < 20 ? "#1E7B34" : p < 45 ? "#8A5B00" : "#B3261E");
 
   const strategyResults = Object.entries(STRATEGIES).map(([key, strat]) => {
     const r = strat.run(baseInputs);
-    return { key, label: strat.label, percent: r.percent, cost: totalCostOfQuality(r.quality) };
+    const rows = calculateRiskTable({ ...baseInputs, selectedQuality: r.quality });
+    const summary = calculateSummary(rows, baseInputs.criticalLossThreshold);
+    return {
+      key,
+      label: strat.label,
+      percent: summary.residualPercent,
+      criticalIdx: summary.criticalExceedanceProxy,
+      cost: totalCostOfQuality(r.quality),
+    };
   });
 
-  const items = [
+  const riskItems = [
     {
       label: "Текущее состояние",
       value: currentPercent,
@@ -1289,7 +1314,28 @@ function renderStrategyComparison(ctx) {
     }),
   ];
 
-  const chart = buildHorizontalBarChart(items, {
+  const criticalItems = [
+    {
+      label: "Текущее состояние",
+      value: currentCritical,
+      valueLabel: currentCritical.toFixed(1) + "%",
+      color: "#6B7A85",
+      tooltip: `Текущее состояние: индекс критического ущерба ${currentCritical.toFixed(1)}%.`,
+    },
+    ...strategyResults.map((r) => {
+      const delta = currentCritical - r.criticalIdx;
+      const deltaText = delta > 0.05 ? `ниже текущего на ${delta.toFixed(1)} п.п.` : "почти не изменился";
+      return {
+        label: r.label,
+        value: r.criticalIdx,
+        valueLabel: r.criticalIdx.toFixed(1) + "%",
+        color: colorFor(r.criticalIdx),
+        tooltip: `${r.label}: индекс критического ущерба ${r.criticalIdx.toFixed(1)}% (${deltaText}). Средний риск по этой же стратегии — ${r.percent.toFixed(1)}%.`,
+      };
+    }),
+  ];
+
+  const riskChart = buildHorizontalBarChart(riskItems, {
     xTitle: "Остаточный риск, %",
     width: 800,
     barHeight: 26,
@@ -1298,22 +1344,36 @@ function renderStrategyComparison(ctx) {
     tickFormatter: (v) => v.toFixed(0) + "%",
   });
 
-  el.innerHTML = chart;
+  const criticalChart = buildHorizontalBarChart(criticalItems, {
+    xTitle: "Индекс критического ущерба, %",
+    width: 800,
+    barHeight: 26,
+    gap: 16,
+    leftMargin: 210,
+    tickFormatter: (v) => v.toFixed(0) + "%",
+  });
+
+  el.innerHTML = `
+    ${riskChart}
+    <p class="caption" style="margin:0.9rem 0 0.3rem 0;">
+      <strong>ДО:</strong> остаточный риск усредняет эффект по всем 16 угрозам поровну. Индекс критического
+      ущерба ниже взвешен по «тяжести хвоста» каждой угрозы и показывает вероятность именно катастрофического
+      сценария относительно порога устойчивости — это язык, который убеждает директора, а не риск-менеджера.
+    </p>
+    ${criticalChart}
+  `;
 
   if (noteEl) {
     const best = strategyResults.reduce((a, b) => (b.percent < a.percent ? b : a));
-    const bestDelta = currentPercent - best.percent;
-    noteEl.innerHTML =
-      bestDelta > 0.05
-        ? `<strong>ПОСЛЕ:</strong> лучший результат среди стратегий — «${escapeHtml(
-            best.label
-          )}»: ${best.percent.toFixed(1)}% против текущих ${currentPercent.toFixed(
-            1
-          )}% (снижение на ${bestDelta.toFixed(1)} п.п.). Столбцы окрашены по той же шкале, что и индикатор
-          риска в метриках: зелёный — ниже 20%, жёлтый — 20–44%, красный — от 45%.`
-        : `<strong>ПОСЛЕ:</strong> при текущих вводных ни одна из трёх стратегий не снижает риск заметно
-          сильнее, чем уже выбранный вами набор мер, — возможно, он уже близок к эвристическому пределу
-          жадного алгоритма.`;
+    const bestCritical = strategyResults.reduce((a, b) => (b.criticalIdx < a.criticalIdx ? b : a));
+    const gap = bestCritical.criticalIdx - bestCritical.percent;
+    noteEl.innerHTML = `<strong>ПОСЛЕ:</strong> лучший результат по среднему риску — «${escapeHtml(
+      best.label
+    )}» (${best.percent.toFixed(1)}%), но по индексу критического ущерба та же стратегия даёт ${escapeHtml(
+      bestCritical.criticalIdx.toFixed(1)
+    )}% — на ${gap.toFixed(1)} п.п. выше. Это системный разрыв: дешёвые меры в первую очередь закрывают частые
+    лёгкие угрозы, а не угрозы с тяжёлым хвостом, которые и определяют вероятность сценария, угрожающего
+    выживанию бизнеса. Для разговора с директором о бюджете ориентируйтесь на нижний график, а не на верхний.`;
   }
 }
 
@@ -1775,9 +1835,16 @@ function buildSidebar() {
       <div class="help">Время простоя, которое бизнес может выдержать без критических последствий.</div>
     </div>
     <div class="field">
-      <label for="criticalThreshold">Критический ущерб для устойчивости МСП, руб.</label>
+      <label for="criticalThreshold">Критический ущерб для устойчивости МСП, руб.
+        <span class="threshold-hint" id="thresholdHint"></span>
+      </label>
       <input type="number" id="criticalThreshold" min="50000" max="500000000" step="50000" value="1500000" />
-      <div class="help">Порог, после которого ущерб считается угрожающим для дальнейшей работы бизнеса.</div>
+      <button type="button" id="suggestThresholdBtn" class="threshold-suggest-btn">
+        ⟳ Предложить по выручке (1 месяц)
+      </button>
+      <div class="help">Порог, после которого ущерб считается угрожающим для дальнейшей работы бизнеса. Это
+      не формула от выручки — выручка не отражает ни маржинальность, ни резервы компании, поэтому порог
+      стоит вписывать осознанно, а не выводить автоматически. Подсказка справа и кнопка ниже — только ориентир.</div>
     </div>
 
     <h2>2. Люди и данные</h2>
@@ -2451,17 +2518,38 @@ function renderFullPrintReport(ctx) {
 
 /* ====================== ПРИВЯЗКА СОБЫТИЙ ====================== */
 
+function updateThresholdHint() {
+  const hint = document.getElementById("thresholdHint");
+  if (!hint) return;
+  const revenue = Number(document.getElementById("monthlyRevenue").value) || 0;
+  const threshold = Number(document.getElementById("criticalThreshold").value) || 0;
+  if (revenue <= 0) {
+    hint.textContent = "";
+    return;
+  }
+  const months = threshold / revenue;
+  hint.textContent = `≈ ${months.toFixed(1)} мес. вашей выручки`;
+}
+
 function wireEvents() {
   document.getElementById("sidebar").addEventListener("input", (e) => {
     if (e.target.id === "onlineShare") document.getElementById("onlineShareVal").textContent = e.target.value;
     if (e.target.id === "downtimeHours") document.getElementById("downtimeHoursVal").textContent = e.target.value;
     if (e.target.id === "staffWithAccess") document.getElementById("staffVal").textContent = e.target.value;
+    if (e.target.id === "monthlyRevenue" || e.target.id === "criticalThreshold") updateThresholdHint();
     recomputeAndRender();
   });
   document.getElementById("sidebar").addEventListener("change", (e) => {
     if (e.target.id === "hasPdn") {
       document.getElementById("pdnSubjects").disabled = !e.target.checked;
     }
+    recomputeAndRender();
+  });
+
+  document.getElementById("suggestThresholdBtn").addEventListener("click", () => {
+    const revenue = Number(document.getElementById("monthlyRevenue").value) || 0;
+    document.getElementById("criticalThreshold").value = Math.round(revenue);
+    updateThresholdHint();
     recomputeAndRender();
   });
 
@@ -2647,6 +2735,7 @@ function init() {
   wireEvents();
   wireReportDownload();
   wirePriceTierPanel();
+  updateThresholdHint();
   recomputeAndRender();
 }
 
