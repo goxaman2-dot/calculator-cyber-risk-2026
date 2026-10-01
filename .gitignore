@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# API-ключи нейросетей — никогда не публиковать в репозиторий (сайт открыт на GitHub Pages)
+*key*.txt
+*.key
+*apikey*
+*api_key*
