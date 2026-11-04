@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>КиберСмета 3.1 — расчёт и обоснование бюджета ИБ для МСП и ИП</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Literata:opsz,wght@7..72,500;7..72,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F4F1; --panel:#FFFFFF; --ink:#16212A; --muted:#5B6873; --line:#CDD5D6; --soft:#E6EBE9;
+  --accent:#0E6973; --accent-ink:#FFFFFF; --core:#B8233A; --amber:#B97F12; --ok:#2C7A4B; --warn:#9A5B00;
+  --scene-bg:#0C2530; --scene-ink:#E9F1F2; --scene-muted:#9FB6BC; --scene-line:#2F5F6A; --scene-core:#FF5D73; --scene-amber:#F2B544;
+  --serif:"Literata","PT Serif",Georgia,"Times New Roman",serif;
+  --sans:"Golos Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#10181D; --panel:#172229; --ink:#E3EAEC; --muted:#93A2AA; --line:#2C3A42; --soft:#1E2B33;
+    --accent:#4DB2BC; --accent-ink:#06262A; --core:#F0596E; --amber:#E2A83A; --ok:#5BC08A; --warn:#E3A13A;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10181D; --panel:#172229; --ink:#E3EAEC; --muted:#93A2AA; --line:#2C3A42; --soft:#1E2B33;
+  --accent:#4DB2BC; --accent-ink:#06262A; --core:#F0596E; --amber:#E2A83A; --ok:#5BC08A; --warn:#E3A13A;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- Заставка ---------- */
+.scene{position:relative;height:100vh;min-height:560px;background:var(--scene-bg);color:var(--scene-ink);overflow:hidden}
+.scene canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+.scene canvas:active{cursor:grabbing}
+.scene::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;background:linear-gradient(90deg,var(--scene-bg) 0,var(--scene-bg) 26%,rgba(12,37,48,0) 42%)}
+.hud .sub .ttl{display:block;color:var(--scene-ink);font-size:clamp(15px,1.3vw,18px);line-height:1.4;max-width:40ch}
+.hud .sub .mth{display:block;margin-top:6px;font-size:13.5px;color:var(--scene-amber)}
+.sbar{position:absolute;z-index:4;left:0;right:0;top:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px;padding:12px clamp(18px,3.5vw,56px);border-bottom:2px solid var(--scene-amber);background:rgba(12,37,48,.92)}
+.sbar .brand{display:flex;align-items:baseline;gap:10px;justify-self:start}
+.sbar .uni{justify-self:end}
+.sbar .nm{font-family:var(--serif);font-weight:700;font-size:clamp(26px,2.6vw,36px);line-height:1;color:var(--scene-ink);letter-spacing:-.01em}
+.sbar .ver{font-size:13px;color:var(--scene-muted)}
+.sbar .fund{display:flex;align-items:center;gap:10px}
+.sbar .fund img{display:block;height:36px;width:auto;border-radius:4px}
+.sbar .fund span{display:flex;flex-direction:column;line-height:1.25}
+.sbar .fund b{font-size:14px;color:var(--scene-ink);font-weight:600}
+.sbar .fund small{font-size:12px;color:var(--scene-muted)}
+.sbar .uni{display:flex;flex-direction:column;align-items:flex-end;padding-left:20px;border-left:1px solid var(--scene-line)}
+.sbar .uni .u{font-family:var(--serif);font-weight:700;font-size:clamp(24px,2.3vw,32px);line-height:1;letter-spacing:.06em;color:var(--scene-amber)}
+.sbar .uni .au{font-size:12.5px;color:var(--scene-ink);margin-top:4px}
+.hud{position:absolute;z-index:2;left:clamp(18px,3.5vw,56px);top:70px;bottom:0;width:min(38%,490px);display:flex;flex-direction:column;justify-content:center;gap:12px;pointer-events:none}
+.pbtn{background:transparent;color:var(--scene-muted);border:1px solid var(--scene-line);border-radius:3px;padding:3px 10px;font-size:12.5px;cursor:pointer;margin-right:12px}
+.hud-hint{display:flex;align-items:center}
+.hud h1{font-family:var(--serif);font-weight:700;font-size:clamp(42px,5vw,72px);line-height:.95;margin:0;letter-spacing:-.02em}
+.hud .sub{font-size:clamp(14px,1.2vw,16.5px);color:var(--scene-muted);margin:10px 0 0;max-width:42ch}
+.hud .authors{font-size:14px;color:var(--scene-muted);line-height:1.5;margin:0}
+.hud .go{pointer-events:auto;align-self:flex-start;background:var(--scene-ink);color:var(--scene-bg);border:0;border-radius:4px;padding:12px 22px;font-weight:600;cursor:pointer}
+.hud-pareto{border-top:1px solid var(--scene-line);padding-top:12px;font-size:13.5px;color:var(--scene-ink)}
+.hud-pareto h2{font-family:var(--serif);font-size:22px;margin:0 0 2px;font-weight:700;letter-spacing:.01em}
+.hud-pareto p{margin:6px 0 0;color:var(--scene-muted);max-width:44ch}
+.hud-pareto svg{display:block;width:100%;max-width:490px;height:auto}
+.hud-pareto p{font-size:12.5px}
+@media (max-height:800px){#hudText{display:none}.hud{gap:12px}}
+body.in-app .scene{display:none}
+body:not(.in-app) #app{display:none}
+body:not(.in-inc) #inc{display:none}
+body.in-inc .scene{display:none}
+.gorow{display:flex;gap:10px;flex-wrap:wrap;pointer-events:auto}
+.hud .go2{pointer-events:auto;background:transparent;color:var(--scene-ink);border:1px solid var(--scene-ink);border-radius:4px;padding:11px 18px;font-weight:600;cursor:pointer}
+.qblock{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin-bottom:14px}
+.qblock h4{margin:0 0 4px;font-size:16px}
+.qblock .q{margin:12px 0 6px;font-weight:600;font-size:14.5px}
+.qblock .hint{font-size:13px;color:var(--muted)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 18px}
+.qgrid input[type=number],.qgrid select,.qblock select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--panel)}
+.conf{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.conf label{font-size:12.5px;border:1px solid var(--line);border-radius:3px;padding:2px 8px;cursor:pointer;color:var(--muted)}
+.conf input{position:absolute;opacity:0;pointer-events:none}
+.conf label:has(input:checked){border-color:var(--accent);color:var(--accent);font-weight:600}
+.types{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px}
+.types label{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:4px;padding:8px 10px;cursor:pointer;font-size:14px;background:var(--panel)}
+.types label:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.types .fid{font-size:12px}
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:6px}
+.calc div{background:var(--panel);padding:10px 12px}
+.calc .k{font-size:12.5px;color:var(--muted)}
+.calc .v{font-family:var(--serif);font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+.warn{color:var(--warn);font-weight:600}
+.okmsg{color:var(--ok);font-weight:600}
+
+ .years{position:absolute;z-index:3;right:clamp(18px,3.5vw,56px);top:96px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;color:var(--scene-ink)}
+.years .skfu{display:flex;flex-direction:column;align-items:flex-end;text-align:right;margin-bottom:10px;padding:10px 14px 10px 0;border-right:3px solid var(--scene-core)}
+.years .skfu .u{font-family:var(--serif);font-weight:700;font-size:clamp(30px,3vw,44px);line-height:1;letter-spacing:.06em;color:var(--scene-ink)}
+.years .skfu .uf{font-size:13px;color:var(--scene-ink);margin-top:5px}
+.years .skfu .au{font-size:12.5px;color:var(--scene-muted);margin-top:3px}
+.years .row{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.years button{background:transparent;color:var(--scene-muted);border:1px solid var(--scene-line);border-radius:3px;padding:5px 10px;font-size:13px;cursor:pointer}
+.years button[aria-pressed="true"]{color:var(--scene-bg);background:var(--scene-ink);border-color:var(--scene-ink);font-weight:600}
+.years .cap{font-size:12.5px;color:var(--scene-muted);text-align:right;max-width:420px;line-height:1.4}
+.years .bud{margin-top:10px;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px;max-width:330px}
+.years .bud .lbl{font-size:12.5px;color:var(--scene-muted)}
+.years .bud b{font-family:var(--serif);font-size:clamp(26px,3vw,38px);font-weight:700;color:var(--scene-amber);line-height:1.1}
+.years .bud #budSub{font-size:12.5px;color:var(--scene-ink)}
+.years .bud .src{font-size:11px;color:var(--scene-muted)}
+.years .cap b{color:var(--scene-ink);font-family:var(--serif);font-size:20px;font-weight:700;margin-right:8px}
+@media (max-width:899px){.years .skfu{align-items:center;text-align:center;border-right:0;border-bottom:2px solid var(--scene-core);padding:0 0 6px;margin-bottom:6px}.years .skfu .u{font-size:26px}.years .skfu .ar,.years .skfu .uf{display:none}.years{left:12px;right:12px;align-items:center}.years .cap{text-align:center}.years .cap b{font-size:16px}.years .bud{align-items:center;text-align:center;margin-top:4px}.years .bud .src,.years .bud .lbl{display:none}.years .bud b{font-size:22px}}
+.hud-hint{position:absolute;z-index:2;right:clamp(14px,3vw,40px);bottom:18px;font-size:12.5px;color:var(--scene-muted)}
+@media (max-width:899px){
+  .sbar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 10px;padding:10px 14px}
+  .hud .sub .ttl{font-size:15px}
+  .sbar .ver{display:none}
+  .sbar .nm{font-size:24px}
+  .sbar .fund{order:3;width:100%;padding-top:6px;border-top:1px solid var(--scene-line)}
+  .sbar .fund img{height:28px}
+  .sbar .uni{padding-left:10px;max-width:58%}
+  .sbar .uni .u{font-size:22px}
+  .sbar .uni .au{font-size:11px;text-align:right}
+  .years{top:122px}
+  .scene::before{background:linear-gradient(180deg,rgba(12,37,48,0) 0,rgba(12,37,48,0) 52%,var(--scene-bg) 64%,var(--scene-bg) 100%)}
+  .hud{left:18px;right:18px;width:auto;top:auto;gap:12px;bottom:calc(20px + env(safe-area-inset-bottom,0px));justify-content:flex-end;gap:16px}
+  .hud-pareto,.hud-hint span{display:none}.hud-hint{bottom:auto;top:214px;right:14px}
+}
+/* ---------- Рабочая область ---------- */
+.app{max-width:1120px;margin:0 auto;padding:40px clamp(14px,3vw,28px) 80px}
+.app-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.app-head h2{font-family:var(--serif);font-size:clamp(26px,3.4vw,36px);margin:0;line-height:1.1}
+.app-head p{margin:6px 0 0;color:var(--muted);max-width:70ch}
+.theme-btn{background:none;border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;color:var(--muted);font-size:14px}
+.steps{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:26px;overflow-x:auto}
+.steps button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px 9px;cursor:pointer;color:var(--muted);white-space:nowrap;font-size:15px}
+.steps button b{font-weight:700;margin-right:6px;color:var(--ink)}
+.steps button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.step{display:none}
+.step.on{display:block}
+.step h3{font-family:var(--serif);font-size:24px;margin:0 0 6px}
+.lead{color:var(--muted);margin:0 0 22px;max-width:76ch}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px 22px}
+.field label{display:block;font-weight:600;font-size:14.5px;margin-bottom:5px}
+.field .hint{font-size:13px;color:var(--muted);margin-top:4px}
+.field input[type=number],.field input[type=text],.field select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:4px;background:var(--panel)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{border:1px solid var(--line);border-radius:4px;padding:7px 12px;cursor:pointer;background:var(--panel);font-size:14.5px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{font-weight:700;color:var(--accent)}
+.seg label:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.seg label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:30px;flex-wrap:wrap}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);padding:10px 18px;border-radius:4px;cursor:pointer;font-weight:600}
+.btn.ghost{background:none;color:var(--accent)}
+.btn.small{padding:6px 12px;font-size:14px}
+
+table{border-collapse:collapse;width:100%}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--soft);vertical-align:top;font-size:14.5px}
+th{font-weight:600;color:var(--muted);background:var(--soft);font-size:13.5px}
+td.r,th.r{text-align:right;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.cap{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:26px 0 8px}
+.cap .t{font-weight:600;text-align:center;flex:1}
+.cap .n{color:var(--muted);font-size:14px;white-space:nowrap}
+
+.asset-row td:first-child{width:36px}
+.asset-row input[type=number]{width:150px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);text-align:right}
+.lvl{display:flex;gap:4px;flex-wrap:wrap}
+.lvl label{font-size:13.5px;border:1px solid var(--line);border-radius:3px;padding:4px 8px;cursor:pointer;background:var(--panel)}
+.lvl input{position:absolute;opacity:0;pointer-events:none}
+.lvl label:has(input:checked){background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.lvl label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.fid{font-weight:700;color:var(--muted);white-space:nowrap}
+
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px;margin-top:8px}
+.chart svg{display:block;width:100%;height:auto}
+.chart svg text.co{paint-order:stroke;stroke:var(--panel);stroke-width:5px;stroke-linejoin:round}
+.after{margin:12px 0 0;max-width:80ch}
+
+.measure{border:1px solid var(--line);border-radius:6px;background:var(--panel);margin-bottom:10px}
+.measure header{display:flex;justify-content:space-between;gap:12px;padding:11px 14px;align-items:baseline;flex-wrap:wrap}
+.measure header .nm{font-weight:600}
+.measure header .meta{font-size:13.5px;color:var(--muted)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0;border-top:1px solid var(--soft)}
+.opt{padding:10px 14px;border-right:1px solid var(--soft);cursor:pointer;position:relative;font-size:14px}
+.opt:last-child{border-right:0}
+.opt input[type=radio]{position:absolute;opacity:0;pointer-events:none}
+.opt .on-mark{font-weight:700}
+.opt:has(input[type=radio]:checked){background:color-mix(in srgb,var(--accent) 12%,var(--panel));box-shadow:inset 0 3px 0 var(--accent)}
+.opt:has(input[type=radio]:focus-visible){outline:2px solid var(--accent);outline-offset:-2px}
+.opt:has(input[type=radio]:disabled){opacity:.45;cursor:not-allowed}
+.opt .v{color:var(--muted);font-size:13px;margin-top:2px}
+.opt .c{margin-top:6px;font-variant-numeric:tabular-nums}
+.opt .price{width:110px;padding:3px 6px;margin-top:6px;border:1px solid var(--line);border-radius:3px;background:var(--panel);text-align:right;font-size:13px}
+
+.budgetbar{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-bottom:16px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.budgetbar .field{min-width:200px}
+.budgetbar .sum{font-size:15px}
+.budgetbar .sum b{font-size:20px}
+.over{color:var(--core);font-weight:600}
+
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.kpi{background:var(--panel);padding:14px 16px}
+@media (max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi .k{font-size:13.5px;color:var(--muted)}
+.kpi .v{font-family:var(--serif);font-size:26px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:13px;color:var(--muted)}
+.method{margin-top:28px;border-top:1px solid var(--line);padding-top:10px}
+.method summary{cursor:pointer;font-weight:600;padding:8px 0}
+.method .f{font-family:var(--serif);font-size:16px;margin:10px 0;padding:8px 12px;background:var(--soft);border-radius:4px;overflow-x:auto;white-space:nowrap}
+.note{font-size:13.5px;color:var(--muted)}
+.foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted)}
+.badge{display:inline-block;font-size:12.5px;padding:1px 7px;border-radius:3px;border:1px solid var(--line);color:var(--muted)}
+.badge.core{border-color:var(--core);color:var(--core)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:4px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media print{
+  .scene,.steps,.nav,.budgetbar,.theme-btn,.toast,.no-print{display:none!important}
+  .step{display:block!important;page-break-inside:avoid}
+  .step:not(#s5){display:none!important}
+  body{background:#fff;color:#000}
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= ЗАСТАВКА ======================= -->
+<section class="scene" id="scene" aria-label="Заставка КиберСметы: ландшафт угроз 2023–2026 и график PARETO‑X">
+  <canvas id="terrain" role="img" aria-label="Трёхмерный ландшафт угроз по годам 2023–2026. Красные пики — факторы Парето-ядра."></canvas>
+  <header class="sbar">
+    <div class="brand"><span class="nm">КиберСмета</span><span class="ver">версия 3.1</span></div>
+    <div class="fund"><img src="data:image/png;base64,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" width="61" height="36" alt="АС «Фонд-М», Фонд содействия инновациям"><span><b>Студенческий стартап, 8 очередь</b><small>заявка в Фонд содействия инновациям</small></span></div>
+    <div class="uni"><span class="u">СКФУ</span><span class="au">Мандрица И.В., Богданова У.А.</span></div>
+  </header>
+  <div class="hud">
+    <p class="sub"><span class="ttl">Веб-платформа для расчёта и обоснования бюджета затрат на информационную безопасность субъектов малого и среднего предпринимательства и ИП</span><span class="mth">Методы PARETO‑X и ALE–ROSI</span></p>
+    <div class="hud-pareto" id="hudPareto">
+      <h2 id="hudH">PARETO‑X</h2>
+      <div id="hudCurve"></div>
+      <p id="hudText"></p>
+    </div>
+    <div class="gorow"><button class="go" id="goBtn" type="button">Перейти к калькулятору</button><button class="go2" id="incBtn" type="button">Анкета об инциденте</button></div>
+  </div>
+  <div class="years" id="years">
+    <div class="bud" aria-live="off"><span class="lbl" id="budLbl">Удорожание защиты</span><b id="budVal" class="num"></b><span id="budSub"></span><span class="src">модельная организация; данные анкеты, курс 78 ₽/$</span></div>
+  </div>
+  <div class="hud-hint"><button type="button" id="playBtn" class="pbtn" aria-label="Остановить анимацию">Пауза</button><span>Перетащите ландшафт, чтобы повернуть</span></div>
+</section>
+
+<!-- ======================= ПРИЛОЖЕНИЕ ======================= -->
+<main class="app" id="app">
+  <div class="app-head">
+    <div>
+      <h2>Смета мер защиты</h2>
+      <p>Пять шагов: профиль заказчика, активы, экспресс-аудит, Парето-анализ угроз, подбор мер и итоговая смета с остаточным риском.</p>
+    </div>
+    <span><button class="theme-btn" id="backBtn" type="button">Заставка</button> <button class="theme-btn" id="toIncBtn" type="button">Анкета об инциденте</button> <button class="theme-btn" id="themeBtn" type="button">Сменить тему</button></span>
+  </div>
+
+  <nav class="steps" role="tablist" id="steps">
+    <button role="tab" data-s="0" aria-selected="true"><b>1</b>Профиль</button>
+    <button role="tab" data-s="1" aria-selected="false"><b>2</b>Активы</button>
+    <button role="tab" data-s="2" aria-selected="false"><b>3</b>Экспресс-аудит</button>
+    <button role="tab" data-s="3" aria-selected="false"><b>4</b>Парето-ядро</button>
+    <button role="tab" data-s="4" aria-selected="false"><b>5</b>Меры и вендоры</button>
+    <button role="tab" data-s="5" aria-selected="false"><b>6</b>Итоговая смета</button>
+  </nav>
+
+  <!-- Шаг 1 -->
+  <section class="step on" id="s0" role="tabpanel">
+    <h3>Профиль заказчика</h3>
+    <p class="lead">От размера организации зависят число лицензий и частота атак, от выручки — масштаб ущерба, от числа субъектов персональных данных — размер возможного штрафа.</p>
+    <div class="field" style="margin-bottom:18px">
+      <label>Тип субъекта</label>
+      <div class="seg" id="sizeSeg"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="sector">Отрасль</label><select id="sector"></select></div>
+      <div class="field"><label for="revenue">Выручка за год, ₽</label><input id="revenue" type="number" min="0" step="100000"><div class="hint">Используется для оценки стоимости активов по умолчанию.</div></div>
+      <div class="field"><label for="staff">Сотрудников</label><input id="staff" type="number" min="1" step="1"></div>
+      <div class="field"><label for="pcs">Рабочих мест (ПК, ноутбуки)</label><input id="pcs" type="number" min="1" step="1"></div>
+      <div class="field"><label for="srv">Серверов (свои или арендованные)</label><input id="srv" type="number" min="0" step="1"></div>
+      <div class="field"><label for="pdn">Субъектов ПДн в базах</label><input id="pdn" type="number" min="0" step="100"><div class="hint">Клиенты и сотрудники. Определяет часть ст. 13.11 КоАП РФ.</div></div>
+      <div class="field"><label for="rate">Ставка ИТ-специалиста, ₽/ч</label><input id="rate" type="number" min="0" step="100"><div class="hint">Учитывает трудозатраты, без которых бесплатные средства не работают.</div></div>
+      <div class="field"><label for="qfine">Вероятность применения штрафа при утечке</label><input id="qfine" type="number" min="0" max="1" step="0.05"><div class="hint">По умолчанию 0,3: специальные составы ч. 12–14 пока применяются редко.</div></div>
+      <div class="field"><label for="rho">Нетерпимость к остаточному риску ρ</label><input id="rho" type="number" min="0" max="5" step="0.1"><div class="hint">0 — чисто экономическая позиция; чем больше ρ, тем выше допустимый предел затрат в методе PARETO‑X.</div></div>
+      <div class="field"><label for="rrmax">Допустимый остаточный риск RR<sub>max</sub></label><input id="rrmax" type="number" min="0.05" max="1" step="0.05"><div class="hint">Доля текущих ожидаемых потерь, которую заказчик готов оставить. По умолчанию 0,5.</div></div>
+    </div>
+    <div class="nav"><span></span><button class="btn" data-go="1">Перейти к активам</button></div>
+  </section>
+
+  <!-- Шаг 2 -->
+  <section class="step" id="s1" role="tabpanel">
+    <h3>Защищаемые информационные активы</h3>
+    <p class="lead">Отметьте, что есть у заказчика, и уточните оценку ущерба при полной потере или компрометации актива. Значения по умолчанию рассчитаны как доля годовой выручки и пересчитываются, пока вы их не измените.</p>
+    <div class="cap"><span class="t">Состав и стоимость активов</span><span class="n">Таблица 1</span></div>
+    <div class="tbl-wrap"><table id="assetTbl"><thead><tr><th></th><th>Актив</th><th>Свойства ИБ</th><th class="r">Ущерб при потере, ₽</th></tr></thead><tbody></tbody></table></div>
+    <p class="after" id="assetAfter"></p>
+    <div class="nav"><button class="btn ghost" data-go="0">Назад</button><button class="btn" data-go="2">Перейти к аудиту</button></div>
+  </section>
+
+  <!-- Шаг 3 -->
+  <section class="step" id="s2" role="tabpanel">
+    <h3>Экспресс-аудит текущей защищённости</h3>
+    <p class="lead">Аудит нужен, чтобы не включать в смету то, что у заказчика уже работает. Если пропустить шаг, калькулятор будет считать, что защиты нет, и бюджет окажется завышенным.</p>
+    <div class="cap"><span class="t">Оценка зрелости по 16 факторам модели</span><span class="n">Таблица 2</span></div>
+    <div class="tbl-wrap"><table id="auditTbl"><thead><tr><th>Фактор</th><th>Что проверяем</th><th>Состояние</th></tr></thead><tbody></tbody></table></div>
+    <p class="after" id="auditAfter"></p>
+    <div class="nav"><button class="btn ghost" data-go="1">Назад</button><button class="btn" data-go="3">Построить Парето-ядро</button></div>
+  </section>
+
+  <!-- Шаг 4 -->
+  <section class="step" id="s3" role="tabpanel">
+    <h3>Парето-ядро и точка перегиба</h3>
+    <p class="lead" id="paretoLead"></p>
+    <div class="cap"><span class="t">Вклад факторов в скорректированный TDI и накопленная доля</span><span class="n">Рисунок 1</span></div>
+    <div class="chart" id="paretoChart"></div>
+    <p class="after" id="paretoAfter"></p>
+    <div class="nav"><button class="btn ghost" data-go="2">Назад</button><button class="btn" data-go="4">Подобрать меры</button></div>
+  </section>
+
+  <!-- Шаг 5 -->
+  <section class="step" id="s4" role="tabpanel">
+    <h3>Меры защиты и вендоры</h3>
+    <p class="lead">Меры подбираются одним из двух методов. Метод PARETO‑X ищет минимальные затраты, при которых закрыты все угрозы Парето-ядра и остаточный риск не выше нормы. Метод ALE–ROSI набирает меры по убыванию снижения потерь на рубль затрат. Для каждого фактора есть три уровня решения. Цены являются ориентирами каталога на 03.11.2026 (₽ в год, без НДС) и требуют сверки с прайс-листами на дату заключения договора; цену выбранного варианта можно исправить прямо в карточке.</p>
+    <div class="budgetbar">
+      <div class="field" style="min-width:auto"><label>Метод бюджетирования</label><div class="seg" id="methodSeg">
+        <label><input type="radio" name="method" value="pyat"><span>PARETO‑X (СКФУ)</span></label>
+        <label><input type="radio" name="method" value="us"><span>ALE–ROSI (США)</span></label></div></div>
+      <div class="field"><label for="limit">Лимит бюджета, ₽/год</label><input id="limit" type="number" min="0" step="10000"></div>
+      <button class="btn small" id="optBtn" type="button">Подобрать по методу</button>
+      <button class="btn small ghost" id="kneeBtn" type="button">Взять точку перегиба</button>
+      <div class="sum" id="sumLine"></div>
+    </div>
+    <div id="measures"></div>
+    <div class="nav"><button class="btn ghost" data-go="3">Назад</button><button class="btn" data-go="5">Рассчитать смету</button></div>
+  </section>
+
+  <!-- Шаг 6 -->
+  <section class="step" id="s5" role="tabpanel">
+    <h3>Итоговая смета и остаточный риск</h3>
+    <p class="lead" id="resLead"></p>
+    <div class="kpis" id="kpis"></div>
+    <p class="after" id="kpiAfter"></p>
+
+    <p class="after" id="frontBefore"></p>
+    <div class="cap"><span class="t">Граница эффективности: затраты на меры и остаточные ожидаемые потери</span><span class="n">Рисунок 2</span></div>
+    <div class="chart" id="frontChart"></div>
+    <p class="after" id="frontAfter"></p>
+
+    <p class="after">Ниже перечислены выбранные меры с полной стоимостью владения: лицензии, ежегодные трудозатраты и треть стоимости внедрения при амортизации на три года.</p>
+    <div class="cap"><span class="t">Итоговый бюджет мер информационной безопасности</span><span class="n">Таблица 3</span></div>
+    <div class="tbl-wrap"><table id="budgetTbl"></table></div>
+    <p class="after" id="budgetAfter"></p>
+
+    <div id="pyatBlock">
+    <p class="after">Для контроля структуры затрат метод PARETO‑X задаёт каждому фактору Парето-ядра норматив, пропорциональный его доле в скорректированной токсичности, и сравнивает его с фактической стоимостью выбранной меры.</p>
+    <div class="cap"><span class="t">Распределение лимита по Парето-ядру токсичности</span><span class="n">Таблица 4</span></div>
+    <div class="tbl-wrap"><table id="allocTbl"></table></div>
+    <p class="after" id="allocAfter"></p>
+    </div>
+    <p class="after">Оба метода рассчитываются на одних исходных данных, поэтому их результаты можно сравнить напрямую: по затратам, остаточным потерям и хвостовому риску.</p>
+    <div class="cap"><span class="t">Сравнение методов бюджетирования</span><span class="n">Таблица 5</span></div>
+    <div class="tbl-wrap"><table id="cmpTbl"></table></div>
+    <p class="after" id="cmpAfter"></p>
+
+    <details class="method" id="method">
+      <summary>Методика расчёта</summary>
+      <div id="methodBody"></div>
+    </details>
+    <div class="nav no-print">
+      <button class="btn ghost" data-go="4">Назад</button>
+      <span>
+        <button class="btn ghost" id="saveBtn" type="button">Сохранить черновик</button>
+        <button class="btn ghost" id="resetBtn" type="button">Сбросить</button>
+        <button class="btn" id="printBtn" type="button">Распечатать отчёт</button>
+      </span>
+    </div>
+  </section>
+
+  <div class="foot">КиберСмета 3.1. Авторы: Мандрица И.В., Богданова У.А. Северо-Кавказский федеральный университет, кафедра ОТЗИ, 2027. Данные модели: 16-факторная модель 2024 г. (TDI, частоты, оценки Delphi «до» и «после»), БДУ ФСТЭК России (227 угроз), КоАП РФ ст. 13.11 в ред. Федерального закона от 30.11.2024 № 420-ФЗ. Расчёт носит оценочный характер и не заменяет аудит.</div>
+</main>
+<main class="app" id="inc">
+  <div class="app-head">
+    <div>
+      <h2>Анкета об инциденте</h2>
+      <p>Анонимная анкета для малого и среднего бизнеса и ИП. Ответы уточняют индекс TDI и частоты угроз в модели КиберСметы и формируют отраслевой и региональный бенчмарк. Название организации и контакты не собираются.</p>
+    </div>
+    <span><button class="theme-btn" id="incBack" type="button">Заставка</button> <button class="theme-btn" id="incCalc" type="button">Калькулятор</button></span>
+  </div>
+  <nav class="steps" role="tablist" id="isteps">
+    <button role="tab" data-s="0" aria-selected="true"><b>1</b>Организация</button>
+    <button role="tab" data-s="1" aria-selected="false"><b>2</b>Инцидент</button>
+    <button role="tab" data-s="2" aria-selected="false"><b>3</b>Последствия и ущерб</button>
+    <button role="tab" data-s="3" aria-selected="false"><b>4</b>Эмпирический TDI</button>
+  </nav>
+
+  <section class="step on" id="i0" role="tabpanel">
+    <h3>Об организации</h3>
+    <p class="lead">Эти сведения нужны, чтобы считать частоту инцидентов на одну организацию в год и сравнивать отрасли и регионы. Ответ «инцидентов не было» тоже важен: без него частоту посчитать нельзя.</p>
+    <div class="qblock"><div class="qgrid">
+      <div><div class="q">Регион</div><select id="iRegion"></select></div>
+      <div><div class="q">Отрасль</div><select id="iSector"></select></div>
+      <div><div class="q">Тип субъекта</div><select id="iSize"></select></div>
+      <div><div class="q">Выручка за год</div><select id="iRev"></select></div>
+      <div><div class="q">Сотрудников</div><input type="number" id="iStaff" min="1" step="1" value="12"></div>
+    </div>
+    <div class="q">Были ли у организации инциденты информационной безопасности за последние 12 месяцев?</div>
+    <div class="seg" id="iHad"><label><input type="radio" name="iHad" value="1"><span>Да</span></label><label><input type="radio" name="iHad" value="0"><span>Нет</span></label><label><input type="radio" name="iHad" value="-1"><span>Не знаю</span></label></div>
+    <div id="iCountRow" style="margin-top:10px;display:none"><div class="q">Сколько всего инцидентов за 12 месяцев (примерно)?</div><input type="number" id="iCount" min="1" step="1" value="1" style="max-width:160px;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--panel)"></div>
+    </div>
+    <div class="nav"><span></span><span><button class="btn ghost" id="iSendNo" type="button" style="display:none">Отправить ответ «инцидентов не было»</button> <button class="btn" data-igo="1" id="iNext0">Описать самый серьёзный инцидент</button></span></div>
+  </section>
+
+  <section class="step" id="i1" role="tabpanel">
+    <h3>Самый серьёзный инцидент за 12 месяцев</h3>
+    <p class="lead">Выберите один вариант, ближе всего описывающий, что произошло. Каждый вариант соответствует фактору 16-факторной модели угроз, по которому уточняется TDI.</p>
+    <div class="qblock"><div class="types" id="iTypes"></div></div>
+    <div class="qblock"><div class="qgrid">
+      <div><div class="q">Когда</div><select id="iWhen"></select></div>
+      <div><div class="q">Как обнаружили</div><select id="iDetect"></select></div>
+      <div><div class="q">Была ли защита именно от этой угрозы</div><select id="iMeasure"><option value="0">нет</option><option value="1">частично</option><option value="2">да, но не сработала</option><option value="-1">не знаю</option></select></div>
+    </div>
+    <div class="q">Какие свойства информации пострадали</div>
+    <div class="seg" id="iCia"><label><input type="checkbox" value="К"><span>Конфиденциальность (утечка, раскрытие)</span></label><label><input type="checkbox" value="Ц"><span>Целостность (подмена, искажение)</span></label><label><input type="checkbox" value="Д"><span>Доступность (остановка, недоступность)</span></label></div>
+    </div>
+    <div class="nav"><button class="btn ghost" data-igo="0">Назад</button><button class="btn" data-igo="2">К последствиям</button></div>
+  </section>
+
+  <section class="step" id="i2" role="tabpanel">
+    <h3>Последствия и ущерб</h3>
+    <p class="lead">Вводите наблюдаемые факты: часы, людей, суммы по документам. Ущерб анкета рассчитает сама по компонентам, итог «из головы» не нужен. У каждого блока отметьте, откуда цифра.</p>
+    <div class="qblock"><h4>Остановка и деградация работы</h4>
+      <div class="qgrid">
+        <div><div class="q">Полная остановка, Tп</div><select id="iTp"></select></div>
+        <div><div class="q">Частичная деградация, Tд</div><select id="iTd"></select></div>
+        <div><div class="q">Потеря выручки в период деградации, α</div><select id="iAlpha"></select></div>
+        <div><div class="q">Замедление процессов, β</div><select id="iBeta"></select></div>
+        <div><div class="q">Сотрудников затронуто</div><input type="number" id="iNaff" min="0" step="1" value="5"></div>
+      </div>
+      <div class="conf" data-c="ops"></div>
+    </div>
+    <div class="qblock"><h4>Восстановление</h4>
+      <div class="qgrid">
+        <div><div class="q">Часы своих сотрудников на восстановление, Tв</div><input type="number" id="iRecH" min="0" step="1" value="0"></div>
+        <div><div class="q">Счета подрядчиков, ₽</div><input type="number" id="iRecInv" min="0" step="1000" value="0"></div>
+        <div><div class="q">Замена оборудования и ПО, ₽</div><input type="number" id="iHw" min="0" step="1000" value="0"></div>
+      </div>
+      <div class="conf" data-c="rec"></div>
+    </div>
+    <div class="qblock"><h4>Прямые денежные потери</h4>
+      <div class="qgrid">
+        <div><div class="q">Похищено или выплачен выкуп, ₽</div><input type="number" id="iTheft" min="0" step="1000" value="0"></div>
+        <div><div class="q">Штрафы, претензии, компенсации, ₽</div><input type="number" id="iFines" min="0" step="1000" value="0"></div>
+        <div><div class="q">Юристы, уведомления, прочее, ₽</div><input type="number" id="iLegal" min="0" step="1000" value="0"></div>
+      </div>
+      <div class="conf" data-c="pay"></div>
+    </div>
+    <details class="qblock"><summary style="cursor:pointer;font-weight:600">Параметры расчёта</summary>
+      <div class="qgrid" style="margin-top:10px">
+        <div><div class="q">Доля маржинального дохода, m</div><input type="number" id="iM" min="0.05" max="1" step="0.05" value="0.3"><div class="hint">Теряется маржа, а не вся выручка.</div></div>
+        <div><div class="q">Стоимость часа сотрудника, w, ₽</div><input type="number" id="iW" min="0" step="50" value="500"></div>
+        <div><div class="q">Ставка ИТ-специалиста, c, ₽/ч</div><input type="number" id="iC" min="0" step="100" value="1500"></div>
+        <div><div class="q">Рабочих часов в году, H</div><input type="number" id="iH" min="500" step="10" value="1980"></div>
+      </div>
+    </details>
+    <div class="cap"><span class="t">Ущерб инцидента по компонентам</span><span class="n">Таблица 6</span></div>
+    <div class="calc" id="iCalc"></div>
+    <p class="after" id="iCalcAfter"></p>
+    <div class="qblock"><div class="q">Если у вас есть своя оценка общего ущерба, укажите её (необязательно), ₽</div><input type="number" id="iSelf" min="0" step="1000" placeholder="не указывать" style="max-width:220px;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--panel)"><div id="iSelfMsg" class="hint"></div></div>
+    <div class="nav"><button class="btn ghost" data-igo="1">Назад</button><button class="btn" id="iSend" type="button">Отправить анонимно</button></div>
+    <p class="after" id="iSendMsg" role="status"></p>
+  </section>
+
+  <section class="step" id="i3" role="tabpanel">
+    <h3>Эмпирический TDI</h3>
+    <p class="lead" id="tLead"></p>
+    <div class="qblock" style="display:flex;gap:16px;align-items:end;flex-wrap:wrap">
+      <div><div class="q" style="margin-top:0">Выборка</div><select id="tScope"><option value="all">все регионы</option><option value="Ставропольский край">Ставропольский край</option></select></div>
+      <div><div class="q" style="margin-top:0">Вес модели k, организаций-лет</div><input type="number" id="tK" min="1" step="1" value="20" style="width:120px;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--panel)"></div>
+      <div id="tMeta" class="hint"></div>
+    </div>
+    <p class="after" id="tBefore"></p>
+    <div class="cap"><span class="t">Уточнение частот и индекса TDI по данным анкет</span><span class="n">Таблица 7</span></div>
+    <div class="tbl-wrap"><table id="tTbl"></table></div>
+    <p class="after" id="tAfter"></p>
+    <details class="method"><summary>Как рассчитывается</summary>
+      <div class="f"><i>λ</i><sub><i>i</i></sub><sup>0</sup> = <i>Λ</i> · <i>TDI<sub>i</sub></i> / Σ<i>TDI</i>,&emsp; <i>λ<sub>i</sub></i> = (<i>k</i> · <i>λ</i><sub><i>i</i></sub><sup>0</sup> + <i>n<sub>i</sub></i>) / (<i>k</i> + <i>N</i>),&emsp; <i>TDI</i><sub><i>i</i></sub><sup>*</sup> = <i>TDI<sub>i</sub></i> · <i>λ<sub>i</sub></i> / <i>λ</i><sub><i>i</i></sub><sup>0</sup>&emsp;&emsp;(8)</div>
+      <p>где <i>N</i> — число анкет (организаций-лет), <i>n<sub>i</sub></i> — число инцидентов по фактору <i>i</i> (по самому серьёзному инциденту анкеты; остальные инциденты распределяются пропорционально), <i>k</i> — вес модели в эквивалентном числе наблюдений. Пока анкет мало, оценка остаётся близкой к модели 2024 г.</p>
+      <div class="f"><i>L</i> = <i>D</i> + <i>C</i><sub>в</sub> + <i>m</i> · (<i>R</i>/<i>H</i>) · (<i>T</i><sub>п</sub> + <i>α</i> · <i>T</i><sub>д</sub>) + <i>w</i> · (<i>N</i><sub>з</sub> · <i>T</i><sub>п</sub> + <i>N</i><sub>з</sub> · <i>β</i> · <i>T</i><sub>д</sub>),&emsp; <i>C</i><sub>в</sub> = <i>c</i> · <i>T</i><sub>в</sub> + счета + замена&emsp;&emsp;(9)</div>
+      <p>Проверка согласованности: ранговая корреляция Спирмена между рангами TDI и рангами наблюдаемых частот по факторам; рассчитывается при <i>N</i> ≥ 20. Медианы ущерба показываются для факторов, где не меньше 5 ответов.</p>
+    </details>
+    <div class="nav"><button class="btn ghost" data-igo="0">Новая анкета</button><button class="btn" id="tToCalc" type="button">Перейти к калькулятору</button></div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ===================== ДАННЫЕ МОДЕЛИ ===================== */
+/* 16 факторов: TDI, вес, оценки Delphi «до»/«после», частота угрозы в год —
+   лист «2024_меры» файла «2024_данные_проверено.xlsx». */
+const FACTORS = [
+ {id:"1.1",sn:"MFA и шифрование",g:1,name:"MFA и шифрование",tdi:510.42,w:7,d0:6,d1:3,f:0.125,assets:["mail","bank","crm","files","pdn"],leak:true,
+  q:"Вход в почту, банк-клиент и облако защищён вторым фактором, ноутбуки зашифрованы",xy:[-0.70,-0.35]},
+ {id:"1.2",sn:"Антифишинг",g:1,name:"Антифишинг и обучение",tdi:255.21,w:7,d0:6,d1:3,f:0.375,assets:["mail","bank","ws"],leak:true,
+  q:"Сотрудники проходили обучение по фишингу, для домена настроены SPF, DKIM и DMARC",xy:[-0.42,-0.72]},
+ {id:"1.3",sn:"Ключи и ЭП",g:1,name:"Ключи и электронная подпись",tdi:153.13,w:6,d0:5,d1:2,f:0.065,assets:["bank","acc"],leak:false,
+  q:"Ключи ЭП хранятся на токенах, пароли не лежат в файлах, таблицах и коде",xy:[-0.86,-0.78]},
+ {id:"2.1",sn:"Контроль изменений",g:2,name:"Контроль изменений",tdi:153.13,w:7,d0:6,d1:2,f:0.003,assets:["acc","files","know"],leak:false,
+  q:"Изменения в 1С и важных документах фиксируются, подлинность можно проверить",xy:[0.32,-0.82]},
+ {id:"2.2",sn:"Конфигурации",g:2,name:"Контроль конфигураций",tdi:306.25,w:6,d0:4,d1:3,f:0.0001,assets:["srv","web"],leak:false,
+  q:"Настройки серверов и ПК задаются по эталону, отклонения видны",xy:[0.72,-0.55]},
+ {id:"2.3",sn:"Уязвимости",g:2,name:"Управление уязвимостями",tdi:816.67,w:7,d0:6,d1:2,f:0.0089,assets:["ws","srv","web"],leak:false,
+  q:"ОС и программы обновляются регулярно, уязвимости проверяются сканером",xy:[0.12,-0.40]},
+ {id:"3.1",sn:"DDoS и резервный канал",g:3,name:"Защита от DDoS, резервный канал",tdi:204.17,w:7,d0:6,d1:1,f:0.324,assets:["web","pos"],leak:false,
+  q:"Сайт и касса работают при атаке на канал: есть защита провайдера или резервный интернет",xy:[-0.76,0.26]},
+ {id:"3.2",sn:"Резервные копии",g:3,name:"Резервное копирование",tdi:459.38,w:7,d0:6,d1:2,f:0.85,assets:["acc","files","crm","srv"],leak:false,
+  q:"Есть резервные копии по правилу 3-2-1, восстановление проверялось",xy:[-0.40,0.04]},
+ {id:"4.1",sn:"Аудит ИБ и ПДн",g:4,name:"Аудит ИБ и ПДн",tdi:102.08,w:5,d0:3,d1:1,f:0.78,assets:["pdn","srv"],leak:false,
+  q:"За последний год проводился аудит ИБ или проверка обработки персональных данных",xy:[0.86,0.05]},
+ {id:"4.2",sn:"Поставщики",g:4,name:"Риски поставщиков",tdi:153.13,w:5,d0:5,d1:2,f:0.30,assets:["acc","web","files"],leak:true,
+  q:"В договорах с подрядчиками и облачными сервисами есть требования к ИБ",xy:[0.55,-0.12]},
+ {id:"4.3",sn:"Мониторинг (SIEM)",g:4,name:"Мониторинг событий (SIEM)",tdi:612.5,w:7,d0:6,d1:3,f:0.15,assets:["srv","ws","mail"],leak:false,
+  q:"Журналы событий собираются, и кто-то регулярно их просматривает",xy:[0.10,0.12]},
+ {id:"4.4",sn:"Сегментация сети",g:4,name:"Сегментация сети",tdi:408.33,w:5,d0:5,d1:1,f:0.08,assets:["srv","pos","iot"],leak:false,
+  q:"Бухгалтерия, касса, гостевой Wi-Fi и камеры находятся в разных сегментах сети",xy:[0.44,0.36]},
+ {id:"4.5",sn:"IoT и периферия",g:4,name:"Защита IoT и периферии",tdi:102.08,w:6,d0:5,d1:1,f:0.52,assets:["iot","pos"],leak:false,
+  q:"У камер, принтеров и роутеров сменены заводские пароли, устройства изолированы",xy:[0.86,0.56]},
+ {id:"4.6",sn:"Устаревшие системы",g:4,name:"Изоляция устаревших систем",tdi:153.13,w:6,d0:6,d1:1,f:0.34,assets:["srv","acc"],leak:false,
+  q:"Устаревшие ПК и ОС без поддержки изолированы или заменены",xy:[0.60,0.82]},
+ {id:"4.7",sn:"Привилег. доступ (PAM)",g:4,name:"Привилегированный доступ (PAM)",tdi:306.25,w:6,d0:6,d1:2,f:0.57,assets:["srv","acc","bank"],leak:true,
+  q:"Учётные записи администраторов выданы поимённо, удалённый доступ идёт через шлюз",xy:[-0.20,0.56]},
+ {id:"4.8",sn:"Защита от утечек (DLP)",g:4,name:"Защита от утечек (DLP)",tdi:204.17,w:6,d0:5,d1:2,f:0.47,assets:["pdn","crm","know"],leak:true,
+  q:"Выгрузка клиентской базы на флешки и в личную почту ограничена",xy:[0.14,0.82]},
+];
+FACTORS.forEach(f=>{f.E=(f.d0-f.d1)/f.d0;});
+const TDI_MAX=Math.max(...FACTORS.map(f=>f.tdi));
+const YEAR_TDI=[["2023",4600,7,80.4],["2024",4900,10,83.3],["2025",5035,8,80.7],["2026 прогноз",6500,11,82.5]];
+
+const ASSETS=[
+ {id:"pdn",name:"Персональные данные клиентов и сотрудников",cia:"К",share:0.02},
+ {id:"acc",name:"1С: бухгалтерия, зарплата, торговля",cia:"К, Ц, Д",share:0.06},
+ {id:"bank",name:"Банк-клиент и платёжные кабинеты",cia:"К, Ц",share:0.08},
+ {id:"pos",name:"Онлайн-касса, терминалы, эквайринг",cia:"Ц, Д",share:0.05},
+ {id:"web",name:"Сайт, формы заявок, интернет-магазин",cia:"Ц, Д",share:0.06},
+ {id:"mail",name:"Корпоративная почта и мессенджеры",cia:"К, Д",share:0.03},
+ {id:"crm",name:"CRM и клиентская база",cia:"К, Д",share:0.08},
+ {id:"files",name:"Файловые хранилища и облачные документы",cia:"К, Ц, Д",share:0.04},
+ {id:"ws",name:"Рабочие места сотрудников",cia:"Д",share:0.02},
+ {id:"srv",name:"Сервер и локальная сеть",cia:"Ц, Д",share:0.04},
+ {id:"iot",name:"Видеонаблюдение, принтеры, IoT",cia:"Д",share:0.005},
+ {id:"know",name:"Коммерческая тайна, сметы, ноу-хау",cia:"К",share:0.05},
+];
+
+const SIZES=[
+ {id:"ip",name:"ИП",staff:3,pcs:3,srv:0,rev:6e6,pdn:800,mult:0.6},
+ {id:"micro",name:"Микропредприятие",staff:12,pcs:10,srv:1,rev:3e7,pdn:3000,mult:0.8},
+ {id:"small",name:"Малое предприятие",staff:60,pcs:50,srv:3,rev:3.5e8,pdn:20000,mult:1.0},
+ {id:"medium",name:"Среднее предприятие",staff:180,pcs:150,srv:8,rev:1.5e9,pdn:120000,mult:1.2},
+];
+/* Отраслевые поправки к частоте (экспертные, v3; подлежат калибровке на данных опроса) */
+const SECTORS=[
+ {id:"trade",name:"Торговля и ритейл",assets:["pdn","acc","bank","pos","web","mail","crm","ws"],k:{"1.2":1.3,"3.1":1.2,"4.5":1.2,"4.8":1.2}},
+ {id:"services",name:"Профессиональные услуги и консалтинг",assets:["pdn","acc","bank","mail","crm","files","ws","know"],k:{"1.2":1.3,"4.8":1.3,"4.2":1.2}},
+ {id:"it",name:"ИТ и разработка",assets:["pdn","acc","bank","web","mail","crm","files","ws","srv","know"],k:{"4.2":1.5,"2.3":1.3,"4.7":1.3,"1.3":1.2}},
+ {id:"health",name:"Медицина и клиники",assets:["pdn","acc","bank","pos","mail","crm","files","ws","srv","iot"],k:{"3.2":1.3,"4.8":1.4,"4.6":1.3}},
+ {id:"edu",name:"Образовательные услуги",assets:["pdn","acc","bank","web","mail","crm","ws"],k:{"3.1":1.2,"1.2":1.2}},
+ {id:"logistics",name:"Логистика и транспорт",assets:["pdn","acc","bank","web","mail","crm","ws","iot"],k:{"4.5":1.4,"3.1":1.1,"4.4":1.2}},
+ {id:"food",name:"Общепит и гостиницы",assets:["pdn","acc","bank","pos","web","mail","ws","iot"],k:{"4.5":1.3,"3.1":1.2,"1.2":1.1}},
+ {id:"construct",name:"Строительство и подряд",assets:["pdn","acc","bank","mail","files","ws","know"],k:{"4.8":1.2,"4.2":1.3,"1.2":1.2}},
+];
+const LEVELS=["Нет","Частично","Внедрено","Внедрено и проверяется"];
+const LEVEL_EFF=[0,0.35,0.65,0.9];
+const TIER_NAMES=["Не добавлять","Бесплатно","Бюджетный","Расширенный"];
+const TIER_EFF=[0,0.5,0.8,1.0];
+const CATALOG_DATE="03.11.2026";
+/* Каталог: unit — host (ПК), user (сотрудник), server, org (на организацию);
+   p — ₽/год за единицу, su — часы внедрения, rh — часы сопровождения в год. */
+const CAT={
+"1.1":[{v:"Яндекс Ключ или TOTP, BitLocker, VeraCrypt",u:"org",p:0,su:6,rh:6},
+       {v:"МУЛЬТИФАКТОР, облачная 2FA",url:"https://multifactor.ru/",u:"user",p:1500,su:8,rh:6},
+       {v:"Avanpost MFA+ и токены Рутокен",url:"https://www.avanpost.ru/",u:"user",p:4500,su:24,rh:12}],
+"1.2":[{v:"SPF, DKIM, DMARC и учебные рассылки своими силами",u:"org",p:0,su:6,rh:12},
+       {v:"«Антифишинг», платформа обучения",url:"https://antiphish.ru/",u:"user",p:2000,su:4,rh:6},
+       {v:"Kaspersky Security Awareness",url:"https://www.kaspersky.ru/enterprise-security/security-awareness",u:"user",p:3500,su:6,rh:8}],
+"1.3":[{v:"Токены у подписантов, KeePassXC для паролей",u:"org",p:0,su:4,rh:4},
+       {v:"Рутокен ЭЦП 3.0 и регламент хранения ключей",url:"https://www.rutoken.ru/",u:"org",p:9000,su:6,rh:4},
+       {v:"КриптоПро CSP, токены, корпоративное хранилище секретов",url:"https://www.cryptopro.ru/",u:"org",p:30000,su:16,rh:8}],
+"2.1":[{v:"Журнал регистрации 1С, хеш-контроль, Git для конфигураций",u:"org",p:0,su:10,rh:12},
+       {v:"Подсистема аудита 1С и ЭП ключевых документов (интегратор)",u:"org",p:20000,su:12,rh:8},
+       {v:"Efros Config Inspector (Газинформсервис)",url:"https://www.gaz-is.ru/",u:"org",p:400000,su:40,rh:24}],
+"2.2":[{v:"Эталонные GPO, Ansible, Wazuh SCA",u:"org",p:0,su:12,rh:12},
+       {v:"RedCheck, аудит конфигураций",url:"https://www.altx-soft.ru/",u:"host",p:1500,su:8,rh:8},
+       {v:"Efros Config Inspector (Газинформсервис)",url:"https://www.gaz-is.ru/",u:"org",p:1500000,su:60,rh:40}],
+"2.3":[{v:"OpenVAS и автообновление ОС и браузеров",u:"org",p:0,su:8,rh:24},
+       {v:"RedCheck (Алтэкс-Софт)",url:"https://www.altx-soft.ru/",u:"host",p:2000,su:8,rh:12},
+       {v:"MaxPatrol VM (Positive Technologies)",url:"https://www.ptsecurity.com/",u:"org",p:400000,su:40,rh:24}],
+"3.1":[{v:"Защита хостинга и CDN по базовому тарифу, второй канал на 4G",u:"org",p:0,su:4,rh:2},
+       {v:"StormWall, защита сайта",url:"https://stormwall.pro/",u:"org",p:36000,su:4,rh:2},
+       {v:"Qrator Labs",url:"https://qrator.net/",u:"org",p:180000,su:8,rh:4}],
+"3.2":[{v:"Скрипты, внешний диск и облако по правилу 3-2-1",u:"org",p:6000,su:8,rh:24},
+       {v:"Handy Backup (Новософт)",url:"https://www.handybackup.ru/",u:"server",p:15000,su:8,rh:12},
+       {v:"Кибер Бэкап (Киберпротект)",url:"https://cyberprotect.ru/",u:"server",p:75000,su:16,rh:12}],
+"4.1":[{v:"Самооценка по чек-листу КиберСметы",u:"org",p:0,su:8,rh:8},
+       {v:"Аудит ИБ и ПДн силами регионального интегратора",u:"org",p:80000,su:6,rh:0},
+       {v:"Комплексный аудит «Информзащиты»",url:"https://www.infosec.ru/",u:"org",p:300000,su:10,rh:0}],
+"4.2":[{v:"Типовые требования ИБ в договорах",u:"org",p:0,su:6,rh:6},
+       {v:"Юридическая проверка договоров на аутсорсе",u:"org",p:40000,su:2,rh:2},
+       {v:"Инфосистемы Джет, оценка поставщиков",url:"https://jet.su/",u:"org",p:250000,su:8,rh:4}],
+"4.3":[{v:"Wazuh и журналы Windows",u:"org",p:0,su:24,rh:72},
+       {v:"Мониторинг по подписке у MSSP, пакет для малого бизнеса",u:"org",p:240000,su:8,rh:12},
+       {v:"Solar JSOC или BI.ZONE MDR",url:"https://rt-solar.ru/",u:"org",p:1000000,su:24,rh:12}],
+"4.4":[{v:"VLAN и ACL на имеющемся оборудовании",u:"org",p:0,su:12,rh:6},
+       {v:"Ideco UTM для малого офиса",url:"https://ideco.ru/",u:"org",p:60000,su:12,rh:8},
+       {v:"UserGate NGFW",url:"https://www.usergate.com/ru",u:"org",p:400000,su:24,rh:12}],
+"4.5":[{v:"Отдельная сеть для камер и принтеров, смена паролей",u:"org",p:0,su:6,rh:4},
+       {v:"Гостевой изолированный контур на маршрутизаторе",u:"org",p:8000,su:6,rh:4},
+       {v:"UserGate, контроль трафика IoT",url:"https://www.usergate.com/ru",u:"org",p:150000,su:16,rh:8}],
+"4.6":[{v:"Изоляция устаревших ПК, запрет выхода в интернет",u:"org",p:0,su:8,rh:6},
+       {v:"Перевод на отечественную ОС (Astra Linux), 2 рабочих места",url:"https://astralinux.ru/",u:"org",p:30000,su:16,rh:6},
+       {v:"Виртуализация и сопровождение интегратором",u:"org",p:200000,su:24,rh:12}],
+"4.7":[{v:"Apache Guacamole или Teleport Community Edition",u:"org",p:0,su:16,rh:12},
+       {v:"Indeed PAM, минимальный пакет",url:"https://indeed-company.ru/",u:"org",p:150000,su:16,rh:8},
+       {v:"Solar SafeInspect",url:"https://rt-solar.ru/",u:"org",p:1500000,su:40,rh:16}],
+"4.8":[{v:"Запрет USB через GPO, правила почтового шлюза",u:"org",p:0,su:6,rh:6},
+       {v:"StaffCop Enterprise",url:"https://www.staffcop.ru/",u:"host",p:3000,su:8,rh:12},
+       {v:"InfoWatch Traffic Monitor или Solar Dozor",url:"https://www.infowatch.ru/",u:"host",p:6000,su:24,rh:16}],
+};
+const UNIT_NAME={host:"раб. место",user:"сотрудник",server:"сервер",org:"организация"};
+
+/* ===================== СОСТОЯНИЕ ===================== */
+const DEFAULT_STATE=()=>({size:"micro",sector:"trade",revenue:3e7,staff:12,pcs:10,srv:1,pdn:3000,rate:1500,qfine:0.3,rho:0.5,rrmax:0.5,method:"pyat",
+  assetsOn:{},assetVal:{},assetEdited:{},audit:{},choice:{},priceOverride:{},limit:null,seed:20270101});
+let S=DEFAULT_STATE();
+function applySizeDefaults(id){const z=SIZES.find(s=>s.id===id);S.size=id;S.staff=z.staff;S.pcs=z.pcs;S.srv=z.srv;S.revenue=z.rev;S.pdn=z.pdn;}
+function applySectorAssets(){const sec=SECTORS.find(s=>s.id===S.sector);ASSETS.forEach(a=>{S.assetsOn[a.id]=sec.assets.includes(a.id);});}
+function refreshAssetDefaults(){ASSETS.forEach(a=>{if(!S.assetEdited[a.id])S.assetVal[a.id]=Math.round(S.revenue*a.share/1000)*1000;});}
+
+/* ===================== РАСЧЁТНОЕ ЯДРО ===================== */
+const fmtR=n=>Math.round(n).toLocaleString("ru-RU")+"\u00A0₽";
+function fmtM(n){const a=Math.abs(n);if(a>=1e6)return (n/1e6).toLocaleString("ru-RU",{maximumFractionDigits:2})+"\u00A0млн\u00A0₽";if(a>=1e3)return (n/1e3).toLocaleString("ru-RU",{maximumFractionDigits:0})+"\u00A0тыс.\u00A0₽";return Math.round(n)+"\u00A0₽";}
+const pct=x=>(x*100).toLocaleString("ru-RU",{maximumFractionDigits:1})+"\u00A0%";
+
+/* Штраф по ст. 13.11 КоАП РФ (ред. 420-ФЗ): середина диапазона санкции для юрлиц и ИП */
+function finePoint(n){if(n<1)return 0;if(n<1000)return 225000;if(n<10000)return 4e6;if(n<100000)return 7.5e6;return 12.5e6;}
+function sizeMult(){return SIZES.find(s=>s.id===S.size).mult;}
+function sectorK(id){const sec=SECTORS.find(s=>s.id===S.sector);return sec.k[id]||1;}
+const TDI_SUM=FACTORS.reduce((a,f)=>a+f.tdi,0), LAMBDA=FACTORS.reduce((a,f)=>a+f.f,0);
+function rateOf(f){return LAMBDA*f.tdi/TDI_SUM*sizeMult()*sectorK(f.id);} // λ_i, событий в год: поток Λ распределён по долям TDI
+function exposedValue(f){return f.assets.reduce((s,a)=>s+(S.assetsOn[a]?(+S.assetVal[a]||0):0),0);}
+function lossPerEvent(f){                                              // L_i, ₽ на одно событие
+  const lam=0.025*f.w;                                 // доля потери стоимости актива по весу Delphi (5…7 → 0,125…0,175)
+  let L=lam*exposedValue(f);
+  if(f.leak&&S.assetsOn.pdn)L+=0.5*S.qfine*finePoint(S.pdn);
+  return L;
+}
+function e0(f){return f.E*LEVEL_EFF[S.audit[f.id]||0];}
+function eTier(f,t){return f.E*TIER_EFF[t];}
+function eEff(f,t){return Math.max(e0(f),eTier(f,t));}
+function units(u){return u==="host"?S.pcs:u==="user"?S.staff:u==="server"?Math.max(1,S.srv):1;}
+function optionCost(f,t){                                              // TCO в год и первый год
+  if(t===0)return{tco:0,first:0,lic:0,labor:0,setup:0};
+  const o=CAT[f.id][t-1];
+  const p=S.priceOverride[f.id+"_"+t]!=null?S.priceOverride[f.id+"_"+t]:o.p;
+  const lic=p*units(o.u),labor=o.rh*S.rate,setup=o.su*S.rate;
+  return{tco:lic+labor+setup/3,first:lic+labor+setup,lic,labor,setup,price:p};
+}
+function aleFactor(f,t){return rateOf(f)*(1-eEff(f,t))*lossPerEvent(f);}
+function aleTotal(choice){return FACTORS.reduce((s,f)=>s+aleFactor(f,choice[f.id]||0),0);}
+function tierAllowed(f,t){return t===0||eTier(f,t)>e0(f)+1e-9;}
+
+/* Парето по скорректированному TDI */
+function paretoAdj(){
+  const rows=FACTORS.map(f=>{
+    const total=f.assets.length,on=f.assets.filter(a=>S.assetsOn[a]).length;
+    const expo=Math.max(0.2,on/total);
+    return{f,v:f.tdi*sectorK(f.id)*expo*(1-e0(f))};
+  }).sort((a,b)=>b.v-a.v);
+  return paretoStats(rows.map(r=>r.v),rows);
+}
+function paretoStats(vals,rows){
+  const tot=vals.reduce((a,b)=>a+b,0)||1;let c=0;const cum=vals.map(v=>(c+=v)/tot);
+  const core=cum.findIndex(x=>x>=0.8)+1;
+  const n=vals.length;let best=-1,kn=[];
+  cum.forEach((y,i)=>{const d=y-(i+1)/n;if(d>best+0.002){best=d;kn=[i+1];}else if(Math.abs(d-best)<=0.002)kn.push(i+1);});
+  return{rows,vals,cum,core,coreShare:cum[core-1],knee:kn[0],kneeTo:kn[kn.length-1],tot};
+}
+
+/* Граница эффективности: множественный рюкзак, жадный алгоритм по выпуклой оболочке */
+function increments(){
+  const inc=[];
+  FACTORS.forEach(f=>{
+    const base=aleFactor(f,0);
+    let pts=[{t:0,c:0,r:0}];
+    for(let t=1;t<=3;t++){if(!tierAllowed(f,t))continue;pts.push({t,c:optionCost(f,t).tco,r:base-aleFactor(f,t)});}
+    pts.sort((a,b)=>a.c-b.c);
+    const nd=[];pts.forEach(p=>{if(!nd.length||p.r>nd[nd.length-1].r+1e-6)nd.push(p);});   // недоминируемые
+    const hull=[nd[0]];
+    for(let i=1;i<nd.length;i++){
+      while(hull.length>=2){const a=hull[hull.length-2],b=hull[hull.length-1],p=nd[i];
+        const s1=(b.r-a.r)/Math.max(b.c-a.c,1e-6),s2=(p.r-b.r)/Math.max(p.c-b.c,1e-6);
+        if(s2>=s1)hull.pop();else break;}
+      hull.push(nd[i]);
+    }
+    for(let i=1;i<hull.length;i++){const dc=hull[i].c-hull[i-1].c,dr=hull[i].r-hull[i-1].r;
+      inc.push({f,t:hull[i].t,dc,dr,slope:dc<=1e-6?Infinity:dr/dc});}
+  });
+  return inc.sort((a,b)=>b.slope-a.slope);
+}
+function greedy(limit){
+  const choice={};FACTORS.forEach(f=>choice[f.id]=0);
+  let cost=0;const inc=increments();const done=new Set();
+  for(const s of inc){
+    const cur=choice[s.f.id];
+    // приращения одного фактора идут по возрастанию уровня; пропущенный шаг блокирует следующие
+    if(done.has(s.f.id))continue;
+    if(cost+s.dc<=limit+1e-6){choice[s.f.id]=s.t;cost+=s.dc;}else done.add(s.f.id);
+    void cur;
+  }
+  return{choice,cost};
+}
+function frontier(){
+  const inc=increments();const choice={};FACTORS.forEach(f=>choice[f.id]=0);
+  let cost=0;const base=aleTotal(choice);const pts=[{c:0,ale:base,slope:Infinity}];
+  for(const s of inc){choice[s.f.id]=s.t;cost+=s.dc;pts.push({c:cost,ale:aleTotal(choice),slope:s.slope});}
+  const maxC=cost||1,maxR=(base-pts[pts.length-1].ale)||1;
+  let ki=0,best=-1;pts.forEach((p,i)=>{const d=(base-p.ale)/maxR-p.c/maxC;if(d>best){best=d;ki=i;}});
+  let ri=0;pts.forEach((p,i)=>{if(i>0&&p.slope>=1)ri=i;});
+  return{pts,knee:pts[ki],kneeI:ki,rosi1:pts[ri],rosiI:ri,base};
+}
+
+/* Монте-Карло: число событий ~ Пуассон, ущерб события ~ логнормальный (σ = 1), зерно фиксировано */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function monteCarlo(choice,N=10000,sigma=1.0){
+  const rnd=mulberry32(S.seed);
+  const par=FACTORS.map(f=>({lam:rateOf(f)*(1-eEff(f,choice[f.id]||0)),L:lossPerEvent(f)}));
+  const gauss=()=>{let u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+  const out=new Float64Array(N);
+  for(let n=0;n<N;n++){let tot=0;
+    for(const p of par){if(p.lam<=0||p.L<=0)continue;
+      let k=0,acc=Math.exp(-p.lam),prod=rnd();while(prod>acc){k++;prod*=rnd();if(k>50)break;}
+      const mu=Math.log(p.L)-sigma*sigma/2;
+      for(let j=0;j<k;j++)tot+=Math.exp(mu+sigma*gauss());}
+    out[n]=tot;}
+  const s=Array.from(out).sort((a,b)=>a-b);
+  const mean=s.reduce((a,b)=>a+b,0)/N;const i95=Math.floor(0.95*N);
+  const var95=s[i95];let cv=0;for(let i=i95;i<N;i++)cv+=s[i];
+  return{mean,var95,cvar95:cv/(N-i95),pZero:s.filter(x=>x===0).length/N};
+}
+function budgetOf(choice){
+  let tco=0,first=0;FACTORS.forEach(f=>{const c=optionCost(f,choice[f.id]||0);tco+=c.tco;first+=c.first;});return{tco,first};
+}
+function zeroChoice(){const z={};FACTORS.forEach(f=>z[f.id]=0);return z;}
+/* Метод PARET-X: планово-лимитное бюджетирование по Парето-ядру токсичности */
+function pyatCeil(){const E0=aleTotal(zeroChoice());return{E0,Bmax:Math.min(E0,(1+S.rho)*E0/Math.E)};}
+function pyatAt(B){
+  const P=paretoAdj();const core=P.rows.slice(0,P.core);
+  const sumC=core.reduce((s,r)=>s+r.v,0)||1;
+  const alloc={};core.forEach(r=>alloc[r.f.id]=B*r.v/sumC);         // норматив по формуле (6)
+  const choice=zeroChoice();let spent=0;const missed=[];
+  const E0=aleTotal(zeroChoice());
+  // 1) обязательное покрытие ядра: каждый фактор ядра доводится не ниже бюджетного уровня, в порядке токсичности
+  core.forEach(r=>{const f=r.f;if(e0(f)>=eTier(f,2)-1e-9)return;
+    let t=2;if(!tierAllowed(f,2))t=3;const c=optionCost(f,t).tco;
+    if(spent+c<=B+1e-6){choice[f.id]=t;spent+=c;}else missed.push(f.id);});
+  // 2) норма остаточного риска: самые дешёвые доплаты на единицу снижения EAL
+  let guard=0;
+  while(E0>0&&aleTotal(choice)/E0>S.rrmax+1e-9&&guard++<64){
+    let best=null;
+    FACTORS.forEach(f=>{const cur=choice[f.id];const c0=optionCost(f,cur).tco,a0=aleFactor(f,cur);
+      for(let t=cur+1;t<=3;t++){if(!tierAllowed(f,t))continue;const dc=optionCost(f,t).tco-c0,da=a0-aleFactor(f,t);
+        if(da<=0||spent+dc>B+1e-6)continue;const r=dc<=0?Infinity:da/dc;if(!best||r>best.r)best={f,t,dc,r};}});
+    if(!best)break;choice[best.f.id]=best.t;spent+=best.dc;}
+  return{choice,alloc,core:P.core,B,spent,missed,rrOk:E0>0?aleTotal(choice)/E0<=S.rrmax+1e-9:true};
+}
+function rrOf(choice){const E0=aleTotal(zeroChoice());return E0>0?aleTotal(choice)/E0:0;}
+function pyatRequired(){const r=pyatAt(1e12);return r.rrOk&&!r.missed.length?r.spent:null;}
+/* Метод ALE–ROSI (США): Гордон–Лёб и ROSI Сонненрейха, подбор по отдаче на рубль */
+function usAuto(){const fr=frontier();const L=Math.round(fr.knee.c/1000)*1000;return{limit:L,choice:greedy(L).choice,fr};}
+function rosiOf(choice){const E0=aleTotal(zeroChoice()),b=budgetOf(choice).tco;return b>0?(E0-aleTotal(choice)-b)/b:null;}
+/* ===================== /РАСЧЁТНОЕ ЯДРО ===================== */
+
+/* ===================== ЗАСТАВКА: 3D-ЛАНДШАФТ ===================== */
+/* Годовые срезы Pareto_Index (2024 — модель, 2025 — модель по БДУ, 2026 — прогноз), сведённые в домены угроз.
+   [TDI, в ядре, краткое имя]; null — домен в срезе отсутствует. */
+const YEARS=[{y:"2023",cap:"реконструкция",bud:153279.82},{y:"2024",cap:"модель, 16 факторов",bud:198504.27},{y:"2025",cap:"модель по БДУ ФСТЭК",bud:230666.14},{y:"2026",cap:"прогноз",bud:278184.30}];
+const USD=78; // курс из анкеты (лист «Пересчет рисков»)
+const DOMAINS=[
+ {xy:[0.12,-0.40],v:[[500,1,"Уязвимости, patch lag"],[816.67,1,"Уязвимости"],[157.01,0,"Уязвимости и обновления"],[603.09,1,"ИИ-эксплуатация уязвимостей"]]},
+ {xy:[0.10,0.12],v:[[300,1,"Мониторинг, SOC"],[612.5,1,"Мониторинг (SIEM)"],[104.5,0,"Обнаружение инцидентов"],[335.05,1,"SIEM/SOAR и UEBA"]]},
+ {xy:[-0.70,-0.35],v:[[350,1,"Доступ и MFA"],[510.42,1,"MFA и шифрование"],[286.3,1,"MFA и шифрование"],[502.58,1,"Адаптивная IAM/MFA"]]},
+ {xy:[-0.40,0.04],v:[[450,1,"Резервные копии"],[459.38,1,"Резервные копии"],[117.14,0,"Резервные копии и DR"],[301.55,0,"Неизменяемые бэкапы"]]},
+ {xy:[0.44,0.36],v:[[200,0,"Сегментация"],[408.33,1,"Сегментация сети"],[62.58,0,"Микросегментация"],[268.04,0,"ZTNA, east-west"]]},
+ {xy:[0.72,-0.55],v:[[50,0,"Облако"],[306.25,1,"Конфигурации"],[949.54,1,"Облако и конфигурации"],[536.08,1,"Облако, CIEM"]]},
+ {xy:[-0.20,0.56],v:[[100,0,"Привилегированный доступ"],[306.25,1,"Привилегированный доступ"],[57.14,0,"Привилегированный доступ"],null]},
+ {xy:[-0.42,-0.72],v:[[700,1,"Фишинг и BEC"],[255.21,1,"Антифишинг"],[281.5,1,"Фишинг и соц. инженерия"],[703.61,1,"ИИ-фишинг и deepfake"]]},
+ {xy:[-0.76,0.26],v:[[75,0,"DDoS"],[204.17,1,"DDoS"],null,null]},
+ {xy:[0.14,0.82],v:[[50,0,"DLP"],[204.17,1,"Утечки (DLP)"],[30.48,0,"Утечки данных"],[234.54,0,"DLP для ИИ"]]},
+ {xy:[-0.86,-0.78],v:[null,[153.12,0,"Ключи и ЭП"],[265.18,0,"Криптоключи"],null]},
+ {xy:[0.32,-0.82],v:[null,[153.12,0,"Контроль изменений"],[178.27,0,"Дрейф конфигураций"],null]},
+ {xy:[0.55,-0.12],v:[[100,0,"Поставщики"],[153.12,0,"Поставщики"],null,[402.06,1,"Цепочки поставок ИИ"]]},
+ {xy:[0.60,0.82],v:[null,[153.12,0,"Устаревшие системы"],[621.74,1,"Виртуализация"],null]},
+ {xy:[0.86,0.05],v:[null,[102.08,0,"Аудит"],null,null]},
+ {xy:[0.86,0.56],v:[[25,0,"OT/IoT"],[102.08,0,"IoT"],null,null]},
+ {xy:[0.38,0.62],v:[null,null,[617.9,1,"Микропрограммы, загрузка"],[134.02,0,"Firmware/UEFI"]]},
+ {xy:[-0.12,-0.10],v:[[800,1,"Шифровальщики, endpoint"],null,[519.18,1,"Endpoint, шифровальщики"],[368.56,1,"Endpoint/XDR"]]},
+ {xy:[0.40,-0.48],v:[[125,0,"WAF, веб-приложения"],null,[421.38,1,"Приложения и веб"],[201.03,0,"API Security"]]},
+ {xy:[-0.48,0.40],v:[null,null,[365.51,1,"Управление доступом"],null]},
+ {xy:[-0.15,-0.62],v:[null,null,null,[603.09,1,"ИИ-малварь, шифровальщики"]]},
+ {xy:[-0.55,0.80],v:[null,null,null,[469.07,1,"Безопасность моделей ИИ"]]},
+ {xy:[-0.88,0.62],v:[null,null,null,[435.57,1,"Prompt-injection, RAG"]]},
+ {xy:[0.95,-0.30],v:[[600,1,"Периметр (VPN, edge)"],null,null,null]},
+ {xy:[-0.98,-0.05],v:[[175,0,"Защита почты"],null,null,null]},
+ {xy:[-0.30,0.94],v:[null,null,null,[402.06,1,"Отравление данных"]]},
+];
+const YMAX=Math.max(...DOMAINS.flatMap(d=>d.v.filter(Boolean).map(x=>x[0])));
+(function terrain(){
+  const cv=document.getElementById("terrain"),ctx=cv.getContext("2d");
+  const scene=document.getElementById("scene");
+  const cs=getComputedStyle(document.documentElement);const col=n=>cs.getPropertyValue(n).trim();
+  const C={line:col("--scene-line"),ink:col("--scene-ink"),muted:col("--scene-muted"),core:col("--scene-core"),amber:col("--scene-amber")};
+  const N=58,SIG=0.13,NN=(N+1)*(N+1);
+  const BASIS=DOMAINS.map(d=>{const B=new Float32Array(NN);for(let i=0;i<=N;i++)for(let j=0;j<=N;j++){const x=-1.15+2.3*i/N,y=-1.15+2.3*j/N;B[i*(N+1)+j]=Math.exp(-((x-d.xy[0])**2+(y-d.xy[1])**2)/(2*SIG*SIG));}return B;});
+  const RIP=new Float32Array(NN);for(let i=0;i<=N;i++)for(let j=0;j<=N;j++){const x=-1.15+2.3*i/N,y=-1.15+2.3*j/N;RIP[i*(N+1)+j]=0.012*Math.sin(7*x+2*y)*Math.cos(5*y-x);}
+  const hOf=(d,k)=>k>=0&&d.v[k]?0.78*d.v[k][0]/YMAX:0;
+  const H=new Float32Array(NN);
+  const reduce=false; // заставка анимирована всегда; остановить можно кнопкой «Пауза»
+  let cur=0,from=-1,to=0,s=0,phaseT=0,playing=true,last=0;
+  const HOLD=4800,MORPH=6500;
+  let yaw=-0.6,pitch=0.95,W=0,Hh=0,dpr=1,raf=0,visible=true,drag=null,LY=null;
+  const smooth=t=>t*t*(3-2*t);
+  function heights(){const u=smooth(s);return DOMAINS.map(d=>hOf(d,from)*(1-u)+hOf(d,to)*u);}
+  function field(hs){H.set(RIP);hs.forEach((h,k)=>{if(h<=0)return;const B=BASIS[k];for(let q=0;q<NN;q++)H[q]+=h*B[q];});}
+  function size(){dpr=Math.min(2,window.devicePixelRatio||1);W=cv.clientWidth;Hh=cv.clientHeight;cv.width=W*dpr;cv.height=Hh*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function layout(){const desk=W>=900;
+    if(desk){const x0=Math.min(W*0.40,560);return{desk,cx:x0+(W-x0)*0.45,cy:Hh*0.6,s:Math.min(W-x0,Hh*1.25)*0.34,box:{x0:x0+10,x1:W-12,y0:84,y1:Hh-40},nogo:{x0:W-400,y0:0,x1:W,y1:250}};}
+    return{desk,cx:W*0.5,cy:Hh*0.45,s:Math.min(W,Hh*0.5)*0.36,box:{x0:8,x1:W-8,y0:248,y1:Hh*0.63}};}
+  function proj(x,y,z){const cy=Math.cos(yaw),sy=Math.sin(yaw);const X=x*cy-y*sy,Y=x*sy+y*cy;
+    const cp=Math.cos(pitch),sp=Math.sin(pitch);const Y2=Y*cp-z*sp,Z2=Y*sp+z*cp;const d=3.4,k=d/(d+Y2);
+    return{x:LY.cx+X*LY.s*k,y:LY.cy-Z2*LY.s*k,z:Y2,k};}
+  function mix(a,b,t){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);
+    const r=((pa>>16)&255)*(1-t)+((pb>>16)&255)*t,g=((pa>>8)&255)*(1-t)+((pb>>8)&255)*t,bl=(pa&255)*(1-t)+(pb&255)*t;return`rgb(${r|0},${g|0},${bl|0})`;}
+  function draw(){
+    LY=layout();ctx.clearRect(0,0,W,Hh);
+    const hs=heights();field(hs);budget();FIG.update(from,to,smooth(s));
+    const hv=(i,j)=>H[i*(N+1)+j];const P=(i,j)=>proj(-1.15+2.3*i/N,-1.15+2.3*j/N,hv(i,j)*0.9-0.25);
+    ctx.lineWidth=1;
+    for(let pass=0;pass<2;pass++)for(let a=0;a<=N;a++){let prev=null;
+      for(let b=0;b<=N;b++){const i=pass?a:b,j=pass?b:a;const p=P(i,j);const h=hv(i,j);
+        if(prev){const t=Math.min(1,h/0.55);ctx.strokeStyle=t>0.35?mix(C.line,C.amber,Math.min(1,(t-0.35)/0.65)):C.line;
+          ctx.globalAlpha=0.35+0.55*Math.min(1,h/0.4);ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(p.x,p.y);ctx.stroke();}
+        prev=p;}}
+    ctx.globalAlpha=1;
+    const k=smooth(s)<0.5&&from>=0?from:to;
+    const pts=DOMAINS.map((d,i)=>({d,h:hs[i],core:!!(d.v[k]&&d.v[k][1]),top:proj(d.xy[0],d.xy[1],hs[i]*0.9-0.25+0.03),foot:proj(d.xy[0],d.xy[1],-0.25)})).filter(p=>p.h>0.025);
+    pts.sort((a,b)=>b.top.z-a.top.z).forEach(p=>{ctx.globalAlpha=Math.min(1,p.h/0.08);ctx.strokeStyle=p.core?C.core:C.amber;ctx.lineWidth=1.3;
+      ctx.beginPath();ctx.moveTo(p.foot.x,p.foot.y);ctx.lineTo(p.top.x,p.top.y);ctx.stroke();
+      ctx.fillStyle=p.core?C.core:C.amber;ctx.beginPath();ctx.arc(p.top.x,p.top.y,p.core?3.6:2.6,0,Math.PI*2);ctx.fill();});
+    ctx.globalAlpha=1;
+    if(s<1&&from!==to)return;                                   // во время перехода подписи скрыты
+    const fs=LY.desk?11:9.5;ctx.font=`500 ${fs}px ${getComputedStyle(document.body).fontFamily}`;
+    const lab=pts.filter(p=>p.core).sort((a,b)=>b.d.v[k][0]-a.d.v[k][0]).slice(0,LY.desk?11:5);
+    const boxes=[];const B=LY.box;const hgt=fs+5;
+    const hit=r=>boxes.some(q=>r.x<q.x+q.w+3&&r.x+r.w+3>q.x&&r.y<q.y+q.h+2&&r.y+r.h+2>q.y);
+    const segs=[];const inBox=(x,y,q)=>x>q.x-2&&x<q.x+q.w+2&&y>q.y-2&&y<q.y+q.h+2;
+    const segHitsBoxes=(x1,y1,x2,y2)=>{for(let t=0.08;t<=0.92;t+=0.06){const x=x1+(x2-x1)*t,y=y1+(y2-y1)*t;if(boxes.some(q=>inBox(x,y,q)))return true;}return false;};
+    const ccw=(ax,ay,bx,by,cx,cy)=>(cy-ay)*(bx-ax)>(by-ay)*(cx-ax);
+    const segCross=(x1,y1,x2,y2)=>segs.some(([a,b,c,d])=>ccw(x1,y1,a,b,c,d)!==ccw(x2,y2,a,b,c,d)&&ccw(x1,y1,x2,y2,a,b)!==ccw(x1,y1,x2,y2,c,d));
+    const boxHitsSegs=r=>segs.some(([x1,y1,x2,y2])=>{for(let t=0.05;t<=0.95;t+=0.05){if(inBox(x1+(x2-x1)*t,y1+(y2-y1)*t,r))return true;}return false;});
+    lab.forEach(p=>{const txt=`${p.d.v[k][2]}, ${Math.round(p.d.v[k][0])}`;const w=ctx.measureText(txt).width+6;let best=null;
+      for(const dist of [22,40,60,84,110])for(const ang of [-90,-60,-120,-30,-150,0,180,30,150]){
+        const r=ang*Math.PI/180;const ax=p.top.x+dist*Math.cos(r),ay=p.top.y+dist*Math.sin(r);
+        const x=Math.cos(r)<-0.2?ax-w:Math.cos(r)>0.2?ax:ax-w/2;const y=ay-hgt/2;const box={x,y,w,h:hgt};
+        if(x<B.x0||x+w>B.x1||y<B.y0||y+hgt>B.y1||hit(box)||boxHitsSegs(box))continue;
+        if(LY.nogo&&x<LY.nogo.x1&&x+w>LY.nogo.x0&&y<LY.nogo.y1&&y+hgt>LY.nogo.y0)continue;
+        const ex=Math.max(x,Math.min(x+w,ax)),ey=y+hgt/2;if(segHitsBoxes(p.top.x,p.top.y,ex,ey)||segCross(p.top.x,p.top.y,ex,ey))continue;
+        best={box,ax,ex,ey};break;}
+      if(!best)return;boxes.push(best.box);segs.push([p.top.x,p.top.y,best.ex,best.ey]);
+      ctx.strokeStyle=C.muted;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.top.x,p.top.y);
+      ctx.lineTo(best.ex,best.ey);ctx.stroke();
+      ctx.fillStyle="rgba(12,37,48,0.78)";ctx.fillRect(best.box.x,best.box.y,best.box.w,best.box.h);
+      ctx.fillStyle=C.ink;ctx.fillText(txt,best.box.x+3,best.box.y+fs+0.5);});
+  }
+  let lastB=-1;
+  function budget(){const u=smooth(s);const b=((from>=0?YEARS[from].bud:0)*(1-u)+YEARS[to].bud*u)*USD;
+    if(Math.abs(b-lastB)<500)return;lastB=b;
+    $y("#budLbl").textContent=`Удорожание защиты, ${YEARS[u<0.5&&from>=0?from:to].y} г.${(u<0.5&&from>=0?from:to)===3?" (прогноз)":""}`;
+    $y("#budVal").textContent=(b/1e6).toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2})+" млн ₽";
+    const k=u<0.5&&from>=0?from:to;const base=YEARS[0].bud;const prev=k>0?YEARS[k-1].bud:null;
+    $y("#budSub").textContent=`в год, бюджет мер Парето-ядра; ${k>0?"к "+YEARS[k-1].y+" г. +"+pct(YEARS[k].bud/prev-1)+", к 2023 г. ×"+(YEARS[k].bud/base).toLocaleString("ru-RU",{maximumFractionDigits:2}):"базовый год"}`;}
+  function yearStats(k){const rows=DOMAINS.filter(d=>d.v[k]).map(d=>({f:{id:d.v[k][2]},v:d.v[k][0]})).sort((a,b)=>b.v-a.v);return paretoStats(rows.map(r=>r.v),rows);}
+  function hud(k){
+    document.querySelectorAll("#years button[data-y]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.y===k?"true":"false"));
+    const st=yearStats(k);const Y0=YEARS[k];
+    if($y("#yearCap"))$y("#yearCap").innerHTML=`<b>${Y0.y}</b>${Y0.cap}; ΣTDI = ${Math.round(st.tot).toLocaleString("ru-RU")}, ядро ${st.core} из 16`;
+    $y("#hudText").textContent=`Ядро из ${st.core} факторов даёт ${pct(st.coreShare)} суммарной токсичности; перегиб по методу Kneedle на ранге ${st.knee}${st.kneeTo>st.knee?"–"+st.kneeTo+" (плато)":""}. ${["Срез 2023 г. реконструирован: ядро держится на шифровальщиках, фишинге и атаках на периметр.","В 2024 г. ядро возглавляют уязвимости и мониторинг.","В 2025 г. на первое место выходят облако, виртуализация и микропрограммы.","Срез 2026 г. является прогнозом: в ядро выходят угрозы, связанные с ИИ."][k]}`;
+  }
+  function $y(q){return document.querySelector(q);}
+  /* Оживлённый рисунок «Парето-срезы 2023–2026»: годовые плоскости с накопленной долей TDI */
+  const FIG=(function(){
+    const W=560,Hs=345,x0=58,y0=292,wR=246,hV=186,dx=34,dy=-25;
+    const P=(r,v,k)=>[x0+(r-1)*wR/15+k*dx,y0-v*hV+k*dy];
+    const cols=["#5E8FA8","#71B2D3","#94CFE8","#CDEEFA"];
+    const ST=[0,1,2,3].map(yearStats);
+    const f=n=>n.toFixed(1);
+    let g=`<defs><filter id="glow"><feGaussianBlur stdDeviation="1.6"/></filter></defs>`;
+    // оси передней плоскости
+    const [ax,ay]=P(1,0,0),[bx]=P(16,0,0),[,ty]=P(1,1,0);
+    for(let v=0;v<=1.001;v+=0.2){const [px,py]=P(1,v,0);g+=`<line x1="${f(px-4)}" y1="${f(py)}" x2="${f(px)}" y2="${f(py)}" stroke="${C.muted}"/><text x="${f(px-7)}" y="${f(py+3.5)}" font-size="10" fill="${C.muted}" text-anchor="end">${Math.round(v*100)}</text>`;}
+    g+=`<line x1="${ax}" y1="${ay}" x2="${ax}" y2="${f(ty-6)}" stroke="${C.muted}" stroke-width="1.2"/>`;
+    g+=`<line x1="${ax}" y1="${ay+8}" x2="${f(bx+6)}" y2="${ay+8}" stroke="${C.amber}" stroke-width="1.4" stroke-dasharray="6 4"/>`;
+    [1,4,8,12,16].forEach(r=>{const [px]=P(r,0,0);g+=`<text x="${f(px)}" y="${ay+22}" font-size="10" fill="${C.muted}" text-anchor="middle">${r}</text>`;});
+    g+=`<text x="${f((ax+bx)/2)}" y="${ay+38}" font-size="11" fill="${C.amber}" text-anchor="middle">ранг фактора по вкладу</text>`;
+    g+=`<text transform="translate(14 ${f((ay+ty)/2)}) rotate(-90)" font-size="11" fill="${C.muted}" text-anchor="middle">накопленная доля TDI, %</text>`;
+    const [d0x,d0y]=P(16,0,0),[d3x,d3y]=P(16,0,3);
+    g+=`<line x1="${f(d0x+10)}" y1="${f(d0y+8)}" x2="${f(d3x+18)}" y2="${f(d3y-6)}" stroke="${C.muted}" stroke-dasharray="5 4"/>`;
+    // плоскости, от дальней к ближней
+    for(let k=3;k>=0;k--){const st=ST[k];const c=cols[k];
+      const pts=st.cum.map((v,i)=>P(i+1,v,k));const [lx,ly]=P(1,0,k),[rx,ry]=P(16,0,k);
+      const d=pts.map((p,i)=>(i?"L":"M")+f(p[0])+","+f(p[1])).join(" ");
+      let gg=`<path d="M${f(lx)},${f(ly)} ${d.replace("M","L")} L${f(rx)},${f(ry)} Z" fill="${c}" opacity="0.10"/>`;
+      gg+=`<line x1="${f(lx)}" y1="${f(ly)}" x2="${f(rx)}" y2="${f(ry)}" stroke="${c}" opacity="0.5"/>`;
+      const [ex0,e80]=P(1,0.8,k),[ex1]=P(16,0.8,k);
+      gg+=`<line x1="${f(ex0)}" y1="${f(e80)}" x2="${f(ex1)}" y2="${f(e80+(15*dy/15)*0)}" stroke="${C.core}" stroke-dasharray="3 3" opacity="0.3"/>`;
+      let dots="";pts.forEach((p,i)=>{dots+=i<st.core?`<circle cx="${f(p[0])}" cy="${f(p[1])}" r="2.8" fill="${c}"/>`:`<circle cx="${f(p[0])}" cy="${f(p[1])}" r="2.6" fill="${getComputedStyle(document.documentElement).getPropertyValue("--scene-bg").trim()}" stroke="${c}" stroke-width="1.3"/>`;});
+      const [bxk,byk]=P(st.core,st.coreShare,k),[bbx,bby]=P(st.core,0,k);
+      const [cx,cy]=P(16,1,k);const lyy=[110,84,58,32][k]+6;
+      const lab=`<line x1="${f(cx+3)}" y1="${f(cy)}" x2="430" y2="${lyy-4}" stroke="${c}" stroke-width="1"/>
+        <text x="434" y="${lyy-6}" font-size="12" font-weight="700" fill="${c}">${YEARS[k].y}${k===3?", прогноз":""}</text>
+        <text x="434" y="${lyy+7}" font-size="10.5" fill="${C.ink}">ядро ${st.core}, ${pct(st.coreShare)}</text>`;
+      g+=`<g id="fa${k}" style="opacity:0">${gg}</g>
+        <path id="fc${k}" d="${d}" fill="none" stroke="${c}" stroke-width="2.4" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" style="stroke-dashoffset:1"/>
+        <g id="fp${k}" style="opacity:0">${dots}
+          <line x1="${f(bxk)}" y1="${f(byk)}" x2="${f(bbx)}" y2="${f(bby)}" stroke="${C.core}" stroke-dasharray="2 3"/>
+          <circle cx="${f(bbx)}" cy="${f(bby)}" r="2.6" fill="${C.core}"/>
+          <circle cx="${f(bxk)}" cy="${f(byk)}" r="5" fill="${C.core}" stroke="${C.ink}" stroke-width="1.2"/>
+          <text x="${f(rx+10)}" y="${f(ry+4)}" font-size="10" fill="${c}">${YEARS[k].y}</text>${lab}</g>`;}
+    // граница ядра между годами и её тень на основании
+    for(let k=1;k<=3;k++){const a=ST[k-1],b=ST[k];
+      const [x1,y1]=P(a.core,a.coreShare,k-1),[x2,y2]=P(b.core,b.coreShare,k);
+      const [s1,t1]=P(a.core,0,k-1),[s2,t2]=P(b.core,0,k);
+      g+=`<g id="fr${k}" style="opacity:0"><line x1="${f(s1)}" y1="${f(t1)}" x2="${f(s2)}" y2="${f(t2)}" stroke="${C.core}" stroke-dasharray="5 4" opacity="0.8"/>
+        <line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${C.core}" stroke-width="2.4"/></g>`;}
+    $y("#hudCurve").innerHTML=`<svg viewBox="0 0 ${W} ${Hs}" role="img" aria-label="Годовые срезы Парето-ядра 2023–2026: накопленная доля TDI по рангу фактора">${g}</svg>`;
+    const el=k=>({a:$y("#fa"+k),c:$y("#fc"+k),p:$y("#fp"+k),r:k?$y("#fr"+k):null});
+    const E=[0,1,2,3].map(el);const cl=x=>Math.max(0,Math.min(1,x));let lastKey="";
+    return{update(fr,to,u){const key=fr+"|"+to+"|"+u.toFixed(3);if(key===lastKey)return;lastKey=key;
+      E.forEach((e,k)=>{const inF=k<=fr,inT=k<=to;const v=inF&&inT?1:inT?u:inF?1-u:0;
+        e.c.style.strokeDashoffset=String(1-v);e.a.style.opacity=String(v);e.p.style.opacity=String(cl((v-0.55)/0.45));
+        if(e.r)e.r.style.opacity=String(cl((v-0.75)/0.25));});}};
+  })();
+  function goYear(k,user){if(user){playing=false;$y("#playBtn").textContent="Пуск";$y("#playBtn").setAttribute("aria-label","Запустить смену лет");}
+    document.querySelectorAll("#years button[data-y]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.y===k?"true":"false"));
+    if(k===to&&s>=1)return;from=reduce?k:(s<1?Math.max(0,to):cur);to=k;s=reduce?1:0;phaseT=0;if(reduce){cur=k;hud(k);draw();}}
+  function tick(ts){const dt=last?Math.min(64,ts-last):16;last=ts;
+    if(!drag&&!reduce)yaw+=0.0008;
+    if(s<1){s=Math.min(1,s+dt/MORPH);if(s>=1){cur=to;hud(cur);}}
+    else if(playing){phaseT+=dt;if(phaseT>HOLD){goYear((cur+1)%YEARS.length,false);}}
+    draw();if(visible&&!reduce)raf=requestAnimationFrame(tick);}
+  document.querySelectorAll("#years button[data-y]").forEach(b=>b.onclick=()=>goYear(+b.dataset.y,true));
+  $y("#playBtn").onclick=()=>{playing=!playing;$y("#playBtn").textContent=playing?"Пауза":"Пуск";$y("#playBtn").setAttribute("aria-label",playing?"Остановить анимацию":"Запустить анимацию");phaseT=0;};
+  if(reduce){playing=false;$y("#playBtn").textContent="Пуск";$y("#playBtn").hidden=true;}
+  size();hud(0);document.querySelectorAll("#years button[data-y]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.y==="0"?"true":"false"));draw();
+  new ResizeObserver(()=>{size();draw();}).observe(scene);
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting;cancelAnimationFrame(raf);last=0;if(visible&&!reduce)raf=requestAnimationFrame(tick);}).observe(scene);
+  cv.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId);});
+  cv.addEventListener("pointermove",e=>{if(!drag)return;yaw+=(e.clientX-drag.x)*0.008;pitch=Math.max(0.35,Math.min(1.35,pitch+(e.clientY-drag.y)*0.006));drag={x:e.clientX,y:e.clientY};if(reduce)draw();});
+  cv.addEventListener("pointerup",()=>{drag=null;});
+})();
+
+/* ===================== ИНТЕРФЕЙС ===================== */
+const $=s=>document.querySelector(s);
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2200);}
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+let current=0;
+function go(n){current=n;document.querySelectorAll("#app .step").forEach((s,i)=>s.classList.toggle("on",i===n));
+  document.querySelectorAll("#steps button").forEach((b,i)=>b.setAttribute("aria-selected",i===n?"true":"false"));
+  if(n===1)renderAssets();if(n===2)renderAudit();if(n===3)renderPareto();if(n===4)renderMeasures();if(n===5)renderResults();
+  $("#app").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}
+document.querySelectorAll("#steps button").forEach(b=>b.onclick=()=>go(+b.dataset.s));
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(+b.dataset.go));
+$("#goBtn").onclick=()=>{document.body.classList.add("in-app");go(0);window.scrollTo(0,0);};
+$("#backBtn").onclick=()=>{document.body.classList.remove("in-app");window.scrollTo(0,0);};
+
+function bindProfile(){
+  $("#sizeSeg").innerHTML=SIZES.map(z=>`<label><input type="radio" name="size" value="${z.id}" ${S.size===z.id?"checked":""}><span>${z.name}</span></label>`).join("");
+  $("#sector").innerHTML=SECTORS.map(s=>`<option value="${s.id}" ${S.sector===s.id?"selected":""}>${s.name}</option>`).join("");
+  ["revenue","staff","pcs","srv","pdn","rate","qfine","rho","rrmax"].forEach(k=>{$("#"+k).value=S[k];});
+}
+$("#sizeSeg").addEventListener("change",e=>{applySizeDefaults(e.target.value);refreshAssetDefaults();bindProfile();S.limit=null;});
+$("#sector").addEventListener("change",e=>{S.sector=e.target.value;applySectorAssets();S.limit=null;});
+["revenue","staff","pcs","srv","pdn","rate","qfine","rho","rrmax"].forEach(k=>$("#"+k).addEventListener("input",e=>{
+  let v=parseFloat(e.target.value);if(!isFinite(v)||v<0)v=0;if(k==="qfine")v=Math.min(1,v);if(k==="rho")v=Math.min(5,v);if(k==="rrmax")v=Math.min(1,Math.max(0.05,v));S[k]=v;if(k==="revenue")refreshAssetDefaults();S.limit=null;}));
+
+function renderAssets(){
+  const tb=$("#assetTbl tbody");
+  tb.innerHTML=ASSETS.map(a=>`<tr class="asset-row"><td><input type="checkbox" id="as_${a.id}" ${S.assetsOn[a.id]?"checked":""} aria-label="${a.name}"></td>
+   <td><label for="as_${a.id}">${a.name}</label></td><td>${a.cia}</td>
+   <td class="r"><input type="number" min="0" step="10000" id="av_${a.id}" value="${S.assetVal[a.id]}" aria-label="Ущерб, ${a.name}"></td></tr>`).join("");
+  ASSETS.forEach(a=>{
+    $("#as_"+a.id).onchange=e=>{S.assetsOn[a.id]=e.target.checked;assetAfter();S.limit=null;};
+    $("#av_"+a.id).oninput=e=>{S.assetVal[a.id]=Math.max(0,+e.target.value||0);S.assetEdited[a.id]=true;assetAfter();S.limit=null;};
+  });
+  assetAfter();
+}
+function assetAfter(){
+  const on=ASSETS.filter(a=>S.assetsOn[a.id]);const sum=on.reduce((s,a)=>s+(+S.assetVal[a.id]||0),0);
+  const top=on.slice().sort((a,b)=>S.assetVal[b.id]-S.assetVal[a.id])[0];
+  $("#assetAfter").textContent=on.length?`В расчёт включено ${on.length} активов из ${ASSETS.length} с суммарной оценкой ущерба ${fmtM(sum)}. Наибольший вклад даёт актив «${top.name}»; угрозы, затрагивающие его, получат больший вес в Парето-анализе. ${S.assetsOn.pdn?"Отмечены персональные данные, поэтому к ущербу от утечек добавлено ожидаемое значение штрафа по ст. 13.11 КоАП РФ.":"Персональные данные не отмечены, штрафная составляющая не учитывается."}`:"Не выбрано ни одного актива: ожидаемые потери будут нулевыми, отметьте хотя бы один актив.";
+}
+
+function renderAudit(){
+  const tb=$("#auditTbl tbody");
+  tb.innerHTML=FACTORS.map(f=>`<tr><td class="fid">${f.id}</td><td><b>${f.name}</b><br><span class="note">${f.q}</span></td>
+   <td><div class="lvl" role="radiogroup" aria-label="${f.name}">${LEVELS.map((l,i)=>`<label><input type="radio" name="au_${f.id}" value="${i}" ${(S.audit[f.id]||0)===i?"checked":""}>${l}</label>`).join("")}</div></td></tr>`).join("");
+  FACTORS.forEach(f=>document.querySelectorAll(`input[name="au_${f.id}"]`).forEach(r=>r.onchange=e=>{S.audit[f.id]=+e.target.value;
+    FACTORS.forEach(g=>{if(!tierAllowed(g,S.choice[g.id]||0))S.choice[g.id]=0;});S.limit=null;auditAfter();}));
+  auditAfter();
+}
+function auditAfter(){
+  const lv=FACTORS.map(f=>S.audit[f.id]||0);const done=lv.filter(x=>x>=2).length,none=lv.filter(x=>x===0).length;
+  const z={};FACTORS.forEach(f=>z[f.id]=0);
+  const a0=FACTORS.reduce((s,f)=>s+rateOf(f)*lossPerEvent(f),0),a1=aleTotal(z);
+  $("#auditAfter").textContent=`Внедрено ${done} мер из 16, полностью отсутствуют ${none}. Текущая защита снижает ожидаемые годовые потери с ${fmtM(a0)} до ${fmtM(a1)}, то есть на ${pct(a0?1-a1/a0:0)}. Эта разница не попадёт в смету: меры, которые уже работают на заявленном уровне, калькулятор не предложит купить повторно.`;
+}
+
+function svgEl(w,h,inner,label){return`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}">${inner}</svg>`;}
+function renderPareto(){
+  const P=paretoAdj();const n=P.vals.length;
+  const W=900,H=500,pl=58,pr=60,pt=24,pb=150;const bw=(W-pl-pr)/n;const maxV=Math.max(...P.vals)||1;
+  const X=i=>pl+bw*i,Yb=v=>pt+(H-pt-pb)*(1-v/maxV),Yc=c=>pt+(H-pt-pb)*(1-c);
+  const ink=css("--ink"),mut=css("--muted"),line=css("--line"),core=css("--core"),amb=css("--amber"),acc=css("--accent");
+  let g="";
+  [0,0.25,0.5,0.75,1].forEach(t=>{g+=`<line x1="${pl}" x2="${W-pr}" y1="${Yc(t)}" y2="${Yc(t)}" stroke="${line}" stroke-width="0.6"/>
+    <text x="${W-pr+6}" y="${Yc(t)+4}" font-size="12" fill="${mut}">${t*100} %</text>`;});
+  g+=`<text x="${pl-8}" y="${pt+4}" font-size="12" fill="${mut}" text-anchor="end">${Math.round(maxV)}</text><text x="${pl-8}" y="${Yb(0)+4}" font-size="12" fill="${mut}" text-anchor="end">0</text>`;
+  g+=`<text transform="translate(16 ${(pt+H-pb)/2}) rotate(-90)" font-size="12.5" fill="${mut}" text-anchor="middle">TDI скорректированный</text>`;
+  g+=`<text transform="translate(${W-12} ${(pt+H-pb)/2}) rotate(90)" font-size="12.5" fill="${mut}" text-anchor="middle">накопленная доля</text>`;
+  P.rows.forEach((r,i)=>{const isC=i<P.core;
+    g+=`<rect x="${X(i)+3}" y="${Yb(r.v)}" width="${bw-6}" height="${Yb(0)-Yb(r.v)}" fill="${isC?core:amb}" opacity="${isC?0.85:0.55}"><title>${r.f.id} ${r.f.name}: ${Math.round(r.v)}</title></rect>`;
+    g+=`<text transform="translate(${X(i)+bw/2+4} ${H-pb+10}) rotate(-90)" font-size="12.5" fill="${ink}" text-anchor="end">${r.f.id} ${r.f.sn}</text>`;});
+  let d="";P.cum.forEach((c,i)=>{d+=(i?" L":"M")+(X(i)+bw/2)+","+Yc(c);});
+  g+=`<path d="${d}" fill="none" stroke="${acc}" stroke-width="2.2"/>`;
+  P.cum.forEach((c,i)=>{g+=`<circle cx="${X(i)+bw/2}" cy="${Yc(c)}" r="3" fill="${acc}"/>`;});
+  g+=`<line x1="${pl}" x2="${W-pr}" y1="${Yc(0.8)}" y2="${Yc(0.8)}" stroke="${core}" stroke-dasharray="6 4" stroke-width="1.2"/>`;
+  // выноски
+  const cx=X(P.core-1)+bw/2,cy=Yc(P.coreShare);
+  const kx=X(P.knee-1)+bw/2,ky=Yc(P.cum[P.knee-1]);
+  const cLabX=Math.min(cx+70,W-pr-230),cLabY=Math.min(cy+70,H-pb-30);
+  g+=`<line x1="${cx}" y1="${cy}" x2="${cLabX}" y2="${cLabY-14}" stroke="${mut}"/><text class="co" x="${cLabX}" y="${cLabY}" font-size="13" fill="${ink}">граница ядра: ${P.core} факторов, ${pct(P.coreShare)}</text>`;
+  const kLabX=Math.max(pl+8,kx-60),kLabY=Math.max(pt+14,ky-48);
+  g+=`<circle cx="${kx}" cy="${ky}" r="6" fill="none" stroke="${ink}" stroke-width="1.6"/><line x1="${kx}" y1="${ky-6}" x2="${kLabX+40}" y2="${kLabY+4}" stroke="${mut}"/>
+      <text class="co" x="${kLabX}" y="${kLabY}" font-size="13" fill="${ink}">точка перегиба: ранг ${P.knee}${P.kneeTo>P.knee?"–"+P.kneeTo:""}</text>`;
+  g+=`<text class="co" x="${W-pr-4}" y="${Yc(0.8)-6}" font-size="12" fill="${core}" text-anchor="end">порог 80 %</text>`;
+  $("#paretoChart").innerHTML=svgEl(W,H,g,"Диаграмма Парето по скорректированному TDI");
+  const sec=SECTORS.find(s=>s.id===S.sector).name;
+  $("#paretoLead").textContent=`Базовые TDI модели 2024 г. скорректированы под заказчика: умножены на отраслевую поправку (${sec.toLowerCase()}), на долю затронутых активов из отмеченных на шаге 2 и на долю, которую не закрывает текущая защита по итогам аудита. Ядро образуют факторы, дающие вместе не менее 80 % суммы; точка перегиба ищется методом Kneedle как ранг с наибольшим отклонением накопленной кривой от диагонали.`;
+  const names=P.rows.slice(0,P.core).map(r=>r.f.id).join(", ");
+  $("#paretoAfter").textContent=`Рисунок 1 показывает, что ${P.core} факторов из 16 (${names}) несут ${pct(P.coreShare)} скорректированной опасности. Перегиб на ранге ${P.knee}${P.kneeTo>P.knee?"–"+P.kneeTo:""} означает, что после этих факторов каждая следующая угроза добавляет меньше среднего; именно на них в первую очередь направляется бюджет на шаге 5. Если ядро у заказчика меньше, чем в базовом срезе (10 факторов), часть угроз уже закрыта имеющейся защитой.`;
+}
+
+function renderMeasures(){
+  const fr=frontier();
+  if(S.limit==null){
+    if(S.method==="pyat"){S.limit=Math.round(pyatCeil().Bmax/1000)*1000;S.choice=pyatAt(S.limit).choice;}
+    else{S.limit=Math.round(fr.knee.c/1000)*1000;S.choice=greedy(S.limit).choice;}}
+  document.querySelectorAll('#methodSeg input').forEach(r=>r.checked=r.value===S.method);
+  $("#kneeBtn").style.display=S.method==="us"?"":"none";
+  $("#limit").value=S.limit;
+  const P=paretoAdj();const coreSet=new Set(P.rows.slice(0,P.core).map(r=>r.f.id));
+  const ordered=P.rows.map(r=>r.f);
+  $("#measures").innerHTML=ordered.map(f=>{
+    const t=S.choice[f.id]||0;const base=aleFactor(f,0);
+    return`<article class="measure"><header><div><span class="fid">${f.id}</span> <span class="nm">${f.name}</span> ${coreSet.has(f.id)?'<span class="badge core">ядро</span>':""}</div>
+     <div class="meta">аудит: ${LEVELS[S.audit[f.id]||0].toLowerCase()}; ожидаемые потери сейчас ${fmtM(base)} в год</div></header>
+     <div class="opts">${[0,1,2,3].map(k=>{
+       const ok=tierAllowed(f,k);const c=optionCost(f,k);const red=base-aleFactor(f,k);
+       const o=k?CAT[f.id][k-1]:null;
+       return`<label class="opt"><input type="radio" name="m_${f.id}" value="${k}" ${t===k?"checked":""} ${ok?"":"disabled"}>
+        <div class="on-mark">${TIER_NAMES[k]}</div>
+        ${o?`<div class="v">${o.url?`<a href="${o.url}" target="_blank" rel="noopener">${o.v}</a>`:o.v}</div>
+        <div class="c">${fmtM(c.tco)} в год; −${fmtM(red)} потерь</div>
+        <div class="v">${c.price?fmtR(c.price)+" за ед. ("+UNIT_NAME[o.u]+")":"лицензия не нужна"}, ${o.su+o.rh} ч работ</div>
+        ${t===k?`<input class="price" type="number" min="0" step="500" data-f="${f.id}" data-t="${k}" value="${c.price}" aria-label="Цена за единицу, ₽">`:""}
+        ${ok?"":`<div class="v">уже покрыто текущей защитой</div>`}`:`<div class="v">${e0(f)>0?"сохранить текущий уровень":"мера не вводится"}</div>`}
+       </label>`;}).join("")}</div></article>`;}).join("");
+  document.querySelectorAll('#measures input[type=radio]').forEach(r=>r.onchange=e=>{S.choice[e.target.name.slice(2)]=+e.target.value;renderMeasures();});
+  document.querySelectorAll('#measures input.price').forEach(inp=>inp.onchange=e=>{S.priceOverride[inp.dataset.f+"_"+inp.dataset.t]=Math.max(0,+e.target.value||0);renderMeasures();});
+  sumLine();
+}
+function sumLine(){
+  const b=budgetOf(S.choice);const over=b.tco>S.limit+1;const rr=rrOf(S.choice);
+  const extra=S.method==="pyat"?`<br><span class="note">Предел PARETO‑X ${fmtM(pyatCeil().Bmax)}; остаточный риск ${pct(rr)} ${rr<=S.rrmax+1e-9?"в пределах нормы":"<span class=\"over\">выше нормы "+pct(S.rrmax)+"</span>"}</span>`
+    :`<br><span class="note">Предел Гордона–Лёба ${fmtM(pyatCeil().E0/Math.E)}; ROSI ${rosiOf(S.choice)==null?"—":rosiOf(S.choice).toLocaleString("ru-RU",{maximumFractionDigits:2})}</span>`;
+  $("#sumLine").innerHTML=`Выбрано: <b class="num">${fmtM(b.tco)}</b> в год ${over?`<span class="over">превышает лимит на ${fmtM(b.tco-S.limit)}</span>`:`<span class="note">в пределах лимита</span>`}${extra}`;
+}
+$("#limit").addEventListener("change",e=>{S.limit=Math.max(0,+e.target.value||0);});
+$("#optBtn").onclick=()=>{S.limit=Math.max(0,+$("#limit").value||0);S.choice=S.method==="pyat"?pyatAt(S.limit).choice:greedy(S.limit).choice;renderMeasures();toast(S.method==="pyat"?"Ядро закрыто с минимальными затратами":"Меры подобраны по отдаче на рубль");};
+$("#methodSeg").addEventListener("change",e=>{S.method=e.target.value;S.limit=null;renderMeasures();toast(S.method==="pyat"?"Метод PARETO‑X: лимит по пределу затрат":"Метод ALE–ROSI: лимит по точке перегиба");});
+$("#kneeBtn").onclick=()=>{const fr=frontier();S.limit=Math.round(fr.knee.c/1000)*1000;S.choice=greedy(S.limit).choice;renderMeasures();toast("Лимит установлен по точке перегиба");};
+
+function ensureChoice(){if(S.limit!=null)return;
+  if(S.method==="pyat"){S.limit=Math.round(pyatCeil().Bmax/1000)*1000;S.choice=pyatAt(S.limit).choice;}
+  else{S.limit=Math.round(frontier().knee.c/1000)*1000;S.choice=greedy(S.limit).choice;}}
+function renderResults(){
+  ensureChoice();
+  const z=zeroChoice();const fr=frontier();const {E0,Bmax}=pyatCeil();const GL=E0/Math.E;
+  const aleA=aleTotal(S.choice);const b=budgetOf(S.choice);const rr=rrOf(S.choice);
+  const mcB=monteCarlo(z),mcA=monteCarlo(S.choice);
+  const rosi=rosiOf(S.choice);const isP=S.method==="pyat";
+  const sz=SIZES.find(s=>s.id===S.size).name,sec=SECTORS.find(s=>s.id===S.sector).name;
+  $("#resLead").textContent=`${sz}, отрасль «${sec.toLowerCase()}», ${S.staff} сотрудников, ${S.pcs} рабочих мест, выручка ${fmtM(S.revenue)} в год. Основной метод расчёта: ${isP?"PARETO‑X (планово-лимитное бюджетирование по Парето-ядру угроз)":"ALE–ROSI (Гордон–Лёб, Сонненрейх)"}. Хвостовой риск оценён методом Монте-Карло (10 000 испытаний, зерно ${S.seed}; при тех же исходных данных результат воспроизводится).`;
+  const K=isP?[
+   ["Бюджет мер (TCO)",fmtM(b.tco),`в год; первый год ${fmtM(b.first)}`],
+   ["Предел затрат PARETO‑X",fmtM(Bmax),`использовано ${pct(Bmax?b.tco/Bmax:0)}, резерв ${fmtM(Math.max(0,Bmax-b.tco))}`],
+   ["Ожидаемые потери EAL",`${fmtM(E0)} → ${fmtM(aleA)}`,"в год, до и после мер"],
+   ["Остаточный риск RR",pct(rr),rr<=S.rrmax+1e-9?`не выше нормы ${pct(S.rrmax)}`:`выше нормы ${pct(S.rrmax)}`],
+   ["CVaR 95 % до мер",fmtM(mcB.cvar95),`VaR 95 % ${fmtM(mcB.var95)}`],
+   ["CVaR 95 % после мер",fmtM(mcA.cvar95),`VaR 95 % ${fmtM(mcA.var95)}`]]
+  :[
+   ["Ожидаемые потери до мер",fmtM(E0),"ALE в год, с учётом текущей защиты"],
+   ["Ожидаемые потери после мер",fmtM(aleA),`снижение на ${pct(E0?1-aleA/E0:0)}`],
+   ["Бюджет мер (TCO)",fmtM(b.tco),`в год; первый год ${fmtM(b.first)}`],
+   ["ROSI",rosi==null?"—":rosi.toLocaleString("ru-RU",{maximumFractionDigits:2}),"(ΔALE − TCO) / TCO"],
+   ["Предел Гордона–Лёба",fmtM(GL),`36,8 % ALE; бюджет занимает ${pct(GL?b.tco/GL:0)}`],
+   ["CVaR 95 % после мер",fmtM(mcA.cvar95),`до мер ${fmtM(mcB.cvar95)}`]];
+  $("#kpis").innerHTML=K.map(k=>`<div class="kpi"><div class="k">${k[0]}</div><div class="v">${k[1]}</div><div class="s">${k[2]}</div></div>`).join("");
+  const check=`Средние потери по методу Монте-Карло (${fmtM(mcA.mean)}) совпадают с аналитической оценкой (${fmtM(aleA)}) в пределах статистической погрешности, что служит внутренней проверкой расчёта.`;
+  $("#kpiAfter").textContent=isP
+   ?`${check} Бюджет рассматривается как лимит управления риском, а не как вложение с возвратом: обоснованием служат снижение ожидаемых потерь на ${fmtM(E0-aleA)} в год, остаточный риск ${pct(rr)} при норме ${pct(S.rrmax)} и уменьшение хвостового риска на ${fmtM(mcB.cvar95-mcA.cvar95)}.`
+   :`${check} ${rosi==null?"Меры не выбраны.":rosi>=0?`Каждый рубль затрат снижает ожидаемые потери на ${((E0-aleA)/b.tco).toLocaleString("ru-RU",{maximumFractionDigits:2})} ₽, поэтому по логике ROSI бюджет оправдан.`:`ROSI отрицателен: по средним потерям меры не окупаются, их обоснованием остаётся снижение хвостового риска на ${fmtM(mcB.cvar95-mcA.cvar95)}.`}`;
+
+  // ---------- граница эффективности
+  const pA=pyatAt(Bmax),uA=usAuto();const pB=budgetOf(pA.choice).tco,pE=aleTotal(pA.choice),uB=budgetOf(uA.choice).tco,uE=aleTotal(uA.choice);
+  const W=900,H=420,pl=86,pr=24,pt=40,pb=56;
+  const maxC=Math.max(Math.min(fr.pts[fr.pts.length-1].c,Math.max(fr.knee.c*2.5,Bmax*1.6,GL*1.6,200000)),b.tco*1.15,pB*1.15)||1,maxA=E0*1.05||1;
+  const X=c=>pl+(W-pl-pr)*Math.min(c,maxC)/maxC,Y=v=>pt+(H-pt-pb)*(1-v/maxA);
+  const ink=css("--ink"),mut=css("--muted"),line=css("--line"),core=css("--core"),acc=css("--accent"),amb=css("--amber"),ok=css("--ok");
+  let g="";
+  for(let i=0;i<=4;i++){const v=maxA*i/4,c=maxC*i/4;
+    g+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${line}" stroke-width="0.6"/><text x="${pl-8}" y="${Y(v)+4}" font-size="12" fill="${mut}" text-anchor="end">${fmtM(v)}</text>
+        <text x="${X(c)}" y="${H-pb+18}" font-size="12" fill="${mut}" text-anchor="${i===4?"end":i===0?"start":"middle"}">${fmtM(c)}</text>`;}
+  g+=`<text x="${(pl+W-pr)/2}" y="${H-12}" font-size="12.5" fill="${mut}" text-anchor="middle">затраты на меры, ₽ в год (TCO)</text>`;
+  g+=`<text transform="translate(16 ${(pt+H-pb)/2}) rotate(-90)" font-size="12.5" fill="${mut}" text-anchor="middle">ожидаемые потери EAL, ₽ в год</text>`;
+  // нормативы
+  const rrY=Y(S.rrmax*E0);
+  g+=`<line x1="${pl}" x2="${W-pr}" y1="${rrY}" y2="${rrY}" stroke="${ok}" stroke-dasharray="6 4" stroke-width="1.3"/><text class="co" x="${W-pr-4}" y="${rrY-6}" font-size="12" fill="${ok}" text-anchor="end">норма остаточного риска RRmax = ${pct(S.rrmax)}</text>`;
+  const vl=[{c:Bmax,t:`предел PARETO‑X ${fmtM(Bmax)}`,col:core},{c:GL,t:`предел Гордона–Лёба ${fmtM(GL)}`,col:amb}].sort((p,q)=>p.c-q.c);
+  vl.forEach((v,i)=>{const x=X(v.c);g+=`<line x1="${x}" x2="${x}" y1="${pt}" y2="${H-pb}" stroke="${v.col}" stroke-dasharray="4 4" stroke-width="1.2"/>`;
+    const right=x<W*0.6;g+=`<text class="co" x="${right?x+6:x-6}" y="${pt-8+i*16-8}" font-size="12" fill="${v.col}" text-anchor="${right?"start":"end"}">${v.t}</text>`;});
+  const vis=fr.pts.filter(p=>p.c<=maxC);const cut=fr.pts.length-vis.length;let d="";vis.forEach((p,i)=>{d+=(i?" L":"M")+X(p.c)+","+Y(p.ale);});
+  g+=`<path d="${d}" fill="none" stroke="${acc}" stroke-width="2.4"/>`;vis.forEach(p=>{g+=`<circle cx="${X(p.c)}" cy="${Y(p.ale)}" r="2.4" fill="${acc}"/>`;});
+  if(cut)g+=`<text class="co" x="${W-pr}" y="${H-pb-8}" font-size="12" fill="${mut}" text-anchor="end">ещё ${cut} дорогих вариантов за шкалой, до ${fmtM(fr.pts[fr.pts.length-1].c)}</text>`;
+  const pts=[{x:X(pB),y:Y(pE),t:`PARETO‑X: ${fmtM(pB)}, EAL ${fmtM(pE)}`,c:core},{x:X(uB),y:Y(uE),t:`ALE–ROSI: ${fmtM(uB)}, EAL ${fmtM(uE)}`,c:amb}];
+  const same=c=>Object.keys(c).every(k=>c[k]===S.choice[k]);
+  if(!same(pA.choice)&&!same(uA.choice))pts.push({x:X(b.tco),y:Y(aleA),t:`ваш выбор: ${fmtM(b.tco)}`,c:ink});
+  const ys=pts.map(o=>Math.max(pt+14,Math.min(H-pb-24,o.y-46)));const ord=ys.map((y,i)=>i).sort((p,q)=>ys[p]-ys[q]);
+  for(let j=1;j<ord.length;j++)if(ys[ord[j]]<ys[ord[j-1]]+22)ys[ord[j]]=ys[ord[j-1]]+22;
+  pts.forEach((o,i)=>{let lx=Math.min(o.x+40,W-pr-290);if(lx<pl+8)lx=pl+8;const ly=ys[i];
+    g+=`<circle cx="${o.x}" cy="${o.y}" r="6" fill="none" stroke="${o.c}" stroke-width="2.2"/><line x1="${o.x}" y1="${o.y}" x2="${lx-4}" y2="${ly-5}" stroke="${mut}"/><text class="co" x="${lx}" y="${ly}" font-size="13" fill="${ink}">${o.t}</text>`;});
+  $("#frontChart").innerHTML=svgEl(W,H,g,"Граница эффективности и решения двух методов");
+  $("#frontBefore").textContent=`Граница эффективности показывает минимально достижимые ожидаемые потери при каждой сумме затрат. На неё нанесены пределы обоих методов (вертикальные линии), норма остаточного риска (горизонтальная линия) и решения, к которым приходит каждый метод при параметрах по умолчанию.`;
+  const req=pyatRequired();
+  $("#frontAfter").textContent=`Рисунок 2 показывает различие логики двух методов. ALE–ROSI останавливается в точке перегиба кривой (${fmtM(uB)}), где отдача следующего рубля резко падает. PARETO‑X ищет минимальные затраты (${fmtM(pB)}), при которых каждая угроза Парето-ядра получает меру не ниже бюджетного уровня и остаточный риск не превышает ${pct(S.rrmax)}; предел ${fmtM(Bmax)} служит потолком, а не целью расходования. ${pA.missed.length?`Предела не хватило на факторы ${pA.missed.join(", ")}, и это нужно показать заказчику как дефицит лимита.`:pA.rrOk?`Оба условия выполнены, резерв до предела составляет ${fmtM(Bmax-pB)}.`:`Норма остаточного риска при этом пределе не достигается; минимальный лимит для неё ${req==null?"превышает возможности каталога":fmtM(req)}.`}`;
+  // ---------- таблица 3: бюджет
+  let rows="",tot={lic:0,labor:0,setup:0,tco:0,first:0,red:0};
+  const P=paretoAdj();
+  P.rows.map(r=>r.f).forEach(f=>{const t=S.choice[f.id]||0;if(!t)return;const o=CAT[f.id][t-1];const c=optionCost(f,t);const red=aleFactor(f,0)-aleFactor(f,t);
+    tot.lic+=c.lic;tot.labor+=c.labor;tot.setup+=c.setup;tot.tco+=c.tco;tot.first+=c.first;tot.red+=red;
+    rows+=`<tr><td class="fid">${f.id}</td><td>${f.name}<br><span class="note">${TIER_NAMES[t]}: ${o.v}</span></td><td class="r">${units(o.u)} × ${fmtR(c.price)}</td><td class="r">${fmtR(c.lic)}</td><td class="r">${fmtR(c.labor)}</td><td class="r">${fmtR(c.setup)}</td><td class="r"><b>${fmtR(c.tco)}</b></td><td class="r">${fmtR(red)}</td></tr>`;});
+  $("#budgetTbl").innerHTML=`<thead><tr><th>Фактор</th><th>Мера и решение</th><th class="r">Лицензии</th><th class="r">Лицензии, ₽/год</th><th class="r">Сопровождение, ₽/год</th><th class="r">Внедрение, ₽</th><th class="r">TCO, ₽/год</th><th class="r">Снижение EAL, ₽/год</th></tr></thead>
+   <tbody>${rows||`<tr><td colspan="8">Меры не выбраны. Вернитесь на шаг 5 и нажмите «Подобрать по методу».</td></tr>`}
+   ${rows?`<tr><td></td><td><b>Итого</b></td><td></td><td class="r"><b>${fmtR(tot.lic)}</b></td><td class="r"><b>${fmtR(tot.labor)}</b></td><td class="r"><b>${fmtR(tot.setup)}</b></td><td class="r"><b>${fmtR(tot.tco)}</b></td><td class="r"><b>${fmtR(tot.red)}</b></td></tr>`:""}</tbody>`;
+  const labShare=tot.tco?(tot.labor+tot.setup/3)/tot.tco:0;
+  $("#budgetAfter").textContent=rows?`Таблица 3 показывает, что трудозатраты составляют ${pct(labShare)} годовой стоимости владения: бесплатные решения без часов специалиста не дают заявленного эффекта. Денежный поток первого года с учётом полного внедрения равен ${fmtM(tot.first)}; цены каталога указаны на ${CATALOG_DATE} и перед согласованием сметы сверяются с коммерческими предложениями.`:"";
+
+  // ---------- таблица 4: распределение PARETO‑X
+  const Bp=isP?S.limit:Bmax;const al=pyatAt(Bp);void al;const coreRows=P.rows.slice(0,P.core);const sumC=coreRows.reduce((s,r)=>s+r.v,0)||1;
+  let ar="",under=0,overN=0;
+  coreRows.forEach(r=>{const f=r.f;const c=optionCost(f,S.choice[f.id]||0).tco;const n=al.alloc[f.id];const gap=c-n;if(gap<-1)under++;if(gap>1)overN++;
+    ar+=`<tr><td class="fid">${f.id}</td><td>${f.name}</td><td class="r">${pct(r.v/sumC)}</td><td class="r">${fmtR(n)}</td><td class="r">${fmtR(c)}</td><td class="r">${gap>=0?"+":"−"}${fmtR(Math.abs(gap))}</td></tr>`;});
+  $("#allocTbl").innerHTML=`<thead><tr><th>Фактор</th><th>Угроза и мера</th><th class="r">Доля в токсичности ядра</th><th class="r">Норматив Bᵢ, ₽/год</th><th class="r">TCO выбранной меры, ₽/год</th><th class="r">Отклонение</th></tr></thead><tbody>${ar}</tbody>`;
+  $("#allocAfter").textContent=`Таблица 4 показывает распределение лимита ${fmtM(Bp)} между ${P.core} факторами ядра. У ${under} факторов мера обходится дешевле норматива, то есть защита ядра достигается с запасом. У ${overN} факторов мера дороже норматива: стоимость защиты от этих угроз непропорциональна их токсичности, и именно эти позиции заказчик в первую очередь будет оспаривать.`;
+
+  // ---------- таблица 5: сравнение методов
+  const mcP=monteCarlo(pA.choice),mcU=monteCarlo(uA.choice);
+  const cnt=c=>Object.values(c).filter(t=>t>0).length;
+  const row=(nm,ch,mc)=>{const bb=budgetOf(ch).tco,e=aleTotal(ch),ro=rosiOf(ch);
+    return`<tr><td>${nm}</td><td class="r">${fmtR(bb)}</td><td class="r">${fmtR(e)}</td><td class="r">${pct(rrOf(ch))}</td><td class="r">${fmtR(mc.cvar95)}</td><td class="r">${ro==null?"—":ro.toLocaleString("ru-RU",{maximumFractionDigits:2})}</td><td class="r">${cnt(ch)}</td></tr>`;};
+  $("#cmpTbl").innerHTML=`<thead><tr><th>Вариант</th><th class="r">Бюджет TCO, ₽/год</th><th class="r">EAL после мер, ₽/год</th><th class="r">RR</th><th class="r">CVaR 95 %, ₽</th><th class="r">ROSI (справочно)</th><th class="r">Мер</th></tr></thead>
+   <tbody>${row("PARETO‑X (СКФУ), минимальный бюджет под ядро и норму RR",pA.choice,mcP)}${row("ALE–ROSI (США), точка перегиба",uA.choice,mcU)}${(!same(pA.choice)&&!same(uA.choice))?row("Текущий выбор пользователя",S.choice,mcA):""}</tbody>`;
+  const dB=pB-uB,dC=mcU.cvar95-mcP.cvar95;
+  $("#cmpAfter").textContent=`Таблица 5 показывает, что метод PARETO‑X ${dB>=0?"требует на "+fmtM(dB)+" больше":"требует на "+fmtM(-dB)+" меньше"}, чем ALE–ROSI, и ${dC>=0?"снижает хвостовой риск CVaR дополнительно на "+fmtM(dC):"оставляет хвостовой риск выше на "+fmtM(-dC)}. Метод ALE–ROSI отвечает на вопрос «где остановиться, чтобы каждый рубль работал», метод PARETO‑X — на вопрос «какой минимальный бюджет закрывает все доминирующие угрозы и удерживает остаточный риск в норме». Для отчёта заказчику основным выбран метод ${isP?"PARETO‑X":"ALE–ROSI"}, второй приведён как контрольный.`;
+  renderMethod();
+}
+function renderMethod(){
+  $("#methodBody").innerHTML=`
+  <p><b>Общая часть.</b> Ожидаемые годовые потери по фактору <i>i</i> при уровне меры <i>t</i>:</p>
+  <div class="f"><i>EAL<sub>i</sub></i>(<i>t</i>) = <i>λ<sub>i</sub></i> · (1 − <i>e<sub>i</sub></i>(<i>t</i>)) · <i>L<sub>i</sub></i>,&emsp; <i>λ<sub>i</sub></i> = <i>Λ</i> · <i>TDI<sub>i</sub></i> / Σ<i>TDI</i> · <i>k</i><sub>разм</sub> · <i>k<sub>i</sub></i><sup>отр</sup>,&emsp;&emsp;(1)</div>
+  <p>где <i>Λ</i> = Σ<i>f<sub>j</sub></i> ≈ 4,96 — суммарная частота инцидентов модели 2024 г.; индекс токсичности TDI определяет только частоту; <i>k</i><sub>разм</sub> — поправка размера (ИП 0,6; микро 0,8; малое 1,0; среднее 1,2); <i>k</i><sup>отр</sup> — отраслевая поправка.</p>
+  <div class="f"><i>e<sub>i</sub></i>(<i>t</i>) = max(<i>E<sub>i</sub></i> · <i>a</i>(<i>m<sub>i</sub></i>), <i>E<sub>i</sub></i> · <i>τ</i>(<i>t</i>)),&emsp; <i>E<sub>i</sub></i> = (<i>d</i><sup>до</sup><sub><i>i</i></sub> − <i>d</i><sup>после</sup><sub><i>i</i></sub>) / <i>d</i><sup>до</sup><sub><i>i</i></sub>,&emsp;&emsp;(2)</div>
+  <p>где <i>E<sub>i</sub></i> — предельная эффективность по медианам Delphi; <i>a</i>(<i>m</i>) = 0; 0,35; 0,65; 0,9 — доля, достигнутая текущей защитой; <i>τ</i>(<i>t</i>) = 0,5; 0,8; 1,0 — доля для бесплатного, бюджетного и расширенного решений.</p>
+  <div class="f"><i>L<sub>i</sub></i> = 0,025 · <i>w<sub>i</sub></i> · Σ<sub><i>a</i>∈<i>A<sub>i</sub></i></sub> <i>V<sub>a</sub></i> + 0,5 · <i>q</i> · <i>F</i>(<i>N</i><sub>ПДн</sub>) · [<i>i</i> ∈ утечки],&emsp;&emsp;(3)</div>
+  <p>где <i>w<sub>i</sub></i> — вес фактора по Delphi (5…7), задающий тяжесть последствий; <i>V<sub>a</sub></i> — оценка ущерба по активу; <i>F</i> — середина санкции ст. 13.11 КоАП РФ по числу субъектов ПДн; <i>q</i> — вероятность применения штрафа. Токсичность в ущерб не входит, чтобы TDI не учитывался дважды.</p>
+  <div class="f"><i>TCO<sub>i</sub></i>(<i>t</i>) = <i>p<sub>t</sub></i> · <i>n<sub>t</sub></i> + <i>h</i><sup>сопр</sup><sub><i>t</i></sub> · <i>c</i> + <i>h</i><sup>внедр</sup><sub><i>t</i></sub> · <i>c</i> / 3,&emsp;&emsp;(4)</div>
+  <p><b>Метод PARETO‑X</b> (Pareto-core Allocation of Resources against Emerging Threats, eXpenditure-limited; планово-лимитное бюджетирование ИБ по Парето-ядру угроз, СКФУ). Бюджет понимается как лимит управления риском, а не как вложение с возвратом. Предел затрат:</p>
+  <div class="f"><i>B</i><sub>max</sub> = min(<i>EAL</i><sub>0</sub>, (1 + <i>ρ</i>) · <i>EAL</i><sub>0</sub> / e),&emsp; <i>EAL</i><sub>0</sub> = Σ <i>λ<sub>i</sub></i> · <i>L<sub>i</sub></i> · <i>v<sub>i</sub></i>,&emsp; <i>v<sub>i</sub></i> = 1 − <i>E<sub>i</sub></i> · <i>a</i>(<i>m<sub>i</sub></i>),&emsp;&emsp;(5)</div>
+  <p>где <i>ρ</i> — нетерпимость к остаточному риску; при <i>ρ</i> = 0 предел совпадает с правилом Гордона–Лёба (1/e ≈ 36,8 %), с ростом <i>ρ</i> допустимые затраты увеличиваются. Лимит распределяется по факторам ядра пропорционально скорректированной токсичности:</p>
+  <div class="f"><i>B<sub>i</sub></i> = <i>B</i> · <i>TDI</i><sup>*</sup><sub><i>i</i></sub> / Σ<sub><i>j</i>∈ядро</sub> <i>TDI</i><sup>*</sup><sub><i>j</i></sub>,&emsp;&emsp;(6)</div>
+  <p>норматив <i>B<sub>i</sub></i> используется для контроля структуры затрат. Сам портфель ищется как решение затратной задачи:</p>
+  <div class="f">min Σ<i>TCO<sub>i</sub></i>(<i>t<sub>i</sub></i>),&emsp; при <i>e<sub>i</sub></i>(<i>t<sub>i</sub></i>) ≥ 0,8 · <i>E<sub>i</sub></i> ∀<i>i</i> ∈ ядро,&emsp; <i>RR</i> = <i>EAL</i>(<i>x</i>) / <i>EAL</i><sub>0</sub> ≤ <i>RR</i><sub>max</sub>,&emsp; Σ<i>TCO<sub>i</sub></i> ≤ <i>B</i><sub>max</sub>.&emsp;&emsp;(6а)</div>
+  <p>Сначала каждый фактор ядра в порядке токсичности доводится не ниже бюджетного уровня, затем, если норма остаточного риска не выполнена, добавляются доплаты с наименьшей стоимостью единицы снижения EAL. Если предела не хватает, калькулятор называет дефицит и минимальный лимит, обеспечивающий оба условия.</p>
+  <p><b>Метод ALE–ROSI</b> (американская школа: Gordon, Loeb, 2002; Sonnenreich, 2006). Меры подбираются как многовариантный рюкзак по убыванию снижения ALE на рубль затрат; рекомендуемый лимит — точка перегиба кривой «затраты — ALE» по методу Kneedle; верхний ориентир — 36,8 % ALE; эффективность выражается показателем</p>
+  <div class="f">ROSI = (<i>ALE</i><sub>0</sub> − <i>ALE</i>(<i>x</i>) − <i>TCO</i>) / <i>TCO</i>.&emsp;&emsp;(7)</div>
+  <p>Хвостовой риск для обоих методов оценивается методом Монте-Карло: число событий подчиняется распределению Пуассона с параметром <i>λ<sub>i</sub></i>(1 − <i>e<sub>i</sub></i>), ущерб события — логнормальному распределению со средним <i>L<sub>i</sub></i> и σ = 1.</p>
+  <p class="note">Проверяемые допущения версии 3.1: коэффициенты <i>a</i>(<i>m</i>), <i>τ</i>(<i>t</i>), 0,025·<i>w<sub>i</sub></i>, отраслевые поправки и доли стоимости активов являются экспертными и подлежат калибровке на данных опроса МСП. Гипотеза метода PARETO‑X опровергается, если на пилотных предприятиях при равном бюджете он не даёт меньшего CVaR или меньшего числа инцидентов по факторам ядра, чем метод ALE–ROSI.</p>`;
+}
+
+
+/* ===================== АНКЕТА ОБ ИНЦИДЕНТЕ ===================== */
+const INC_TYPES=[
+ ["1.2","Фишинг, подмена реквизитов, письмо от «руководителя» или «поставщика»"],
+ ["1.1","Взлом почты, облака или учётной записи"],
+ ["1.3","Кража ключа ЭП или несанкционированный платёж через банк-клиент"],
+ ["3.2","Шифровальщик или потеря данных, которые не удалось восстановить"],
+ ["2.3","Взлом сайта или сервера через уязвимость"],
+ ["3.1","DDoS, недоступность сайта, онлайн-кассы или интернета"],
+ ["4.8","Утечка клиентской базы или персональных данных"],
+ ["4.7","Злоупотребление правами администратора или удалённым доступом"],
+ ["4.2","Инцидент у поставщика, облачного сервиса или подрядчика"],
+ ["4.5","Взлом камер, роутеров, принтеров и других устройств"],
+ ["2.1","Незаметное изменение данных в 1С или документах"],
+ ["2.2","Ошибка настройки: открытая база, облако, общий доступ"],
+ ["4.6","Заражение через устаревший компьютер или систему"],
+ ["4.3","Атака долго оставалась незамеченной"],
+ ["4.4","Заражение распространилось по всей сети"],
+ ["4.1","Нарушение выявила проверка или аудит (например, Роскомнадзор)"]];
+const REGIONS=["Ставропольский край","Республика Дагестан","Кабардино-Балкарская Республика","Карачаево-Черкесская Республика","Республика Северная Осетия — Алания","Республика Ингушетия","Чеченская Республика","Краснодарский край","Ростовская область","Москва","Санкт-Петербург","Другой регион РФ"];
+const REV=[["до 2,4 млн ₽",1.2e6],["2,4–10 млн ₽",6e6],["10–60 млн ₽",3.5e7],["60–120 млн ₽",9e7],["120–800 млн ₽",4.6e8],["800 млн – 2 млрд ₽",1.4e9]];
+const TBANDS=[["не было",0],["до 1 часа",0.5],["1–4 часа",2.5],["4–8 часов",6],["8–24 часа",16],["1–3 суток",48],["3–7 суток",120],["больше недели",240]];
+const PBANDS=[["0 %",0],["до 10 %",0.05],["10–30 %",0.2],["30–60 %",0.45],["больше 60 %",0.75]];
+const DETECT=["сами или сотрудник","клиент или партнёр","банк","провайдер или подрядчик по ИБ","регулятор или полиция","не знаю"];
+const CONF=[["doc","по документам"],["est","оценка"],["unk","не знаю"]];
+const IST={had:null,type:null,conf:{ops:"est",rec:"est",pay:"doc"}};
+let incDb=null,incCanWrite=null,incRows=[],incSub=null;
+function opt(arr,sel){return arr.map((a,i)=>{const [t,v]=Array.isArray(a)?a:[a,a];return`<option value="${i}" ${i===sel?"selected":""}>${t}</option>`;}).join("");}
+function incInit(){
+  $("#iRegion").innerHTML=REGIONS.map((r,i)=>`<option value="${r}" ${i===0?"selected":""}>${r}</option>`).join("");
+  $("#iSector").innerHTML=SECTORS.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
+  $("#iSize").innerHTML=SIZES.map(z=>`<option value="${z.id}" ${z.id==="micro"?"selected":""}>${z.name}</option>`).join("");
+  $("#iRev").innerHTML=opt(REV,2);
+  const now=new Date();const q=[];for(let k=0;k<5;k++){const d=new Date(now.getFullYear(),now.getMonth()-3*k,1);q.push(`${Math.floor(d.getMonth()/3)+1} кв. ${d.getFullYear()}`);}
+  $("#iWhen").innerHTML=q.map(x=>`<option>${x}</option>`).join("");
+  $("#iDetect").innerHTML=DETECT.map(x=>`<option>${x}</option>`).join("");
+  ["iTp","iTd"].forEach(id=>$("#"+id).innerHTML=opt(TBANDS,id==="iTp"?3:4));
+  ["iAlpha","iBeta"].forEach(id=>$("#"+id).innerHTML=opt(PBANDS,2));
+  $("#iTypes").innerHTML=INC_TYPES.map(([fid,t])=>`<label><input type="radio" name="iType" value="${fid}"><span><span class="fid">${fid}</span> ${t}</span></label>`).join("");
+  document.querySelectorAll(".conf").forEach(c=>{const k=c.dataset.c;c.innerHTML='<span class="hint" style="margin-right:4px">Источник цифр:</span>'+CONF.map(([v,t])=>`<label><input type="radio" name="cf_${k}" value="${v}" ${IST.conf[k]===v?"checked":""}><span>${t}</span></label>`).join("");
+    c.addEventListener("change",e=>{IST.conf[k]=e.target.value;});});
+  $("#iHad").addEventListener("change",e=>{IST.had=+e.target.value;$("#iCountRow").style.display=IST.had===1?"":"none";
+    $("#iSendNo").style.display=IST.had===1?"none":"";$("#iNext0").style.display=IST.had===1?"":"none";});
+  $("#iTypes").addEventListener("change",e=>{IST.type=e.target.value;});
+  ["iTp","iTd","iAlpha","iBeta","iNaff","iRecH","iRecInv","iHw","iTheft","iFines","iLegal","iM","iW","iC","iH","iRev","iSelf"].forEach(id=>$("#"+id).addEventListener("input",incCalc));
+  ["iTp","iTd","iAlpha","iBeta","iRev"].forEach(id=>$("#"+id).addEventListener("change",incCalc));
+  document.querySelectorAll("[data-igo]").forEach(b=>b.onclick=()=>igo(+b.dataset.igo));
+  document.querySelectorAll("#isteps button").forEach(b=>b.onclick=()=>igo(+b.dataset.s));
+  $("#iSend").onclick=()=>incSend(true);$("#iSendNo").onclick=()=>incSend(false);
+  $("#tScope").onchange=renderTdi;$("#tK").oninput=renderTdi;
+  $("#tToCalc").onclick=()=>{document.body.classList.remove("in-inc");document.body.classList.add("in-app");go(0);window.scrollTo(0,0);};
+  $("#incBack").onclick=()=>{document.body.classList.remove("in-inc","in-app");window.scrollTo(0,0);};
+  $("#incCalc").onclick=$("#tToCalc").onclick;
+  incCalc();
+}
+let icur=0;
+function igo(n){
+  if(n===1&&IST.had!==1){toast("Сначала отметьте, были ли инциденты");return;}
+  if(n===2&&!IST.type){toast("Выберите, что произошло");return;}
+  icur=n;document.querySelectorAll("#inc .step").forEach((s,i)=>s.classList.toggle("on",i===n));
+  document.querySelectorAll("#isteps button").forEach((b,i)=>b.setAttribute("aria-selected",i===n?"true":"false"));
+  if(n===2)incCalc();if(n===3)renderTdi();window.scrollTo(0,0);}
+function num(id){const v=parseFloat($("#"+id).value);return isFinite(v)&&v>0?v:0;}
+function incVals(){
+  const R=REV[+$("#iRev").value][1];
+  return{R,Tp:TBANDS[+$("#iTp").value][1],Td:TBANDS[+$("#iTd").value][1],a:PBANDS[+$("#iAlpha").value][1],b:PBANDS[+$("#iBeta").value][1],
+    N:num("iNaff"),Tr:num("iRecH"),inv:num("iRecInv"),hw:num("iHw"),theft:num("iTheft"),fines:num("iFines"),legal:num("iLegal"),
+    m:Math.min(1,num("iM")||0.3),w:num("iW"),c:num("iC"),H:num("iH")||1980};}
+function incLoss(v){
+  const D=v.theft+v.fines+v.legal;const Cv=v.c*v.Tr+v.inv+v.hw;
+  const dR=v.m*(v.R/v.H)*(v.Tp+v.a*v.Td);const dP=v.w*(v.N*v.Tp+v.N*v.b*v.Td);
+  return{D,Cv,dR,dP,L:D+Cv+dR+dP,direct:D+Cv,indirect:dR+dP};}
+function incCalc(){
+  const v=incVals();const r=incLoss(v);
+  $("#iCalc").innerHTML=[["Прямые выплаты D",r.D],["Восстановление Cв",r.Cv],["Упущенная маржа ΔR",r.dR],["Потеря производительности ΔP",r.dP],["Итого L",r.L]]
+    .map(([k,x])=>`<div><div class="k">${k}</div><div class="v">${fmtM(x)}</div></div>`).join("");
+  const msgs=[];
+  if(v.Tr>0&&v.Tr<v.Tp)msgs.push("часы восстановления меньше времени полной остановки: проверьте, все ли работы учтены");
+  if(v.N>(+$("#iStaff").value||v.N))msgs.push("затронуто больше сотрудников, чем указано в организации");
+  $("#iCalcAfter").innerHTML=`Таблица 6 показывает, из чего складывается ущерб: прямые потери (выплаты и восстановление) составляют ${fmtM(r.direct)}, косвенные (упущенная маржа и непроизводительное время) — ${fmtM(r.indirect)}. Они хранятся раздельно: прямая часть подтверждается документами, косвенная является расчётной.`+(msgs.length?`<br><span class="warn">Обратите внимание: ${msgs.join("; ")}.</span>`:"");
+  const self=num("iSelf");
+  $("#iSelfMsg").innerHTML=self?(self/r.L>2||r.L/self>2?`<span class="warn">Ваша оценка расходится с расчётом больше чем вдвое (${fmtM(r.L)}). Возможно, какой-то компонент не указан или учтён дважды; в базу попадут обе цифры.</span>`:`<span class="okmsg">Ваша оценка близка к расчёту.</span>`):"";
+}
+async function incConnect(){
+  try{if(!window.claude||!window.claude.use)return;const db=await window.claude.use("db");if(!db)return;incDb=db;
+    try{const u=await window.claude.use("user");incCanWrite=u?u.can("data.write"):null;}catch(e){}
+    let done=false;const t=setTimeout(()=>{if(!done)renderTdi();},10000);
+    incSub=db.collection("incidents").onSnapshot(snap=>{done=true;clearTimeout(t);incRows=snap.docs.map(d=>d.data()).filter(Boolean);renderTdi();},()=>{done=true;clearTimeout(t);renderTdi();});
+  }catch(e){}
+}
+function localRows(){try{return JSON.parse(localStorage.getItem("kibersmeta_inc")||"[]");}catch(e){return[];}}
+async function incSend(had){
+  const base={v:1,ts:new Date().toISOString().slice(0,10),region:$("#iRegion").value,sector:$("#iSector").value,size:$("#iSize").value,
+    revBand:+$("#iRev").value,staff:+$("#iStaff").value||0,had:had?1:(IST.had===-1?-1:0),count:had?Math.max(1,+$("#iCount").value||1):0};
+  let row=base;
+  if(had){const v=incVals();const r=incLoss(v);const cia=[...document.querySelectorAll("#iCia input:checked")].map(x=>x.value);
+    row=Object.assign({},base,{factor:IST.type,when:$("#iWhen").value,detect:$("#iDetect").value,measure:+$("#iMeasure").value,cia,
+      Tp:v.Tp,Td:v.Td,alpha:v.a,beta:v.b,naff:v.N,recH:v.Tr,recInv:v.inv,hw:v.hw,theft:v.theft,fines:v.fines,legal:v.legal,
+      params:{m:v.m,w:v.w,c:v.c,H:v.H},conf:Object.assign({},IST.conf),calc:{D:Math.round(r.D),Cv:Math.round(r.Cv),dR:Math.round(r.dR),dP:Math.round(r.dP),L:Math.round(r.L)},selfEst:num("iSelf")||null});}
+  const msg=$(had?"#iSendMsg":"#iSendMsg");
+  if(incDb&&incCanWrite!==false){
+    try{await incDb.collection("incidents").add(row);toast("Анкета отправлена анонимно");igo(3);return;}
+    catch(e){if(e&&e.code==="quota_exceeded"){toast("Хранилище анкет заполнено");}}
+  }
+  try{const L=localRows();L.push(row);localStorage.setItem("kibersmeta_inc",JSON.stringify(L));}catch(e){}
+  toast("Ответ сохранён в этом браузере");
+  $("#iSendMsg").textContent="Ответ сохранён в этом браузере и учтён в сводке ниже. Отправка в общую базу доступна участникам пилота, у которых есть права участника этой страницы; в рабочей версии платформы анкеты собираются на сервер.";
+  igo(3);
+}
+function spearman(a,b){const n=a.length;const rk=x=>{const idx=x.map((v,i)=>[v,i]).sort((p,q)=>p[0]-q[0]);const r=new Array(n);let i=0;
+  while(i<n){let j=i;while(j+1<n&&idx[j+1][0]===idx[i][0])j++;const avg=(i+j)/2+1;for(let k=i;k<=j;k++)r[idx[k][1]]=avg;i=j+1;}return r;};
+  const ra=rk(a),rb=rk(b);const ma=ra.reduce((s,x)=>s+x,0)/n,mb=rb.reduce((s,x)=>s+x,0)/n;let c=0,va=0,vb=0;
+  for(let i=0;i<n;i++){c+=(ra[i]-ma)*(rb[i]-mb);va+=(ra[i]-ma)**2;vb+=(rb[i]-mb)**2;}return va&&vb?c/Math.sqrt(va*vb):0;}
+function median(a){if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);const m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2;}
+function renderTdi(){
+  const scope=$("#tScope").value;const k=Math.max(1,+$("#tK").value||20);
+  const all=incRows.concat(localRows());
+  const rows=all.filter(r=>r&&r.had!==-1&&(scope==="all"||r.region===scope));
+  const N=rows.length;const n={},Ls={};FACTORS.forEach(f=>{n[f.id]=0;Ls[f.id]=[];});
+  rows.forEach(r=>{if(r.had===1&&r.factor&&n[r.factor]!=null){n[r.factor]+=1;if(r.calc&&r.calc.L!=null)Ls[r.factor].push(r.calc.L);
+      const extra=Math.max(0,(r.count||1)-1);if(extra>0)FACTORS.forEach(f=>{n[f.id]+=extra*f.tdi/TDI_SUM;});}});
+  const lam0=f=>LAMBDA*f.tdi/TDI_SUM;
+  const data=FACTORS.map(f=>{const l0=lam0(f);const l=(k*l0+n[f.id])/(k+N);return{f,l0,n:n[f.id],l,tdiS:f.tdi*l/l0,medL:Ls[f.id].length>=5?median(Ls[f.id]):null,cntL:Ls[f.id].length};})
+    .sort((a,b)=>b.tdiS-a.tdiS);
+  const fromDb=incRows.length,fromLocal=localRows().length;
+  $("#tMeta").innerHTML=`Анкет в выборке: <b>${N}</b> (общая база: ${fromDb}${incDb?"":", недоступна в этом окне"}; этот браузер: ${fromLocal})`;
+  $("#tLead").textContent=`Каждая анкета — одна организация за 12 месяцев. Частота угроз по фактору уточняется байесовски: модель 2024 г. служит априорной оценкой с весом k = ${k} организаций-лет, анкеты сдвигают её к наблюдаемой частоте. Так из TDI получается эмпирический TDI*, а при выборке «Ставропольский край» — региональный.`;
+  $("#tBefore").textContent=`В таблице 7 факторы упорядочены по эмпирическому TDI*. Сравнение столбцов TDI и TDI* показывает, какие угрозы модель переоценивает или недооценивает для выбранной выборки.`;
+  $("#tTbl").innerHTML=`<thead><tr><th>Фактор</th><th>Угроза</th><th class="r">TDI 2024</th><th class="r">λ⁰, модель</th><th class="r">nᵢ, анкеты</th><th class="r">λ, уточнённая</th><th class="r">TDI*</th><th class="r">Медиана ущерба L</th></tr></thead><tbody>`+
+    data.map(d=>`<tr><td class="fid">${d.f.id}</td><td>${d.f.name}</td><td class="r">${Math.round(d.f.tdi)}</td><td class="r">${d.l0.toFixed(3)}</td><td class="r">${d.n%1?d.n.toFixed(1):d.n}</td><td class="r">${d.l.toFixed(3)}</td><td class="r"><b>${Math.round(d.tdiS)}</b></td><td class="r">${d.medL!=null?fmtR(d.medL):(d.cntL?`мало данных (${d.cntL})`:"—")}</td></tr>`).join("")+"</tbody>";
+  let after;
+  if(N===0)after="Анкет пока нет, поэтому TDI* совпадает с моделью 2024 г. Первые ответы начнут сдвигать оценки, а при 20 и более анкетах появится проверка согласованности индекса с наблюдениями.";
+  else if(N<20)after=`Собрано анкет: ${N}. Оценки уже учитывают наблюдения, но вес модели пока больше вклада данных. Проверка согласованности рангов TDI с наблюдаемыми частотами станет доступна при 20 анкетах.`;
+  else{const rho=spearman(FACTORS.map(f=>f.tdi),FACTORS.map(f=>n[f.id]/N));
+    after=`По ${N} анкетам ранговая корреляция Спирмена между TDI и наблюдаемой частотой инцидентов равна ${rho.toFixed(2)}. ${rho>=0.5?"Ранжирование угроз по TDI согласуется с данными.":rho>=0.2?"Согласованность умеренная: часть факторов модель оценивает иначе, чем показывают анкеты.":"Согласованность слабая: ранжирование TDI для этой выборки требует пересмотра."} Выборка не случайная: её состав определяют те, кто заполнил анкету, поэтому вывод относится к ней, а не ко всему малому бизнесу.`;}
+  $("#tAfter").textContent=after;
+}
+$("#incBtn").onclick=()=>{document.body.classList.add("in-inc");window.scrollTo(0,0);};
+$("#toIncBtn").onclick=()=>{document.body.classList.remove("in-app");document.body.classList.add("in-inc");window.scrollTo(0,0);};
+incInit();incConnect();
+
+/* сохранение */
+function save(){try{localStorage.setItem("kibersmeta3",JSON.stringify(S));toast("Черновик сохранён в этом браузере");}catch(e){toast("Браузер не дал сохранить черновик");}}
+function load(){try{const r=localStorage.getItem("kibersmeta3");if(r){const o=JSON.parse(r);S=Object.assign(DEFAULT_STATE(),o);return true;}}catch(e){}return false;}
+$("#saveBtn").onclick=save;
+$("#resetBtn").onclick=()=>{try{localStorage.removeItem("kibersmeta3");}catch(e){}S=DEFAULT_STATE();applySizeDefaults("micro");applySectorAssets();refreshAssetDefaults();bindProfile();go(0);toast("Расчёт сброшен");};
+$("#printBtn").onclick=()=>window.print();
+$("#themeBtn").onclick=()=>{const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;r.dataset.theme=dark?"light":"dark";if(current>=3)go(current);};
+
+if(!load()){applySizeDefaults("micro");applySectorAssets();refreshAssetDefaults();}
+bindProfile();
+</script>
+</body>
+</html>

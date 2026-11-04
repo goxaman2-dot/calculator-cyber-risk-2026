@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Смещение угроз 2023–2025: трёхмерная модель</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e9edf1; --surface:#ffffff; --surface2:#f4f6f8; --ink:#16202b; --muted:#566373;
+  --line:#cfd7e0; --grid:rgba(40,60,80,.10); --accent:#1f5fbf;
+  --ax-x:#c4512f; --ax-y:#2a73c2; --ax-z:#18885d;
+  --up:#b3261e; --down:#1d7a52;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e151d; --surface:#16202b; --surface2:#1c2835; --ink:#e4ebf3; --muted:#93a2b3;
+    --line:#2b3947; --grid:rgba(180,200,220,.09); --accent:#74abff;
+    --ax-x:#ff8d6e; --ax-y:#80bbff; --ax-z:#62d8a6;
+    --up:#ff8a80; --down:#6fe0aa;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e151d; --surface:#16202b; --surface2:#1c2835; --ink:#e4ebf3; --muted:#93a2b3;
+  --line:#2b3947; --grid:rgba(180,200,220,.09); --accent:#74abff;
+  --ax-x:#ff8d6e; --ax-y:#80bbff; --ax-z:#62d8a6;
+  --up:#ff8a80; --down:#6fe0aa;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:15px;line-height:1.5}
+.top{max-width:1320px;margin:0 auto;padding:22px 20px 8px}
+h1{font-size:clamp(20px,2.4vw,28px);line-height:1.2;font-weight:700;margin:0 0 6px;max-width:30em;letter-spacing:-.01em}
+.lede{margin:0;color:var(--muted);max-width:62em}
+.grid{max-width:1320px;margin:0 auto;padding:12px 20px 8px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}
+@media (max-width:960px){.grid{grid-template-columns:1fr}}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;min-width:0}
+.canvas-wrap{position:relative;height:min(64vh,600px);min-height:380px;border-radius:10px;background:var(--surface2);overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;outline:none}
+canvas:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+canvas.dragging{cursor:grabbing}
+.yearbadge{position:absolute;right:14px;top:10px;font-size:clamp(34px,5vw,56px);font-weight:700;line-height:1;
+  color:var(--ink);opacity:.18;pointer-events:none;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.controls{display:flex;gap:14px;align-items:center;padding:12px 6px 4px;flex-wrap:wrap}
+.btn{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--surface2);color:var(--ink);
+  padding:8px 14px;border-radius:8px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,.seg button:focus-visible,input:focus-visible,summary:focus-visible,.mv:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;min-width:150px}
+.slider{flex:1;min-width:220px}
+.slider input{width:100%;accent-color:var(--accent)}
+.ticks{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;padding:0 2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--ink);padding:7px 11px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.toggles{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.visibility-panel{margin:9px 6px 2px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface2)}
+.visibility-title{font-size:13px;font-weight:700;margin:0 0 9px;color:var(--ink)}
+.visibility-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.visibility-buttons button{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);border-radius:8px;padding:8px 11px;cursor:pointer;background:var(--surface);color:var(--muted)}
+.visibility-buttons button[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);background:var(--surface)}
+.visibility-buttons button[aria-pressed="false"]{opacity:.72;text-decoration:line-through}
+.visibility-buttons button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.visibility-buttons button .state{font-weight:500;margin-left:6px;font-size:12px}
+.hint{font-size:13px;color:var(--muted);margin:6px 6px 2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:6px 6px 2px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel>section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.panel h2{font-size:15px;font-weight:600;margin:0 0 8px}
+.card-name{font-size:19px;font-weight:700;line-height:1.25;margin:0 0 4px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.chip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.yt{width:100%;border-collapse:collapse;margin-top:10px;font-variant-numeric:tabular-nums;font-size:14px}
+.yt th,.yt td{padding:4px 6px;text-align:right;border-bottom:1px solid var(--line)}
+.yt th:first-child,.yt td:first-child{text-align:left}
+.yt thead th{font-weight:600;color:var(--muted);font-size:13px}
+.yt tr.cur td{background:var(--surface2)}
+.yt tr.delta td{font-weight:600;border-bottom:0}
+.up{color:var(--up)} .down{color:var(--down)}
+.cx{color:var(--ax-x)} .cy{color:var(--ax-y)} .cz{color:var(--ax-z)}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.axbar{display:grid;grid-template-columns:118px 1fr 58px;align-items:center;gap:8px;margin:7px 0;font-size:14px}
+.track{position:relative;height:12px;background:var(--surface2);border-radius:6px;overflow:hidden}
+.track::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line)}
+.fill{position:absolute;top:2px;bottom:2px;border-radius:4px}
+.axbar .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+#movers{list-style:none;margin:0;padding:0}
+.mv{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;width:100%;font:inherit;font-size:14px;color:var(--ink);
+  background:transparent;border:0;border-bottom:1px solid var(--line);padding:7px 2px;cursor:pointer;text-align:left}
+.mv:hover{background:var(--surface2)}
+.mv i{width:10px;height:10px;border-radius:50%}
+.mv b{font-variant-numeric:tabular-nums;font-weight:600}
+.method p{font-size:13.5px;color:var(--muted);margin:0 0 8px}
+.method p:last-child{margin:0}
+.data{max-width:1320px;margin:0 auto;padding:6px 20px 28px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+summary{cursor:pointer;font-weight:600}
+.tablewrap{overflow-x:auto;margin-top:10px}
+.full{border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;min-width:860px;width:100%}
+.full th,.full td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.full th:first-child,.full td:first-child{text-align:left}
+.full thead th{color:var(--muted);font-weight:600}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Смещение угроз в пространстве «токсичность — бюджет — частота», 2023–2025</h1>
+  <p class="lede">Каждая точка проходит путь через три годовых состояния. Ползунок или кнопка воспроизведения показывают, как угрозы дрейфуют по токсичности (ось X), по доле бюджета информационной безопасности (ось Y) и по частоте атак (ось Z), и куда при этом уходит Парето-ядро ущерба.</p>
+</header>
+
+<main class="grid">
+  <section class="stage">
+    <div class="canvas-wrap" id="wrap">
+      <canvas id="cv" tabindex="0" aria-label="Трёхмерная диаграмма смещения угроз. Стрелки клавиатуры вращают, плюс и минус меняют масштаб."></canvas>
+      <div class="yearbadge" id="yearBadge" aria-hidden="true">2023</div>
+    </div>
+    <div class="controls">
+      <button id="play" class="btn primary" type="button">Воспроизвести</button>
+      <div class="slider">
+        <input type="range" id="t" min="0" max="2" step="0.01" value="0" aria-label="Момент времени между 2023 и 2025 годами">
+        <div class="ticks"><span>2023</span><span>2024</span><span>2025</span></div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Вид">
+        <button type="button" data-view="iso" aria-pressed="true">Объём</button>
+        <button type="button" data-view="xy" aria-pressed="false">X–Y</button>
+        <button type="button" data-view="xz" aria-pressed="false">X–Z</button>
+        <button type="button" data-view="yz" aria-pressed="false">Y–Z</button>
+      </div>
+      <div class="toggles">
+        <label><input type="checkbox" id="optTrails" checked> траектории</label>
+        <label><input type="checkbox" id="optVec"> векторы 2023→2025</label>
+        <label><input type="checkbox" id="optShadow" checked> проекции на пол</label>
+        <label><input type="checkbox" id="optCore" checked> Парето-ядро</label>
+      </div>
+    </div>
+    <div class="visibility-panel" role="group" aria-label="Включить или выключить параметры трехмерной симуляции">
+      <p class="visibility-title">Видимость параметров — Включить / Выключить</p>
+      <div class="visibility-buttons">
+        <button type="button" data-visibility="names" aria-pressed="true">Названия киберугроз <span class="state">Включено</span></button>
+        <button type="button" data-visibility="x" aria-pressed="true">Токсичность <span class="state">Включено</span></button>
+        <button type="button" data-visibility="z" aria-pressed="true">Периодичность <span class="state">Включено</span></button>
+        <button type="button" data-visibility="y" aria-pressed="true">Бюджетность <span class="state">Включено</span></button>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:#E24B4A"></i>критический</span>
+      <span><i style="background:#EF9F27"></i>высокий</span>
+      <span><i style="background:#378ADD"></i>новые угрозы ИИ</span>
+      <span><i style="background:#1D9E75"></i>низкий</span>
+    </div>
+    <p class="hint">Перетаскивание вращает куб, колесо или щипок меняют масштаб, щелчок по точке выводит её траекторию и годовые координаты. Плоские виды X–Y, X–Z и Y–Z изолируют сдвиг по паре осей.</p>
+  </section>
+
+  <aside class="panel">
+    <section id="card" aria-live="polite"></section>
+    <section>
+      <h2>Сдвиг по осям относительно 2023 года</h2>
+      <div id="axes"></div>
+      <p class="note">Среднее смещение всех угроз, взвешенное по ущербу <i>D</i>. Для угроз, появившихся позже, отсчёт ведётся от года появления.</p>
+    </section>
+    <section>
+      <h2>Наибольшие смещения 2023→2025</h2>
+      <ol id="movers"></ol>
+    </section>
+    <section class="method">
+      <h2>Как построена модель</h2>
+      <p>Координаты нормированы в диапазоне 0–1. Состояние 2025 года совпадает с исходной версией v3 калькулятора; состояния 2023 и 2024 годов реконструированы по направлению трендов и подлежат замене эмпирическими оценками.</p>
+      <p>Путь между годовыми узлами построен квадратичной интерполяцией Лагранжа через три точки, поэтому траектория проходит точно через значения каждого года.</p>
+      <p>Ущерб угрозы оценивается как <i>D</i> = <i>x</i>·(0,25 + 0,75·<i>z</i>). Парето-ядро образует минимальный набор угроз, на который приходится не менее 80 % суммарного <i>D</i>; центр ядра взвешен по <i>D</i>.</p>
+    </section>
+  </aside>
+</main>
+
+<section class="data">
+  <details>
+    <summary>Таблица координат по годам</summary>
+    <div class="tablewrap"><table class="full" id="tbl"></table></div>
+  </details>
+</section>
+
+<script>
+(function(){
+const THREATS=[
+ {l:"Ransomware / APT",k:"crit",c:"#E24B4A",p:[[0.86,0.66,0.12],[0.89,0.69,0.10],[0.92,0.72,0.08]],n:"Исходная оценка v3: TDI 800, бюджет 16 %, дрейф медленный."},
+ {l:"Triple Extortion",k:"crit",c:"#E24B4A",p:[[0.74,0.55,0.03],[0.80,0.60,0.05],[0.85,0.65,0.06]],n:"Исходная оценка v3: TDI 750, бюджет 14 %."},
+ {l:"Supply Chain",k:"crit",c:"#E24B4A",p:[[0.78,0.44,0.05],[0.85,0.51,0.08],[0.90,0.58,0.10]],n:"Исходная оценка v3: TDI 720, бюджет 12 %, дрейф нарастает."},
+ {l:"Quantum-Decrypt",k:"crit",c:"#A32D2D",p:[[0.70,0.62,0.01],[0.75,0.66,0.03],[0.80,0.70,0.05]],n:"Перспективная угроза; частота пока близка к нулю."},
+ {l:"Phishing / BEC",k:"high",c:"#EF9F27",p:[[0.38,0.24,0.85],[0.42,0.26,0.89],[0.45,0.28,0.92]],n:"Исходная оценка v3: TDI 700, бюджет 14 %, частота 48 %."},
+ {l:"XSS / инъекции",k:"high",c:"#EF9F27",p:[[0.44,0.26,0.90],[0.42,0.24,0.89],[0.40,0.22,0.88]],n:"Единственный класс высокого уровня с обратным дрейфом."},
+ {l:"Brute Force",k:"high",c:"#EF9F27",p:[[0.42,0.32,0.84],[0.46,0.31,0.90],[0.50,0.30,0.95]],n:"Исходная оценка v3: TDI 450, бюджет 9 %."},
+ {l:"DDoS",k:"high",c:"#BA7517",p:[[0.30,0.22,0.70],[0.33,0.20,0.76],[0.35,0.18,0.80]],n:"Рост частоты при снижении доли бюджета."},
+ {l:"Deepfake-атаки",k:"ai",c:"#378ADD",p:[[0.42,0.15,0.18],[0.58,0.30,0.38],[0.70,0.45,0.55]],n:"Наибольший сдвиг по всем трём осям."},
+ {l:"LLM Jailbreaking",k:"ai",c:"#378ADD",p:[null,[0.55,0.22,0.35],[0.75,0.40,0.60]],n:"Класс появляется в модели с 2024 года."},
+ {l:"Data Poisoning",k:"ai",c:"#378ADD",p:[[0.48,0.25,0.22],[0.57,0.38,0.36],[0.65,0.50,0.50]],n:"Атака на обучающие данные модели."},
+ {l:"Token Theft",k:"ai",c:"#185FA5",p:[[0.62,0.35,0.25],[0.72,0.46,0.33],[0.80,0.55,0.42]],n:"Кража сессионных и API-токенов."},
+ {l:"Cryptojacking",k:"low",c:"#1D9E75",p:[[0.26,0.12,0.72],[0.23,0.10,0.66],[0.20,0.08,0.60]],n:"Затухающий класс."},
+ {l:"Ghost Logging",k:"low",c:"#1D9E75",p:[[0.12,0.04,0.30],[0.13,0.05,0.35],[0.15,0.05,0.40]],n:"Малозаметная, низкий ущерб."},
+ {l:"IoT / OT",k:"low",c:"#1D9E75",p:[[0.18,0.06,0.55],[0.22,0.08,0.63],[0.25,0.10,0.70]],n:"Специфика КИИ, частота нарастает."},
+ {l:"Config Drift",k:"low",c:"#1D9E75",p:[[0.15,0.06,0.26],[0.17,0.06,0.28],[0.18,0.07,0.30]],n:"Рутинный дрейф конфигураций."}
+];
+const CLS={crit:"критический",high:"высокий",ai:"новые угрозы ИИ",low:"низкий"};
+const AX=["x","y","z"];
+const AXNAME=["Токсичность (X)","Бюджет ИБ (Y)","Частота (Z)"];
+
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d"),wrap=document.getElementById("wrap");
+const tIn=document.getElementById("t"),playBtn=document.getElementById("play"),badge=document.getElementById("yearBadge");
+const opt={trails:document.getElementById("optTrails"),vec:document.getElementById("optVec"),shadow:document.getElementById("optShadow"),core:document.getElementById("optCore")};
+const visibility={names:true,x:true,y:true,z:true};
+let W=0,H=0,dpr=1,t=0,zoom=1,playing=false,lastTs=0;
+let rot={x:0.42,y:-0.62},target=null;
+let sel=THREATS[8];
+const VIEWS={iso:{x:0.42,y:-0.62},xy:{x:0,y:0},xz:{x:-Math.PI/2+0.0001,y:0},yz:{x:0,y:Math.PI/2}};
+let C={};
+
+function readColors(){
+  const s=getComputedStyle(document.documentElement);
+  ["--ink","--muted","--line","--grid","--surface","--surface2","--accent","--ax-x","--ax-y","--ax-z"].forEach(k=>C[k]=s.getPropertyValue(k).trim());
+}
+const fmt=v=>(v<0?"−":"")+Math.abs(v).toFixed(2).replace(".",",");
+const fmtS=v=>(v>0?"+":v<0?"−":"±")+Math.abs(v).toFixed(2).replace(".",",");
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const base=th=>th.p[0]?0:1;
+
+function pos(th,tt){
+  const p=th.p;
+  if(p[0]){
+    const a=(tt-1)*(tt-2)/2,b=-tt*(tt-2),c=tt*(tt-1)/2;
+    return [0,1,2].map(i=>p[0][i]*a+p[1][i]*b+p[2][i]*c);
+  }
+  const u=clamp(tt-1,0,1);
+  return [0,1,2].map(i=>p[1][i]+(p[2][i]-p[1][i])*u);
+}
+const vis=(th,tt)=>th.p[0]?1:clamp((tt-0.7)/0.3,0,1);
+const dmg=(q)=>q[0]*(0.25+0.75*q[2]);
+
+function core(tt){
+  const arr=THREATS.map(th=>{const q=pos(th,tt);return {th,q,d:dmg(q)*vis(th,tt)};}).filter(o=>o.d>0).sort((a,b)=>b.d-a.d);
+  const tot=arr.reduce((s,o)=>s+o.d,0);let acc=0;const set=[];
+  for(const o of arr){set.push(o);acc+=o.d;if(acc>=0.8*tot)break;}
+  const w=set.reduce((s,o)=>s+o.d,0);
+  const c=[0,1,2].map(i=>set.reduce((s,o)=>s+o.q[i]*o.d,0)/w);
+  return {c,n:set.length,set};
+}
+
+function resize(){
+  const r=wrap.getBoundingClientRect();dpr=window.devicePixelRatio||1;
+  W=cv.width=Math.round(r.width*dpr);H=cv.height=Math.round(r.height*dpr);
+  draw();
+}
+function proj(x,y,z){
+  const X=x-0.5,Y=y-0.5,Z=z-0.5;
+  const cy=Math.cos(rot.y),sy=Math.sin(rot.y),cx=Math.cos(rot.x),sx=Math.sin(rot.x);
+  const x1=X*cy+Z*sy,z1=-X*sy+Z*cy;
+  const y2=Y*cx-z1*sx,z2=Y*sx+z1*cx;
+  const s=Math.min(W,H)*0.62*zoom,p=3.2/(3.2+z2);
+  return {px:W/2+x1*s*p,py:H/2+H*0.03-y2*s*p,d:z2,p};
+}
+function line3(a,b,col,w,dash){
+  const A=proj(...a),B=proj(...b);
+  ctx.beginPath();ctx.moveTo(A.px,A.py);ctx.lineTo(B.px,B.py);
+  ctx.strokeStyle=col;ctx.lineWidth=(w||1)*dpr;ctx.setLineDash(dash?dash.map(v=>v*dpr):[]);ctx.stroke();ctx.setLineDash([]);
+  return B;
+}
+function arrowHead(A,B,col,size){
+  const ang=Math.atan2(B.py-A.py,B.px-A.px),al=(size||9)*dpr;
+  ctx.beginPath();ctx.moveTo(B.px,B.py);
+  ctx.lineTo(B.px-al*Math.cos(ang-0.42),B.py-al*Math.sin(ang-0.42));
+  ctx.lineTo(B.px-al*Math.cos(ang+0.42),B.py-al*Math.sin(ang+0.42));
+  ctx.closePath();ctx.fillStyle=col;ctx.fill();
+}
+function font(sz,w){return `${w||500} ${sz*dpr}px "Golos Text", system-ui, sans-serif`;}
+function hexA(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function overlaps(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+
+function drawGrid(){
+  const n=5;
+  for(let i=0;i<=n;i++){const v=i/n;
+    line3([v,0,0],[v,0,1],C["--grid"],1);line3([0,0,v],[1,0,v],C["--grid"],1);
+    line3([0,v,0],[0,v,1],C["--grid"],1);line3([0,0,v],[0,1,v],C["--grid"],1);
+    line3([v,0,0],[v,1,0],C["--grid"],1);line3([0,v,0],[1,v,0],C["--grid"],1);
+  }
+}
+function drawAxes(boxes){
+  const ends=[[1.13,0,0],[0,1.13,0],[0,0,1.13]],cols=[C["--ax-x"],C["--ax-y"],C["--ax-z"]];
+  const labels=["X · токсичность (TDI)","Y · бюджет ИБ","Z · частота атак"];
+  ends.forEach((e,i)=>{
+    if(!visibility[AX[i]])return;
+    const A=proj(0,0,0),B=line3([0,0,0],e,cols[i],2);arrowHead(A,B,cols[i],10);
+    [0.5,1].forEach(v=>{const q=[0,0,0];q[i]=v;const P=proj(...q);
+      ctx.font=font(11,500);ctx.fillStyle=C["--muted"];ctx.fillText(v.toFixed(1).replace(".",","),P.px+4*dpr,P.py+13*dpr);});
+    ctx.font=font(13,700);const w=ctx.measureText(labels[i]).width+12*dpr,h=22*dpr;
+    let bx=B.px+6*dpr,by=B.py-h/2;bx=clamp(bx,4*dpr,W-w-4*dpr);by=clamp(by,4*dpr,H-h-4*dpr);
+    rr(bx,by,w,h,6*dpr);ctx.fillStyle=hexA(toHex(C["--surface"]),0.86);ctx.fill();
+    ctx.strokeStyle=cols[i];ctx.lineWidth=1*dpr;ctx.stroke();
+    ctx.fillStyle=cols[i];ctx.fillText(labels[i],bx+6*dpr,by+15.5*dpr);
+    boxes.push({x:bx,y:by,w,h});
+  });
+}
+function toHex(c){
+  if(c.startsWith("#")){return c.length===4?"#"+[...c.slice(1)].map(ch=>ch+ch).join(""):c;}
+  const m=c.match(/\d+/g);if(!m)return "#ffffff";
+  return "#"+m.slice(0,3).map(v=>(+v).toString(16).padStart(2,"0")).join("");
+}
+
+function drawTrail(th,strong){
+  const b=base(th),pts=[];
+  for(let u=b;u<=2.0001;u+=0.04)pts.push(proj(...pos(th,u)));
+  ctx.beginPath();pts.forEach((P,i)=>i?ctx.lineTo(P.px,P.py):ctx.moveTo(P.px,P.py));
+  ctx.strokeStyle=hexA(th.c,strong?0.95:0.38);ctx.lineWidth=(strong?2.6:1.4)*dpr;ctx.stroke();
+  for(let k=b;k<=2;k++){
+    const P=proj(...th.p[k]);ctx.beginPath();ctx.arc(P.px,P.py,(strong?4.5:3)*dpr,0,Math.PI*2);
+    ctx.fillStyle=C["--surface"];ctx.fill();ctx.strokeStyle=hexA(th.c,strong?1:0.6);ctx.lineWidth=1.4*dpr;ctx.stroke();
+    if(strong&&visibility.names){ctx.font=font(12,600);ctx.fillStyle=th.c;ctx.fillText(String(2023+k),P.px+7*dpr,P.py+15*dpr);}
+  }
+}
+function drawVector(th){
+  const a=th.p[base(th)],b=th.p[2];
+  const A=proj(...a),B=line3(a,b,hexA(th.c,0.9),1.8,[6,4]);arrowHead(A,B,hexA(th.c,0.95),8);
+}
+function drawCore(){
+  const trail=[];for(let u=0;u<=2.0001;u+=0.05)trail.push(proj(...core(u).c));
+  ctx.beginPath();trail.forEach((P,i)=>i?ctx.lineTo(P.px,P.py):ctx.moveTo(P.px,P.py));
+  ctx.strokeStyle="rgba(226,75,74,0.55)";ctx.lineWidth=2*dpr;ctx.setLineDash([3*dpr,4*dpr]);ctx.stroke();ctx.setLineDash([]);
+  [0,1,2].forEach(k=>{const P=proj(...core(k).c);ctx.beginPath();ctx.arc(P.px,P.py,3.2*dpr,0,Math.PI*2);ctx.fillStyle="rgba(226,75,74,0.8)";ctx.fill();});
+  const cr=core(t),P=proj(...cr.c),r=0.13*Math.min(W,H)*0.62*zoom*P.p;
+  const g=ctx.createRadialGradient(P.px,P.py,r*0.1,P.px,P.py,r);
+  g.addColorStop(0,"rgba(226,75,74,0.20)");g.addColorStop(1,"rgba(226,75,74,0)");
+  ctx.beginPath();ctx.arc(P.px,P.py,r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+  ctx.strokeStyle="rgba(226,75,74,0.5)";ctx.lineWidth=1.4*dpr;ctx.setLineDash([6*dpr,4*dpr]);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(P.px-6*dpr,P.py);ctx.lineTo(P.px+6*dpr,P.py);ctx.moveTo(P.px,P.py-6*dpr);ctx.lineTo(P.px,P.py+6*dpr);
+  ctx.strokeStyle="rgba(226,75,74,0.95)";ctx.lineWidth=2*dpr;ctx.stroke();
+  return {P,r,n:cr.n};
+}
+
+function placeLabel(text,P,r,col,boxes,force,sub){
+  ctx.font=font(12.5,600);
+  const tw=ctx.measureText(text).width;let sw=0;
+  if(sub){ctx.font=font(11,500);sw=ctx.measureText(sub).width;}
+  const w=Math.max(tw,sw)+12*dpr,h=(sub?34:21)*dpr,g=r+7*dpr;
+  const cand=[[g,-g-h],[-g-w,-g-h],[g,g],[-g-w,g],[-w/2,-g-h-4*dpr],[-w/2,g+4*dpr],[g+22*dpr,-g-h-20*dpr],[-g-w-22*dpr,-g-h-20*dpr],[g+22*dpr,g+20*dpr],[-g-w-22*dpr,g+20*dpr],[g+40*dpr,-h/2],[-g-w-40*dpr,-h/2]];
+  let box=null;
+  for(const [dx,dy] of cand){
+    const b={x:P.px+dx,y:P.py+dy,w,h};
+    if(b.x<2*dpr||b.y<2*dpr||b.x+w>W-2*dpr||b.y+h>H-2*dpr)continue;
+    if(boxes.some(o=>overlaps(b,o)))continue;box=b;break;
+  }
+  if(!box&&force){box={x:clamp(P.px+g,2*dpr,W-w-2*dpr),y:clamp(P.py-g-h,2*dpr,H-h-2*dpr),w,h};}
+  if(!box)return false;
+  boxes.push(box);
+  const ex=clamp(P.px,box.x,box.x+w),ey=clamp(P.py,box.y,box.y+h);
+  const ang=Math.atan2(ey-P.py,ex-P.px);
+  ctx.beginPath();ctx.moveTo(P.px+Math.cos(ang)*r,P.py+Math.sin(ang)*r);ctx.lineTo(ex,ey);
+  ctx.strokeStyle=hexA(col,0.75);ctx.lineWidth=1*dpr;ctx.stroke();
+  rr(box.x,box.y,w,h,5*dpr);ctx.fillStyle=hexA(toHex(C["--surface"]),force?0.97:0.88);ctx.fill();
+  ctx.strokeStyle=hexA(col,force?0.9:0.45);ctx.lineWidth=(force?1.5:1)*dpr;ctx.stroke();
+  ctx.font=font(12.5,600);ctx.fillStyle=C["--ink"];ctx.fillText(text,box.x+6*dpr,box.y+15*dpr);
+  if(sub){ctx.font=font(11,500);ctx.fillStyle=C["--muted"];ctx.fillText(sub,box.x+6*dpr,box.y+29*dpr);}
+  return true;
+}
+
+function draw(){
+  if(!W)return;
+  ctx.clearRect(0,0,W,H);
+  drawGrid();
+  const boxes=[];
+  drawAxes(boxes);
+  let coreInfo=null;
+  if(opt.core.checked)coreInfo=drawCore();
+  if(opt.trails.checked)THREATS.forEach(th=>{if(th!==sel)drawTrail(th,false);});
+  if(sel)drawTrail(sel,true);
+  if(opt.vec.checked)THREATS.forEach(drawVector);
+  const nodes=THREATS.map(th=>{const q=pos(th,t),P=proj(...q),a=vis(th,t);
+    const r=(5+q[0]*9)*dpr*Math.sqrt(zoom)*P.p;return {th,q,P,a,r};}).filter(o=>o.a>0.01);
+  if(opt.shadow.checked)nodes.forEach(o=>{
+    const F=proj(o.q[0],0,o.q[2]);
+    ctx.beginPath();ctx.moveTo(o.P.px,o.P.py);ctx.lineTo(F.px,F.py);
+    ctx.strokeStyle=hexA(o.th.c,0.28*o.a);ctx.lineWidth=1*dpr;ctx.setLineDash([2*dpr,3*dpr]);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.ellipse(F.px,F.py,3.5*dpr,2*dpr,0,0,Math.PI*2);ctx.fillStyle=hexA(o.th.c,0.35*o.a);ctx.fill();
+  });
+  nodes.sort((a,b)=>b.P.d-a.P.d).forEach(o=>{
+    const isS=o.th===sel;
+    if(isS){const g=ctx.createRadialGradient(o.P.px,o.P.py,0,o.P.px,o.P.py,o.r*2.6);
+      g.addColorStop(0,hexA(o.th.c,0.35));g.addColorStop(1,hexA(o.th.c,0));
+      ctx.beginPath();ctx.arc(o.P.px,o.P.py,o.r*2.6,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();}
+    ctx.globalAlpha=o.a;
+    ctx.beginPath();ctx.arc(o.P.px,o.P.py,o.r,0,Math.PI*2);ctx.fillStyle=hexA(o.th.c,isS?1:0.85);ctx.fill();
+    ctx.strokeStyle=isS?C["--ink"]:hexA(o.th.c,1);ctx.lineWidth=(isS?2.2:1)*dpr;ctx.stroke();
+    ctx.globalAlpha=1;
+    boxes.push({x:o.P.px-o.r,y:o.P.py-o.r,w:o.r*2,h:o.r*2});
+  });
+  if(coreInfo&&visibility.names){
+    placeLabel("Парето-ядро",coreInfo.P,8*dpr,"#E24B4A",boxes,false,`${coreInfo.n} угроз · ≥80 % ущерба`);
+  }
+  const order=[...nodes].sort((a,b)=>(b.th===sel)-(a.th===sel)||b.r-a.r);
+  if(visibility.names)order.forEach(o=>{
+    const isS=o.th===sel;
+    const activeCoords=AX.map((key,i)=>visibility[key]?`${key} ${fmt(o.q[i])}`:null).filter(Boolean).join('  ');
+    placeLabel(o.th.l,o.P,o.r,o.th.c,boxes,isS,isS?activeCoords:null);
+  });
+  const yr=2023+t;
+  badge.textContent=Math.abs(yr-Math.round(yr))<0.005?String(Math.round(yr)):yr.toFixed(1).replace(".",",");
+}
+
+function renderCard(){
+  const el=document.getElementById("card"),th=sel;
+  if(!th){el.innerHTML="<p class='note'>Выберите точку на диаграмме.</p>";return;}
+  const b=base(th),cur=pos(th,t);
+  let rows="";
+  const active=AX.map((key,i)=>visibility[key]?i:-1).filter(i=>i>=0);
+  for(let k=0;k<3;k++){
+    const q=th.p[k];
+    rows+=`<tr${Math.round(t)===k&&Math.abs(t-k)<0.02?" class='cur'":""}><td>${2023+k}</td>`+
+      (q?active.map(i=>`<td>${fmt(q[i])}</td>`).join(""):`<td colspan='${Math.max(1,active.length)}' style='text-align:center;color:var(--muted)'>класс отсутствует</td>`)+"</tr>";
+  }
+  const d=th.p[2].map((v,i)=>v-th.p[b][i]);
+  const dl=Math.hypot(...d);
+  rows+=`<tr class="delta"><td>Δ ${2023+b}→2025</td>`+active.map(i=>`<td class="${d[i]>0.005?"up":d[i]<-0.005?"down":""}">${fmtS(d[i])}</td>`).join("")+"</tr>";
+  el.innerHTML=`<p class="card-name">${visibility.names?th.l:'Выбранная киберугроза'}</p>
+    <span class="chip"><i style="background:${th.c}"></i>${CLS[th.k]}</span>
+    <table class="yt"><thead><tr><th>Год</th>${active.map(i=>`<th class="c${AX[i]}">${AX[i].toUpperCase()}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+    <p class="note">Сейчас: ${AX.map((key,i)=>visibility[key]?`${key} ${fmt(cur[i])}`:null).filter(Boolean).join(', ')||'параметры скрыты'}. Длина пути в пространстве |Δ| = ${fmt(dl)}. ${visibility.names?th.n:''}</p>`;
+}
+function renderAxes(){
+  const el=document.getElementById("axes");
+  let sw=0;const s=[0,0,0];
+  THREATS.forEach(th=>{const a=vis(th,t);if(!a)return;const q=pos(th,t),b=th.p[base(th)],w=dmg(q)*a;sw+=w;
+    for(let i=0;i<3;i++)s[i]+=w*(q[i]-b[i]);});
+  const v=s.map(x=>sw?x/sw:0),cols=["var(--ax-x)","var(--ax-y)","var(--ax-z)"],M=0.25;
+  el.innerHTML=v.map((d,i)=>{if(!visibility[AX[i]])return '';const pct=clamp(Math.abs(d)/M,0,1)*50;
+    const left=d>=0?50:50-pct;
+    return `<div class="axbar"><span>${AXNAME[i]}</span><div class="track"><div class="fill" style="left:${left}%;width:${pct}%;background:${cols[i]}"></div></div><span class="v">${fmtS(d)}</span></div>`;}).join("");
+}
+function renderMovers(){
+  const el=document.getElementById("movers");
+  const arr=THREATS.map(th=>{const b=th.p[base(th)];return {th,d:Math.hypot(...th.p[2].map((v,i)=>v-b[i]))};}).sort((a,b)=>b.d-a.d).slice(0,6);
+  el.innerHTML="";
+  arr.forEach(o=>{const li=document.createElement("li");const bt=document.createElement("button");bt.className="mv";bt.type="button";
+    bt.innerHTML=`<i style="background:${o.th.c}"></i><span>${visibility.names?o.th.l:'Киберугроза'}</span><b>${fmt(o.d)}</b>`;
+    bt.addEventListener("click",()=>{sel=o.th;update();});li.appendChild(bt);el.appendChild(li);});
+}
+function renderTable(){
+  const el=document.getElementById("tbl");
+  let h="<thead><tr>"+(visibility.names?"<th>Угроза</th>":"")+"<th>Класс</th>";
+  [2023,2024,2025].forEach(y=>{AX.forEach(key=>{if(visibility[key])h+=`<th class="c${key}">${key.toUpperCase()} ${y}</th>`;});});
+  h+="<th>|Δ|</th></tr></thead><tbody>";
+  THREATS.forEach(th=>{const b=th.p[base(th)];const d=Math.hypot(...th.p[2].map((v,i)=>v-b[i]));
+    h+=`<tr>${visibility.names?`<td>${th.l}</td>`:''}<td>${CLS[th.k]}</td>`;
+    th.p.forEach(q=>{AX.forEach((key,i)=>{if(visibility[key])h+=`<td>${q?fmt(q[i]):'—'}</td>`;});});
+    h+=`<td><b>${fmt(d)}</b></td></tr>`;});
+  el.innerHTML=h+"</tbody>";
+}
+function update(){draw();renderCard();renderAxes();renderTable();}
+
+function loop(ts){
+  const dt=lastTs?Math.min(ts-lastTs,50):16;lastTs=ts;let again=false;
+  if(playing){t+=dt/3200;if(t>=2){t=2;setPlay(false);}tIn.value=t;again=true;}
+  if(target){rot.x+=(target.x-rot.x)*0.16;rot.y+=(target.y-rot.y)*0.16;
+    if(Math.abs(target.x-rot.x)<0.002&&Math.abs(target.y-rot.y)<0.002){rot={...target};target=null;}else again=true;}
+  playing?update():draw();
+  if(again)requestAnimationFrame(loop);else lastTs=0;
+}
+function kick(){if(!lastTs)requestAnimationFrame(loop);}
+function setPlay(on){playing=on;playBtn.textContent=on?"Пауза":"Воспроизвести";if(on){if(t>=2)t=0;kick();}else update();}
+playBtn.addEventListener("click",()=>setPlay(!playing));
+tIn.addEventListener("input",()=>{t=+tIn.value;if(playing)setPlay(false);update();});
+Object.values(opt).forEach(o=>o.addEventListener("change",draw));
+document.querySelectorAll('[data-visibility]').forEach(button=>button.addEventListener('click',()=>{
+  const key=button.dataset.visibility;
+  visibility[key]=!visibility[key];
+  button.setAttribute('aria-pressed',String(visibility[key]));
+  button.querySelector('.state').textContent=visibility[key]?'Включено':'Выключено';
+  update();renderMovers();
+}));
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+  target={...VIEWS[b.dataset.view]};
+  const tw=v=>{let d=(v-rot.y)%(2*Math.PI);if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;return rot.y+d;};
+  target.y=tw(target.y);kick();
+}));
+
+const ptrs=new Map();let down=null,moved=false,pinch=null;
+function hit(cx,cy){
+  const r=cv.getBoundingClientRect(),x=(cx-r.left)*dpr,y=(cy-r.top)*dpr;let best=null,bd=Infinity;
+  THREATS.forEach(th=>{if(vis(th,t)<0.2)return;const q=pos(th,t),P=proj(...q),rad=(5+q[0]*9)*dpr*Math.sqrt(zoom)*P.p+8*dpr;
+    const d=Math.hypot(x-P.px,y-P.py);if(d<rad&&d<bd){bd=d;best=th;}});
+  return best;
+}
+cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===1){down={x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY};moved=false;cv.classList.add("dragging");}
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:zoom};}});
+cv.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2&&pinch){const [a,b]=[...ptrs.values()];zoom=clamp(pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,0.5,2.6);moved=true;draw();return;}
+  if(down){const dx=e.clientX-down.lx,dy=e.clientY-down.ly;down.lx=e.clientX;down.ly=e.clientY;
+    if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>4)moved=true;
+    if(moved){target=null;rot.y+=dx*0.008;rot.x=clamp(rot.x+dy*0.008,-1.57,1.57);
+      document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed","false"));draw();}}});
+function endPtr(e){if(!ptrs.has(e.pointerId))return;
+  if(ptrs.size===1&&down&&!moved){const h=hit(e.clientX,e.clientY);if(h){sel=h;update();}}
+  ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(!ptrs.size){down=null;cv.classList.remove("dragging");}}
+cv.addEventListener("pointerup",endPtr);cv.addEventListener("pointercancel",endPtr);
+cv.addEventListener("wheel",e=>{e.preventDefault();zoom=clamp(zoom*Math.exp(-e.deltaY*0.0012),0.5,2.6);draw();},{passive:false});
+cv.addEventListener("keydown",e=>{const k=e.key;let h=true;
+  if(k==="ArrowLeft")rot.y-=0.08;else if(k==="ArrowRight")rot.y+=0.08;else if(k==="ArrowUp")rot.x=clamp(rot.x-0.08,-1.57,1.57);
+  else if(k==="ArrowDown")rot.x=clamp(rot.x+0.08,-1.57,1.57);else if(k==="+"||k==="=")zoom=clamp(zoom*1.1,0.5,2.6);
+  else if(k==="-")zoom=clamp(zoom/1.1,0.5,2.6);else h=false;if(h){e.preventDefault();target=null;draw();}});
+
+const mq=window.matchMedia("(prefers-color-scheme: dark)");
+const onTheme=()=>{readColors();draw();};
+if(mq.addEventListener)mq.addEventListener("change",onTheme);else if(mq.addListener)mq.addListener(onTheme);
+new MutationObserver(onTheme).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+new ResizeObserver(resize).observe(wrap);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+
+readColors();renderMovers();renderTable();resize();update();
+})();
+</script>
+</body>
+</html>
