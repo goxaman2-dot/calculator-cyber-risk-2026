@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ландшафт ущерба 2023–2025</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e9edf1; --surface:#ffffff; --surface2:#f4f6f8; --ink:#16202b; --muted:#566373;
+  --line:#cfd7e0; --grid:rgba(40,60,80,.10); --accent:#1f5fbf;
+  --ax-x:#c4512f; --ax-y:#8a3fb8; --ax-z:#18885d;
+  --terrain:#b5462f; --plane:#c98a12; --prevent:#1d8a5a;
+  --up:#b3261e; --down:#1d7a52;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e151d; --surface:#16202b; --surface2:#1c2835; --ink:#e4ebf3; --muted:#93a2b3;
+    --line:#2b3947; --grid:rgba(180,200,220,.09); --accent:#74abff;
+    --ax-x:#ff8d6e; --ax-y:#c99bff; --ax-z:#62d8a6;
+    --terrain:#ff8a6a; --plane:#f2b84b; --prevent:#5fd69e;
+    --up:#ff8a80; --down:#6fe0aa;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e151d; --surface:#16202b; --surface2:#1c2835; --ink:#e4ebf3; --muted:#93a2b3;
+  --line:#2b3947; --grid:rgba(180,200,220,.09); --accent:#74abff;
+  --ax-x:#ff8d6e; --ax-y:#c99bff; --ax-z:#62d8a6;
+  --terrain:#ff8a6a; --plane:#f2b84b; --prevent:#5fd69e;
+  --up:#ff8a80; --down:#6fe0aa;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;line-height:1.5}
+.top{max-width:1360px;margin:0 auto;padding:22px 20px 8px}
+h1{font-size:clamp(20px,2.4vw,28px);line-height:1.2;font-weight:700;margin:0 0 6px;max-width:32em;letter-spacing:-.01em}
+.lede{margin:0;color:var(--muted);max-width:66em}
+.grid{max-width:1360px;margin:0 auto;padding:12px 20px 8px;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;min-width:0}
+.canvas-wrap{position:relative;height:min(66vh,620px);min-height:380px;border-radius:10px;background:var(--surface2);overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;outline:none}
+canvas:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+canvas.dragging{cursor:grabbing}
+.yearbadge{position:absolute;right:14px;top:10px;font-size:clamp(34px,5vw,56px);font-weight:700;line-height:1;color:var(--ink);opacity:.18;pointer-events:none;font-variant-numeric:tabular-nums}
+.controls{display:flex;gap:14px;align-items:center;padding:12px 6px 4px;flex-wrap:wrap}
+.btn{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--surface2);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,.seg button:focus-visible,input:focus-visible,summary:focus-visible,.mv:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;min-width:150px}
+.slider{flex:1;min-width:220px}
+.slider input{width:100%;accent-color:var(--accent)}
+.ticks{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;padding:0 2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--ink);padding:7px 11px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.toggles{display:flex;gap:8px 14px;flex-wrap:wrap;font-size:14px}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.hint{font-size:13px;color:var(--muted);margin:6px 6px 2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:6px 6px 2px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.legend i.bar{width:4px;height:14px;border-radius:2px}
+.legend i.ring{background:transparent!important;border:2px solid var(--up)}
+.legend i.plane{width:14px;height:9px;border-radius:2px;border:1px dashed var(--plane);background:transparent}
+.panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel>section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.panel h2{font-size:15px;font-weight:600;margin:0 0 8px}
+.card-name{font-size:19px;font-weight:700;line-height:1.25;margin:0 0 4px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-right:10px}
+.chip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.flag{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px;margin:6px 6px 0 0;border:1px solid var(--line)}
+.flag.bad{color:var(--up);border-color:var(--up)}
+.flag.ok{color:var(--down);border-color:var(--down)}
+.flag.lat{color:var(--accent);border-color:var(--accent)}
+.yt{width:100%;border-collapse:collapse;margin-top:10px;font-variant-numeric:tabular-nums;font-size:13px}
+.yt th,.yt td{padding:4px 4px;text-align:right;border-bottom:1px solid var(--line)}
+.yt th:first-child,.yt td:first-child{text-align:left}
+.yt thead th{font-weight:600;color:var(--muted);font-size:12px}
+.yt tr.cur td{background:var(--surface2)}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.prm{display:grid;grid-template-columns:1fr 64px;gap:2px 10px;align-items:center;margin:8px 0 2px;font-size:14px}
+.prm input{grid-column:1 / -1;width:100%;accent-color:var(--accent)}
+.prm output{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi div{background:var(--surface2);border-radius:8px;padding:8px}
+.kpi b{display:block;font-size:20px;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi span{font-size:12px;color:var(--muted)}
+.lag{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;margin-top:8px}
+.lag th,.lag td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right}
+.lag th:first-child,.lag td:first-child{text-align:left}
+.lag thead th{color:var(--muted);font-weight:600}
+#top{list-style:none;margin:0;padding:0}
+.mv{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;width:100%;font:inherit;font-size:14px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--line);padding:7px 2px;cursor:pointer;text-align:left}
+.mv:hover{background:var(--surface2)}
+.mv i{width:10px;height:10px;border-radius:50%}
+.mv b{font-variant-numeric:tabular-nums;font-weight:600}
+.mv b.bad{color:var(--up)}
+.method p{font-size:13.5px;color:var(--muted);margin:0 0 8px}
+.method p:last-child{margin:0}
+.data{max-width:1360px;margin:0 auto;padding:6px 20px 28px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+summary{cursor:pointer;font-weight:600}
+.tablewrap{overflow-x:auto;margin-top:10px}
+.full{border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;min-width:900px;width:100%}
+.full th,.full td{padding:5px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.full th:first-child,.full td:first-child{text-align:left}
+.full thead th{color:var(--muted);font-weight:600}
+.bad{color:var(--up)}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Ландшафт ущерба: угрозы, затраты на защиту и отложенные атаки, 2023–2025</h1>
+  <p class="lede">Пол куба — эпидемическая карта угроз: токсичность (X) и частота (Z). Рельеф над полом — потенциальный ущерб, который угроза нанесёт без защиты и при полном «созревании». Точка — остаточный ущерб после мер защиты. Зелёный отрезок от рельефа вниз до точки — ущерб, предотвращённый затратами; толщина отрезка отражает уровень затрат. Затраты не являются координатой: они объясняют, насколько точка прижата вниз.</p>
+</header>
+
+<main class="grid">
+  <section class="stage">
+    <div class="canvas-wrap" id="wrap">
+      <canvas id="cv" tabindex="0" aria-label="Трёхмерный ландшафт ущерба. Стрелки клавиатуры вращают, плюс и минус меняют масштаб."></canvas>
+      <div class="yearbadge" id="yearBadge" aria-hidden="true">2023</div>
+    </div>
+    <div class="controls">
+      <button id="play" class="btn primary" type="button">Воспроизвести</button>
+      <div class="slider">
+        <input type="range" id="t" min="0" max="2" step="0.01" value="0" aria-label="Момент времени между 2023 и 2025 годами">
+        <div class="ticks"><span>2023</span><span>2024</span><span>2025</span></div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Вид">
+        <button type="button" data-view="iso" aria-pressed="true">Объём</button>
+        <button type="button" data-view="xy" aria-pressed="false">X – ущерб</button>
+        <button type="button" data-view="zy" aria-pressed="false">Z – ущерб</button>
+        <button type="button" data-view="top" aria-pressed="false">Сверху X–Z</button>
+      </div>
+      <div class="toggles">
+        <label><input type="checkbox" id="optTerrain" checked> рельеф</label>
+        <label><input type="checkbox" id="optPlane" checked> приемлемый ущерб</label>
+        <label><input type="checkbox" id="optStem" checked> предотвращённый ущерб</label>
+        <label><input type="checkbox" id="optRipe" checked> созревание</label>
+        <label><input type="checkbox" id="optTrails"> траектории</label>
+        <label><input type="checkbox" id="optLabels"> названия угроз</label>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:#E24B4A"></i>критический</span>
+      <span><i style="background:#EF9F27"></i>высокий</span>
+      <span><i style="background:#378ADD"></i>новые угрозы ИИ</span>
+      <span><i style="background:#1D9E75"></i>низкий</span>
+      <span><i class="bar" style="background:var(--prevent)"></i>предотвращено затратами</span>
+      <span><i class="ring"></i>выше приемлемого</span>
+      <span><i class="plane"></i>уровень приемлемого ущерба</span>
+    </div>
+    <p class="hint">Дуга вокруг точки показывает степень созревания отложенной атаки: полный круг означает, что злоумышленник дождётся максимального ущерба. Перетаскивание вращает куб, колесо меняет масштаб, щелчок по точке открывает карточку угрозы.</p>
+  </section>
+
+  <aside class="panel">
+    <section id="card" aria-live="polite"></section>
+    <section>
+      <h2>Итог по ландшафту</h2>
+      <div class="kpi">
+        <div><b id="kPot">—</b><span>потенциальный ущерб</span></div>
+        <div><b id="kRes">—</b><span>остаточный ущерб</span></div>
+        <div><b id="kOver">—</b><span>угроз выше приемлемого</span></div>
+      </div>
+      <p class="note" id="kNote"></p>
+    </section>
+    <section>
+      <h2>Параметры модели</h2>
+      <div class="prm"><label for="pMttd">Среднее время обнаружения, сут.</label><output id="oMttd"></output><input type="range" id="pMttd" min="1" max="180" step="1" value="30"></div>
+      <div class="prm"><label for="pEmax">Предельная эффективность мер <i>E</i><sub>max</sub></label><output id="oEmax"></output><input type="range" id="pEmax" min="0.5" max="0.99" step="0.01" value="0.85"></div>
+      <div class="prm"><label for="pEc50">Затраты половинного эффекта <i>EC</i><sub>50</sub></label><output id="oEc50"></output><input type="range" id="pEc50" min="0.05" max="0.6" step="0.01" value="0.30"></div>
+      <div class="prm"><label for="pH">Крутизна кривой «доза — эффект» <i>h</i></label><output id="oH"></output><input type="range" id="pH" min="0.5" max="4" step="0.1" value="1.5"></div>
+      <div class="prm"><label for="pDa">Приемлемый ущерб <i>D</i><sub>a</sub></label><output id="oDa"></output><input type="range" id="pDa" min="0.02" max="0.4" step="0.01" value="0.12"></div>
+      <p class="note">Параметры заданы экспертно. Ползунки нужны для анализа чувствительности: выводы, которые меняются при сдвиге параметра в разумных пределах, нельзя считать устойчивыми.</p>
+    </section>
+    <section>
+      <h2>Запаздывание затрат (гипотеза H1)</h2>
+      <table class="lag" id="lag"></table>
+      <p class="note">Корреляция Пирсона между затратами на угрозы и их потенциальным ущербом в том же году и в предыдущем. Если затраты сильнее связаны с прошлогодним ущербом, защита идёт за угрозой с опозданием. На реконструированных данных 2023–2024 годов это иллюстрация метода, а не проверка гипотезы.</p>
+    </section>
+    <section>
+      <h2>Наибольший остаточный ущерб</h2>
+      <ol id="top"></ol>
+    </section>
+    <section class="method">
+      <h2>Как построена модель</h2>
+      <p>Потенциальный ущерб: <i>D</i><sub>p</sub> = <i>x</i>·(0,25 + 0,75·<i>z</i>), где <i>x</i> — токсичность, <i>z</i> — частота. Формула унаследована от версии v3 и является допущением.</p>
+      <p>Эффективность затрат <i>y</i> описывается уравнением Хилла: <i>E</i>(<i>y</i>) = <i>E</i><sub>max</sub>·<i>y</i><sup><i>h</i></sup> / (<i>EC</i><sub>50</sub><sup><i>h</i></sup> + <i>y</i><sup><i>h</i></sup>). Уровни затрат <i>y</i> взяты из прежней оси «Бюджет ИБ».</p>
+      <p>Отложенная атака: ущерб растёт по логистической кривой со скоростью <i>g</i> от начальной доли <i>ρ</i><sub>0</sub>. Злоумышленник максимизирует <i>D</i>(<i>τ</i>)·e<sup>−<i>λτ</i></sup>, где <i>λ</i> = 1 / (время обнаружения). Оптимум даёт долю созревания <i>ρ</i> = max(<i>ρ</i><sub>0</sub>; 1 − <i>λ</i>/<i>g</i>). При <i>λ</i> ≥ <i>g</i> ждать невыгодно.</p>
+      <p>Остаточный ущерб: <i>D</i><sub>r</sub> = <i>D</i><sub>p</sub>·<i>ρ</i>·(1 − <i>E</i>(<i>y</i>)). Угроза считается резистентной, если даже при <i>E</i> = <i>E</i><sub>max</sub> её ущерб остаётся выше <i>D</i><sub>a</sub>: тогда рост затрат на ту же меру бесполезен и нужна мера другого типа.</p>
+      <p>Значения <i>g</i> и <i>ρ</i><sub>0</sub> для классов угроз — экспертные. Для Quantum-Decrypt обнаружение не прерывает атаку: данные уже вынесены, и ущерб созревает полностью.</p>
+    </section>
+  </aside>
+</main>
+
+<section class="data">
+  <details>
+    <summary>Таблица расчёта по годам</summary>
+    <div class="tablewrap"><table class="full" id="tbl"></table></div>
+  </details>
+</section>
+
+<script>
+(function(){
+// p: [x токсичность, y уровень затрат, z частота] по годам 2023, 2024, 2025
+// r0: доля ущерба при немедленном ударе; g: скорость роста ущерба при скрытом присутствии, 1/сут.; det:false — обнаружение не прерывает атаку
+const THREATS=[
+ {l:"Ransomware / APT",k:"crit",c:"#E24B4A",p:[[0.86,0.66,0.12],[0.89,0.69,0.10],[0.92,0.72,0.08]],r0:0.35,g:0.08,n:"Шифрование обычно приурочено к моменту наибольшего простоя: закрытие периода, праздники."},
+ {l:"Triple Extortion",k:"crit",c:"#E24B4A",p:[[0.74,0.55,0.03],[0.80,0.60,0.05],[0.85,0.65,0.06]],r0:0.40,g:0.10,n:"Перед ударом злоумышленник собирает данные для давления на клиентов жертвы."},
+ {l:"Supply Chain",k:"crit",c:"#E24B4A",p:[[0.78,0.44,0.05],[0.85,0.51,0.08],[0.90,0.58,0.10]],r0:0.20,g:0.010,n:"Длительное скрытое присутствие у поставщика, проявление через месяцы."},
+ {l:"Quantum-Decrypt",k:"crit",c:"#A32D2D",p:[[0.70,0.62,0.01],[0.75,0.66,0.03],[0.80,0.70,0.05]],r0:0.05,g:0.001,det:false,n:"«Собери сейчас — расшифруй потом»: обнаружение уже не возвращает вынесенные данные."},
+ {l:"Phishing / BEC",k:"high",c:"#EF9F27",p:[[0.38,0.24,0.85],[0.42,0.26,0.89],[0.45,0.28,0.92]],r0:0.50,g:0.05,n:"BEC-атака выжидает крупный платёж, чтобы подменить реквизиты."},
+ {l:"XSS / инъекции",k:"high",c:"#EF9F27",p:[[0.44,0.26,0.90],[0.42,0.24,0.89],[0.40,0.22,0.88]],r0:0.90,g:0.30,n:"Ущерб реализуется почти сразу; класс вытесняется современными фреймворками."},
+ {l:"Brute Force",k:"high",c:"#EF9F27",p:[[0.42,0.32,0.84],[0.46,0.31,0.90],[0.50,0.30,0.95]],r0:1,g:1,n:"Атака без латентной фазы."},
+ {l:"DDoS",k:"high",c:"#BA7517",p:[[0.30,0.22,0.70],[0.33,0.20,0.76],[0.35,0.18,0.80]],r0:1,g:1,n:"Ущерб равен простою во время атаки, латентной фазы нет."},
+ {l:"Deepfake-атаки",k:"ai",c:"#378ADD",p:[[0.42,0.15,0.18],[0.58,0.30,0.38],[0.70,0.45,0.55]],r0:0.60,g:0.10,n:"Наибольший сдвиг по полу ландшафта; затраты отстают."},
+ {l:"LLM Jailbreaking",k:"ai",c:"#378ADD",p:[null,[0.55,0.22,0.35],[0.75,0.40,0.60]],r0:0.80,g:0.30,n:"Класс появляется в 2024 году: антигенный сдвиг, а не дрейф."},
+ {l:"Data Poisoning",k:"ai",c:"#378ADD",p:[[0.48,0.25,0.22],[0.57,0.38,0.36],[0.65,0.50,0.50]],r0:0.15,g:0.008,n:"Проявляется после переобучения модели, когда на неё уже опираются решения."},
+ {l:"Token Theft",k:"ai",c:"#185FA5",p:[[0.62,0.35,0.25],[0.72,0.46,0.33],[0.80,0.55,0.42]],r0:0.40,g:0.04,n:"Украденный токен используют, когда доступ даёт наибольшую выгоду."},
+ {l:"Cryptojacking",k:"low",c:"#1D9E75",p:[[0.26,0.12,0.72],[0.23,0.10,0.66],[0.20,0.08,0.60]],r0:0.30,g:0.02,n:"Ущерб накапливается, пока майнер не обнаружен."},
+ {l:"Ghost Logging",k:"low",c:"#1D9E75",p:[[0.12,0.04,0.30],[0.13,0.05,0.35],[0.15,0.05,0.40]],r0:0.20,g:0.010,n:"Малозаметная угроза с долгим скрытым присутствием."},
+ {l:"IoT / OT",k:"low",c:"#1D9E75",p:[[0.18,0.06,0.55],[0.22,0.08,0.63],[0.25,0.10,0.70]],r0:0.30,g:0.015,n:"Специфика КИИ: закрепление в устройствах на месяцы."},
+ {l:"Config Drift",k:"low",c:"#1D9E75",p:[[0.15,0.06,0.26],[0.17,0.06,0.28],[0.18,0.07,0.30]],r0:0.30,g:0.006,n:"Рутинный дрейф конфигураций, ущерб копится незаметно."}
+];
+const CLS={crit:"критический",high:"высокий",ai:"новые угрозы ИИ",low:"низкий"};
+
+const $=id=>document.getElementById(id);
+const cv=$("cv"),ctx=cv.getContext("2d"),wrap=$("wrap");
+const tIn=$("t"),playBtn=$("play"),badge=$("yearBadge");
+const opt={terrain:$("optTerrain"),plane:$("optPlane"),stem:$("optStem"),ripe:$("optRipe"),trails:$("optTrails"),labels:$("optLabels")};
+const P={mttd:$("pMttd"),emax:$("pEmax"),ec50:$("pEc50"),h:$("pH"),da:$("pDa")};
+let W=0,H=0,dpr=1,t=0,zoom=1,playing=false,lastTs=0;
+let rot={x:0.38,y:-0.70},target=null;
+let sel=THREATS[8];
+const VIEWS={iso:{x:0.38,y:-0.70},xy:{x:0,y:0},zy:{x:0,y:-Math.PI/2},top:{x:-Math.PI/2+0.0001,y:0}};
+let C={};
+
+function readColors(){
+  const s=getComputedStyle(document.documentElement);
+  ["--ink","--muted","--line","--grid","--surface","--surface2","--accent","--ax-x","--ax-y","--ax-z","--terrain","--plane","--prevent","--up","--down"].forEach(k=>C[k]=toHex(s.getPropertyValue(k).trim()));
+  C["--grid"]=s.getPropertyValue("--grid").trim();
+}
+const fmt=(v,d=2)=>(v<0?"−":"")+Math.abs(v).toFixed(d).replace(".",",");
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const base=th=>th.p[0]?0:1;
+
+function prm(){
+  return {lam:1/(+P.mttd.value),emax:+P.emax.value,ec50:+P.ec50.value,h:+P.h.value,da:+P.da.value};
+}
+function pos(th,tt){
+  const p=th.p;
+  if(p[0]){const a=(tt-1)*(tt-2)/2,b=-tt*(tt-2),c=tt*(tt-1)/2;return [0,1,2].map(i=>p[0][i]*a+p[1][i]*b+p[2][i]*c);}
+  const u=clamp(tt-1,0,1);return [0,1,2].map(i=>p[1][i]+(p[2][i]-p[1][i])*u);
+}
+const vis=(th,tt)=>th.p[0]?1:clamp((tt-0.7)/0.3,0,1);
+const Dpot=(x,z)=>x*(0.25+0.75*z);
+function eff(y,m){const yh=Math.pow(Math.max(y,0),m.h);return m.emax*yh/(Math.pow(m.ec50,m.h)+yh);}
+function ripe(th,m){
+  if(th.r0>=1)return 1;
+  if(th.det===false)return 1;
+  return Math.max(th.r0,1-m.lam/th.g);
+}
+function tauStar(th,rho){
+  if(th.r0>=1||rho<=th.r0+1e-9)return 0;
+  if(rho>=0.999)return Infinity;
+  return Math.log((rho/(1-rho))*((1-th.r0)/th.r0))/th.g;
+}
+function calc(th,q,m){
+  const x=q[0],y=q[1],z=q[2];
+  const dp=Dpot(x,z),rho=ripe(th,m),e=eff(y,m),dr=dp*rho*(1-e);
+  const resist=dp*rho*(1-m.emax)>m.da;
+  return {x,y,z,dp,rho,e,dr,over:dr>m.da,resist,tau:tauStar(th,rho)};
+}
+
+function resize(){
+  const r=wrap.getBoundingClientRect();dpr=window.devicePixelRatio||1;
+  W=cv.width=Math.round(r.width*dpr);H=cv.height=Math.round(r.height*dpr);draw();
+}
+// мировые координаты: x — токсичность, y — ущерб (вертикаль), z — частота
+function proj(x,y,z){
+  const X=x-0.5,Y=y-0.4,Z=z-0.5;
+  const cy=Math.cos(rot.y),sy=Math.sin(rot.y),cx=Math.cos(rot.x),sx=Math.sin(rot.x);
+  const x1=X*cy+Z*sy,z1=-X*sy+Z*cy;
+  const y2=Y*cx-z1*sx,z2=Y*sx+z1*cx;
+  const s=Math.min(W,H)*0.62*zoom,p=3.2/(3.2+z2);
+  return {px:W/2+x1*s*p,py:H/2+H*0.04-y2*s*p,d:z2,p};
+}
+function line3(a,b,col,w,dash){
+  const A=proj(...a),B=proj(...b);
+  ctx.beginPath();ctx.moveTo(A.px,A.py);ctx.lineTo(B.px,B.py);
+  ctx.strokeStyle=col;ctx.lineWidth=(w||1)*dpr;ctx.setLineDash(dash?dash.map(v=>v*dpr):[]);ctx.stroke();ctx.setLineDash([]);
+  return B;
+}
+function arrowHead(A,B,col,size){
+  const ang=Math.atan2(B.py-A.py,B.px-A.px),al=(size||9)*dpr;
+  ctx.beginPath();ctx.moveTo(B.px,B.py);
+  ctx.lineTo(B.px-al*Math.cos(ang-0.42),B.py-al*Math.sin(ang-0.42));
+  ctx.lineTo(B.px-al*Math.cos(ang+0.42),B.py-al*Math.sin(ang+0.42));
+  ctx.closePath();ctx.fillStyle=col;ctx.fill();
+}
+function font(sz,w){return `${w||500} ${sz*dpr}px "Golos Text", system-ui, sans-serif`;}
+function hexA(hex,a){const n=parseInt(toHex(hex).slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
+function toHex(c){
+  if(!c)return "#888888";
+  if(c.startsWith("#")){return c.length===4?"#"+[...c.slice(1)].map(ch=>ch+ch).join(""):c.slice(0,7);}
+  const m=c.match(/[\d.]+/g);if(!m)return "#888888";
+  return "#"+m.slice(0,3).map(v=>Math.round(+v).toString(16).padStart(2,"0")).join("");
+}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function overlaps(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+
+function drawFloor(){
+  const n=5;
+  for(let i=0;i<=n;i++){const v=i/n;
+    line3([v,0,0],[v,0,1],C["--grid"],1);line3([0,0,v],[1,0,v],C["--grid"],1);
+    line3([0,v,0],[0,v,1],C["--grid"],1);line3([0,0,v],[0,1,v],C["--grid"],1);
+    line3([v,0,0],[v,1,0],C["--grid"],1);line3([0,v,0],[1,v,0],C["--grid"],1);
+  }
+}
+function drawAxes(boxes){
+  const ends=[[1.13,0,0],[0,1.08,0],[0,0,1.13]],cols=[C["--ax-x"],C["--ax-y"],C["--ax-z"]];
+  const labels=["X · токсичность","Y · ущерб","Z · частота атак"];
+  ends.forEach((e,i)=>{
+    const A=proj(0,0,0),B=line3([0,0,0],e,cols[i],2);arrowHead(A,B,cols[i],10);
+    [0.5,1].forEach(v=>{const q=[0,0,0];q[i]=v;const Q=proj(...q);
+      ctx.font=font(11,500);ctx.fillStyle=C["--muted"];ctx.fillText(v.toFixed(1).replace(".",","),Q.px+4*dpr,Q.py+13*dpr);});
+    ctx.font=font(13,700);const w=ctx.measureText(labels[i]).width+12*dpr,h=22*dpr;
+    let bx=clamp(B.px+6*dpr,4*dpr,W-w-4*dpr),by=clamp(B.py-h/2,4*dpr,H-h-4*dpr);
+    rr(bx,by,w,h,6*dpr);ctx.fillStyle=hexA(C["--surface"],0.88);ctx.fill();
+    ctx.strokeStyle=cols[i];ctx.lineWidth=1*dpr;ctx.stroke();
+    ctx.fillStyle=cols[i];ctx.fillText(labels[i],bx+6*dpr,by+15.5*dpr);
+    boxes.push({x:bx,y:by,w,h});
+  });
+}
+function drawTerrain(){
+  const N=10,col=C["--terrain"];
+  // заливка ячеек, от дальних к ближним
+  const cells=[];
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){
+    const x0=i/N,x1=(i+1)/N,z0=j/N,z1=(j+1)/N;
+    const pts=[[x0,Dpot(x0,z0),z0],[x1,Dpot(x1,z0),z0],[x1,Dpot(x1,z1),z1],[x0,Dpot(x0,z1),z1]].map(q=>proj(...q));
+    const d=pts.reduce((s,p)=>s+p.d,0)/4,hgt=Dpot((x0+x1)/2,(z0+z1)/2);
+    cells.push({pts,d,hgt});
+  }
+  cells.sort((a,b)=>b.d-a.d).forEach(c=>{
+    ctx.beginPath();c.pts.forEach((p,k)=>k?ctx.lineTo(p.px,p.py):ctx.moveTo(p.px,p.py));ctx.closePath();
+    ctx.fillStyle=hexA(col,0.04+0.16*c.hgt);ctx.fill();
+  });
+  for(let i=0;i<=N;i++){const v=i/N;
+    ctx.beginPath();for(let k=0;k<=24;k++){const u=k/24,P=proj(v,Dpot(v,u),u);k?ctx.lineTo(P.px,P.py):ctx.moveTo(P.px,P.py);}
+    ctx.strokeStyle=hexA(col,0.30);ctx.lineWidth=1*dpr;ctx.stroke();
+    ctx.beginPath();for(let k=0;k<=24;k++){const u=k/24,P=proj(u,Dpot(u,v),v);k?ctx.lineTo(P.px,P.py):ctx.moveTo(P.px,P.py);}
+    ctx.stroke();
+  }
+}
+function drawPlane(da,boxes){
+  const col=C["--plane"],q=[[0,da,0],[1,da,0],[1,da,1],[0,da,1]].map(v=>proj(...v));
+  ctx.beginPath();q.forEach((p,k)=>k?ctx.lineTo(p.px,p.py):ctx.moveTo(p.px,p.py));ctx.closePath();
+  ctx.fillStyle=hexA(col,0.10);ctx.fill();
+  ctx.strokeStyle=hexA(col,0.8);ctx.lineWidth=1.2*dpr;ctx.setLineDash([6*dpr,4*dpr]);ctx.stroke();ctx.setLineDash([]);
+  const A=proj(1,da,1);
+  ctx.font=font(12,600);const txt=`D_a = ${fmt(da)}`;const w=ctx.measureText(txt).width+10*dpr,h=20*dpr;
+  const bx=clamp(A.px+6*dpr,2*dpr,W-w-2*dpr),by=clamp(A.py-h/2,2*dpr,H-h-2*dpr);
+  rr(bx,by,w,h,5*dpr);ctx.fillStyle=hexA(C["--surface"],0.9);ctx.fill();ctx.strokeStyle=hexA(col,0.9);ctx.lineWidth=1*dpr;ctx.stroke();
+  ctx.fillStyle=col;ctx.fillText(txt,bx+5*dpr,by+14*dpr);
+  boxes.push({x:bx,y:by,w,h});
+}
+function drawTrail(th,m,strong){
+  const b=base(th),pts=[];
+  for(let u=b;u<=2.0001;u+=0.04){const r=calc(th,pos(th,u),m);pts.push(proj(r.x,r.dr,r.z));}
+  ctx.beginPath();pts.forEach((P,i)=>i?ctx.lineTo(P.px,P.py):ctx.moveTo(P.px,P.py));
+  ctx.strokeStyle=hexA(th.c,strong?0.95:0.4);ctx.lineWidth=(strong?2.4:1.3)*dpr;ctx.stroke();
+  for(let k=b;k<=2;k++){
+    const r=calc(th,th.p[k],m),Q=proj(r.x,r.dr,r.z);
+    ctx.beginPath();ctx.arc(Q.px,Q.py,(strong?4:2.6)*dpr,0,Math.PI*2);ctx.fillStyle=C["--surface"];ctx.fill();
+    ctx.strokeStyle=hexA(th.c,strong?1:0.6);ctx.lineWidth=1.3*dpr;ctx.stroke();
+    if(strong){ctx.font=font(12,600);ctx.fillStyle=th.c;ctx.fillText(String(2023+k),Q.px+7*dpr,Q.py+15*dpr);}
+  }
+}
+
+function placeLabel(text,P,r,col,boxes,force,sub){
+  ctx.font=font(12.5,600);const tw=ctx.measureText(text).width;let sw=0;
+  if(sub){ctx.font=font(11,500);sw=ctx.measureText(sub).width;}
+  const w=Math.max(tw,sw)+12*dpr,h=(sub?34:21)*dpr,g=r+7*dpr;
+  const cand=[[g,-g-h],[-g-w,-g-h],[g,g],[-g-w,g],[-w/2,-g-h-4*dpr],[-w/2,g+4*dpr],[g+22*dpr,-g-h-20*dpr],[-g-w-22*dpr,-g-h-20*dpr],[g+22*dpr,g+20*dpr],[-g-w-22*dpr,g+20*dpr],[g+40*dpr,-h/2],[-g-w-40*dpr,-h/2]];
+  let box=null;
+  for(const [dx,dy] of cand){const b={x:P.px+dx,y:P.py+dy,w,h};
+    if(b.x<2*dpr||b.y<2*dpr||b.x+w>W-2*dpr||b.y+h>H-2*dpr)continue;
+    if(boxes.some(o=>overlaps(b,o)))continue;box=b;break;}
+  if(!box&&force)box={x:clamp(P.px+g,2*dpr,W-w-2*dpr),y:clamp(P.py-g-h,2*dpr,H-h-2*dpr),w,h};
+  if(!box)return false;
+  boxes.push(box);
+  const ex=clamp(P.px,box.x,box.x+w),ey=clamp(P.py,box.y,box.y+h),ang=Math.atan2(ey-P.py,ex-P.px);
+  ctx.beginPath();ctx.moveTo(P.px+Math.cos(ang)*r,P.py+Math.sin(ang)*r);ctx.lineTo(ex,ey);
+  ctx.strokeStyle=hexA(col,0.75);ctx.lineWidth=1*dpr;ctx.stroke();
+  rr(box.x,box.y,w,h,5*dpr);ctx.fillStyle=hexA(C["--surface"],force?0.97:0.9);ctx.fill();
+  ctx.strokeStyle=hexA(col,force?0.9:0.45);ctx.lineWidth=(force?1.5:1)*dpr;ctx.stroke();
+  ctx.font=font(12.5,600);ctx.fillStyle=C["--ink"];ctx.fillText(text,box.x+6*dpr,box.y+15*dpr);
+  if(sub){ctx.font=font(11,500);ctx.fillStyle=C["--muted"];ctx.fillText(sub,box.x+6*dpr,box.y+29*dpr);}
+  return true;
+}
+
+function draw(){
+  if(!W)return;
+  const m=prm();
+  ctx.clearRect(0,0,W,H);
+  drawFloor();
+  const boxes=[];
+  drawAxes(boxes);
+  if(opt.terrain.checked)drawTerrain();
+  if(opt.plane.checked)drawPlane(m.da,boxes);
+  if(opt.trails.checked)THREATS.forEach(th=>{if(th!==sel)drawTrail(th,m,false);});
+  if(sel)drawTrail(sel,m,!!opt.trails.checked||true);
+  const nodes=THREATS.map(th=>{const a=vis(th,t);const r=calc(th,pos(th,t),m);
+    const Pt=proj(r.x,r.dp,r.z),Pr=proj(r.x,r.dr,r.z),F=proj(r.x,0,r.z);
+    const rad=(5.5+r.x*5)*dpr*Math.sqrt(zoom)*Pr.p;return {th,a,r,Pt,Pr,F,rad};}).filter(o=>o.a>0.01);
+  // опоры на пол
+  nodes.forEach(o=>{
+    ctx.beginPath();ctx.moveTo(o.Pr.px,o.Pr.py);ctx.lineTo(o.F.px,o.F.py);
+    ctx.strokeStyle=hexA(o.th.c,0.25*o.a);ctx.lineWidth=1*dpr;ctx.setLineDash([2*dpr,3*dpr]);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.ellipse(o.F.px,o.F.py,3.5*dpr,2*dpr,0,0,Math.PI*2);ctx.fillStyle=hexA(o.th.c,0.35*o.a);ctx.fill();
+  });
+  nodes.sort((a,b)=>b.Pr.d-a.Pr.d).forEach(o=>{
+    const isS=o.th===sel;
+    ctx.globalAlpha=o.a;
+    if(opt.stem.checked){
+      // предотвращённый ущерб: от рельефа вниз до точки
+      ctx.beginPath();ctx.moveTo(o.Pt.px,o.Pt.py);ctx.lineTo(o.Pr.px,o.Pr.py);
+      ctx.strokeStyle=hexA(C["--prevent"],isS?0.95:0.7);ctx.lineWidth=(1+o.r.y*7)*dpr;ctx.lineCap="round";ctx.stroke();ctx.lineCap="butt";
+      ctx.beginPath();ctx.arc(o.Pt.px,o.Pt.py,3*dpr,0,Math.PI*2);ctx.fillStyle=C["--surface"];ctx.fill();
+      ctx.strokeStyle=hexA(C["--terrain"],0.9);ctx.lineWidth=1.4*dpr;ctx.stroke();
+    }
+    if(isS){const g=ctx.createRadialGradient(o.Pr.px,o.Pr.py,0,o.Pr.px,o.Pr.py,o.rad*2.6);
+      g.addColorStop(0,hexA(o.th.c,0.35));g.addColorStop(1,hexA(o.th.c,0));
+      ctx.beginPath();ctx.arc(o.Pr.px,o.Pr.py,o.rad*2.6,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();}
+    ctx.beginPath();ctx.arc(o.Pr.px,o.Pr.py,o.rad,0,Math.PI*2);ctx.fillStyle=hexA(o.th.c,isS?1:0.88);ctx.fill();
+    ctx.strokeStyle=isS?C["--ink"]:hexA(o.th.c,1);ctx.lineWidth=(isS?2.2:1)*dpr;ctx.stroke();
+    if(o.r.over){ctx.beginPath();ctx.arc(o.Pr.px,o.Pr.py,o.rad+3*dpr,0,Math.PI*2);ctx.strokeStyle=C["--up"];ctx.lineWidth=2*dpr;
+      if(o.r.resist)ctx.setLineDash([4*dpr,3*dpr]);ctx.stroke();ctx.setLineDash([]);}
+    if(opt.ripe.checked&&o.th.r0<1){
+      const R=o.rad+(o.r.over?7:4)*dpr;
+      ctx.beginPath();ctx.arc(o.Pr.px,o.Pr.py,R,0,Math.PI*2);ctx.strokeStyle=hexA(C["--accent"],0.18);ctx.lineWidth=2*dpr;ctx.stroke();
+      ctx.beginPath();ctx.arc(o.Pr.px,o.Pr.py,R,-Math.PI/2,-Math.PI/2+o.r.rho*Math.PI*2);ctx.strokeStyle=hexA(C["--accent"],0.9);ctx.lineWidth=2.2*dpr;ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+    boxes.push({x:o.Pr.px-o.rad,y:o.Pr.py-o.rad,w:o.rad*2,h:o.rad*2});
+  });
+  const order=[...nodes].sort((a,b)=>(b.th===sel)-(a.th===sel)||b.r.dr-a.r.dr);
+  order.forEach(o=>{const isS=o.th===sel;
+    if(!isS&&!opt.labels.checked)return;
+    placeLabel(o.th.l,o.Pr,o.rad+4*dpr,o.th.c,boxes,isS,isS?`потенц. ${fmt(o.r.dp)} → остат. ${fmt(o.r.dr)}`:null);});
+  const yr=2023+t;
+  badge.textContent=Math.abs(yr-Math.round(yr))<0.005?String(Math.round(yr)):yr.toFixed(1).replace(".",",");
+}
+
+function fmtTau(v){if(v===0)return "удар сразу";if(!isFinite(v))return "до полного созревания";return "≈ "+Math.round(v)+" сут.";}
+function renderCard(){
+  const el=$("card"),th=sel,m=prm();
+  if(!th){el.innerHTML="<p class='note'>Выберите точку на диаграмме.</p>";return;}
+  let rows="";
+  for(let k=0;k<3;k++){const q=th.p[k];
+    if(!q){rows+=`<tr><td>${2023+k}</td><td colspan="6" style="text-align:center;color:var(--muted)">класс отсутствует</td></tr>`;continue;}
+    const r=calc(th,q,m);
+    rows+=`<tr${Math.abs(t-k)<0.02?" class='cur'":""}><td>${2023+k}</td><td>${fmt(r.dp)}</td><td>${fmt(r.y)}</td><td>${fmt(r.e)}</td><td>${fmt(r.rho)}</td><td class="${r.over?"bad":""}">${fmt(r.dr)}</td></tr>`;}
+  const r=calc(th,pos(th,t),m);
+  const flags=[];
+  if(r.over)flags.push(`<span class="flag bad">выше приемлемого</span>`);else flags.push(`<span class="flag ok">в пределах приемлемого</span>`);
+  if(r.resist)flags.push(`<span class="flag bad">резистентна к наращиванию затрат</span>`);
+  if(th.r0<1)flags.push(`<span class="flag lat">отложенная атака: ${fmtTau(r.tau)}</span>`);
+  el.innerHTML=`<p class="card-name">${th.l}</p>
+    <span class="chip"><i style="background:${th.c}"></i>${CLS[th.k]}</span>
+    <div>${flags.join("")}</div>
+    <table class="yt"><thead><tr><th>Год</th><th>D<sub>p</sub></th><th>затр.</th><th>E</th><th>ρ</th><th>D<sub>r</sub></th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="note">Затраты предотвращают ${fmt(r.dp*r.rho*r.e)} из ${fmt(r.dp*r.rho)} реализуемого ущерба. ${th.n}</p>`;
+}
+function renderKpi(){
+  const m=prm();let sp=0,sr=0,over=0,res=0;
+  THREATS.forEach(th=>{const a=vis(th,t);if(a<0.5)return;const r=calc(th,pos(th,t),m);sp+=r.dp;sr+=r.dr;if(r.over)over++;if(r.resist)res++;});
+  $("kPot").textContent=fmt(sp);$("kRes").textContent=fmt(sr);$("kOver").textContent=String(over);
+  $("kNote").textContent=`Затраты снижают суммарный ущерб на ${Math.round((1-sr/sp)*100)} %. Резистентных угроз: ${res}.`;
+}
+function pearson(a,b){const n=a.length;if(n<3)return NaN;const ma=a.reduce((s,v)=>s+v,0)/n,mb=b.reduce((s,v)=>s+v,0)/n;
+  let sab=0,sa=0,sb=0;for(let i=0;i<n;i++){sab+=(a[i]-ma)*(b[i]-mb);sa+=(a[i]-ma)**2;sb+=(b[i]-mb)**2;}return sab/Math.sqrt(sa*sb);}
+function renderLag(){
+  let h="<thead><tr><th>Затраты года</th><th>с ущербом того же года</th><th>с ущербом прошлого года</th></tr></thead><tbody>";
+  for(let k=0;k<3;k++){
+    const same=THREATS.filter(th=>th.p[k]);
+    const c0=pearson(same.map(th=>th.p[k][1]),same.map(th=>Dpot(th.p[k][0],th.p[k][2])));
+    let c1=NaN;
+    if(k>0){const both=THREATS.filter(th=>th.p[k]&&th.p[k-1]);
+      c1=pearson(both.map(th=>th.p[k][1]),both.map(th=>Dpot(th.p[k-1][0],th.p[k-1][2])));}
+    h+=`<tr><td>${2023+k}</td><td>${fmt(c0)}</td><td>${isNaN(c1)?"—":fmt(c1)}</td></tr>`;
+  }
+  $("lag").innerHTML=h+"</tbody>";
+}
+function renderTop(){
+  const m=prm(),el=$("top");
+  const arr=THREATS.filter(th=>vis(th,t)>0.5).map(th=>({th,r:calc(th,pos(th,t),m)})).sort((a,b)=>b.r.dr-a.r.dr).slice(0,6);
+  el.innerHTML="";
+  arr.forEach(o=>{const li=document.createElement("li"),bt=document.createElement("button");bt.className="mv";bt.type="button";
+    bt.innerHTML=`<i style="background:${o.th.c}"></i><span>${o.th.l}</span><b class="${o.r.over?"bad":""}">${fmt(o.r.dr)}</b>`;
+    bt.addEventListener("click",()=>{sel=o.th;update();});li.appendChild(bt);el.appendChild(li);});
+}
+function renderTable(){
+  const m=prm();
+  let h="<thead><tr><th>Угроза</th><th>Класс</th><th>ρ<sub>0</sub></th><th>g, 1/сут.</th>";
+  [2023,2024,2025].forEach(y=>{h+=`<th>D<sub>p</sub> ${y}</th><th>затр. ${y}</th><th>D<sub>r</sub> ${y}</th>`;});
+  h+="</tr></thead><tbody>";
+  THREATS.forEach(th=>{h+=`<tr><td>${th.l}</td><td>${CLS[th.k]}</td><td>${th.r0>=1?"—":fmt(th.r0)}</td><td>${th.r0>=1?"—":fmt(th.g,3)}</td>`;
+    th.p.forEach(q=>{if(!q){h+="<td>—</td><td>—</td><td>—</td>";return;}const r=calc(th,q,m);
+      h+=`<td>${fmt(r.dp)}</td><td>${fmt(r.y)}</td><td class="${r.over?"bad":""}">${fmt(r.dr)}</td>`;});
+    h+="</tr>";});
+  $("tbl").innerHTML=h+"</tbody>";
+}
+function renderParams(){
+  $("oMttd").textContent=P.mttd.value;$("oEmax").textContent=fmt(+P.emax.value);$("oEc50").textContent=fmt(+P.ec50.value);
+  $("oH").textContent=fmt(+P.h.value,1);$("oDa").textContent=fmt(+P.da.value);
+}
+function update(){draw();renderCard();renderKpi();renderTop();}
+function updateAll(){renderParams();update();renderTable();}
+
+function loop(ts){
+  const dt=lastTs?Math.min(ts-lastTs,50):16;lastTs=ts;let again=false;
+  if(playing){t+=dt/3200;if(t>=2){t=2;setPlay(false);}tIn.value=t;again=true;}
+  if(target){rot.x+=(target.x-rot.x)*0.16;rot.y+=(target.y-rot.y)*0.16;
+    if(Math.abs(target.x-rot.x)<0.002&&Math.abs(target.y-rot.y)<0.002){rot={...target};target=null;}else again=true;}
+  playing?update():draw();
+  if(again)requestAnimationFrame(loop);else lastTs=0;
+}
+function kick(){if(!lastTs)requestAnimationFrame(loop);}
+function setPlay(on){playing=on;playBtn.textContent=on?"Пауза":"Воспроизвести";if(on){if(t>=2)t=0;kick();}else update();}
+playBtn.addEventListener("click",()=>setPlay(!playing));
+tIn.addEventListener("input",()=>{t=+tIn.value;if(playing)setPlay(false);update();});
+Object.values(opt).forEach(o=>o.addEventListener("change",draw));
+Object.values(P).forEach(o=>o.addEventListener("input",updateAll));
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+  target={...VIEWS[b.dataset.view]};
+  let d=(target.y-rot.y)%(2*Math.PI);if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;target.y=rot.y+d;kick();
+}));
+
+const ptrs=new Map();let down=null,moved=false,pinch=null;
+function hit(cx,cy){
+  const r=cv.getBoundingClientRect(),x=(cx-r.left)*dpr,y=(cy-r.top)*dpr,m=prm();let best=null,bd=Infinity;
+  THREATS.forEach(th=>{if(vis(th,t)<0.2)return;const c=calc(th,pos(th,t),m),Q=proj(c.x,c.dr,c.z),rad=(5.5+c.x*5)*dpr*Math.sqrt(zoom)*Q.p+8*dpr;
+    const d=Math.hypot(x-Q.px,y-Q.py);if(d<rad&&d<bd){bd=d;best=th;}});
+  return best;
+}
+cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===1){down={x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY};moved=false;cv.classList.add("dragging");}
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:zoom};}});
+cv.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2&&pinch){const [a,b]=[...ptrs.values()];zoom=clamp(pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,0.5,2.6);moved=true;draw();return;}
+  if(down){const dx=e.clientX-down.lx,dy=e.clientY-down.ly;down.lx=e.clientX;down.ly=e.clientY;
+    if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>4)moved=true;
+    if(moved){target=null;rot.y+=dx*0.008;rot.x=clamp(rot.x+dy*0.008,-1.57,1.57);
+      document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed","false"));draw();}}});
+function endPtr(e){if(!ptrs.has(e.pointerId))return;
+  if(ptrs.size===1&&down&&!moved){const h=hit(e.clientX,e.clientY);if(h){sel=h;update();}}
+  ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(!ptrs.size){down=null;cv.classList.remove("dragging");}}
+cv.addEventListener("pointerup",endPtr);cv.addEventListener("pointercancel",endPtr);
+cv.addEventListener("wheel",e=>{e.preventDefault();zoom=clamp(zoom*Math.exp(-e.deltaY*0.0012),0.5,2.6);draw();},{passive:false});
+cv.addEventListener("keydown",e=>{const k=e.key;let h=true;
+  if(k==="ArrowLeft")rot.y-=0.08;else if(k==="ArrowRight")rot.y+=0.08;else if(k==="ArrowUp")rot.x=clamp(rot.x-0.08,-1.57,1.57);
+  else if(k==="ArrowDown")rot.x=clamp(rot.x+0.08,-1.57,1.57);else if(k==="+"||k==="=")zoom=clamp(zoom*1.1,0.5,2.6);
+  else if(k==="-")zoom=clamp(zoom/1.1,0.5,2.6);else h=false;if(h){e.preventDefault();target=null;draw();}});
+
+const mq=window.matchMedia("(prefers-color-scheme: dark)");
+const onTheme=()=>{readColors();draw();};
+if(mq.addEventListener)mq.addEventListener("change",onTheme);else if(mq.addListener)mq.addListener(onTheme);
+new MutationObserver(onTheme).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+new ResizeObserver(resize).observe(wrap);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+
+readColors();renderParams();renderLag();renderTable();resize();update();
+})();
+</script>
+</body>
+</html>

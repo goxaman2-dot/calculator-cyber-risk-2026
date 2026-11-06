@@ -140,6 +140,7 @@ summary{cursor:pointer;font-weight:600}
         <label><input type="checkbox" id="optVec"> векторы 2023→2025</label>
         <label><input type="checkbox" id="optShadow" checked> проекции на пол</label>
         <label><input type="checkbox" id="optCore" checked> Парето-ядро</label>
+        <label><input type="checkbox" id="optLabels"> названия угроз</label>
       </div>
     </div>
     <div class="legend">
@@ -204,7 +205,7 @@ const AXNAME=["Токсичность (X)","Бюджет ИБ (Y)","Частот
 
 const cv=document.getElementById("cv"),ctx=cv.getContext("2d"),wrap=document.getElementById("wrap");
 const tIn=document.getElementById("t"),playBtn=document.getElementById("play"),badge=document.getElementById("yearBadge");
-const opt={trails:document.getElementById("optTrails"),vec:document.getElementById("optVec"),shadow:document.getElementById("optShadow"),core:document.getElementById("optCore")};
+const opt={trails:document.getElementById("optTrails"),vec:document.getElementById("optVec"),shadow:document.getElementById("optShadow"),core:document.getElementById("optCore"),labels:document.getElementById("optLabels")};
 let W=0,H=0,dpr=1,t=0,zoom=1,playing=false,lastTs=0;
 let rot={x:0.42,y:-0.62},target=null;
 let sel=THREATS[8];
@@ -393,6 +394,7 @@ function draw(){
   const order=[...nodes].sort((a,b)=>(b.th===sel)-(a.th===sel)||b.r-a.r);
   order.forEach(o=>{
     const isS=o.th===sel;
+    if(!isS&&!opt.labels.checked)return;
     placeLabel(o.th.l,o.P,o.r,o.th.c,boxes,isS,isS?`x ${fmt(o.q[0])}  y ${fmt(o.q[1])}  z ${fmt(o.q[2])}`:null);
   });
   const yr=2023+t;
