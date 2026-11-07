@@ -107,6 +107,20 @@ canvas.dragging{cursor:grabbing}
 .kpi b{display:block;font-size:20px;font-variant-numeric:tabular-nums;line-height:1.2}
 .kpi span{font-size:12px;color:var(--muted);line-height:1.3;display:block}
 .bars{margin-top:10px}
+.prm2{display:grid;grid-template-columns:1fr 110px;gap:6px 10px;align-items:center;margin:6px 0;font-size:14px}
+.prm2 input{font:inherit;font-size:14px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);color:var(--ink);width:100%;text-align:right}
+.switch.rules button{font-size:14px;padding:8px 13px}
+.cmp{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.cmp th,.cmp td{white-space:nowrap;padding:5px 4px;border-bottom:1px solid var(--line);text-align:right}
+.cmp th:first-child,.cmp td:first-child{text-align:left}
+.cmp thead th{color:var(--muted);font-weight:600;font-size:12px}
+.cmp tr.on td{background:var(--surface2);font-weight:600}
+.smeta{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.smeta th,.smeta td{padding:5px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.smeta td.n,.smeta th.n{text-align:right;white-space:nowrap}
+.smeta thead th{color:var(--muted);font-weight:600;font-size:12px}
+.smeta tfoot td{font-weight:700;border-bottom:0}
+.src{font-size:11px;color:var(--muted)}
 .barrow{display:grid;grid-template-columns:86px 1fr;gap:8px;align-items:center;margin:6px 0;font-size:13px}
 .stack{display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--surface2)}
 .stack i{display:block;height:100%;border-right:1px solid var(--surface)}
@@ -122,6 +136,7 @@ canvas.dragging{cursor:grabbing}
 .curvelegend i.d{border-top-style:dashed;border-color:var(--muted)}
 .curvelegend i.v{width:0;height:12px;border-top:0;border-left:2px solid var(--ink)}
 .curvelegend i.m{width:0;height:12px;border-top:0;border-left:2px dashed var(--up)}
+.curvelegend i.c{border-top-width:2.5px}
 .lag{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;margin-top:8px}
 .lag th,.lag td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right}
 .lag th:first-child,.lag td:first-child{text-align:left}
@@ -132,6 +147,11 @@ canvas.dragging{cursor:grabbing}
 .mv i{width:10px;height:10px;border-radius:50%}
 .mv b{font-variant-numeric:tabular-nums;font-weight:600}
 .bad{color:var(--up)} .good{color:var(--down)}
+.emp{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.emp th,.emp td{padding:4px 3px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.emp th:first-child,.emp td:first-child{text-align:left;white-space:normal;min-width:96px}
+.emp thead th{color:var(--muted);font-weight:600;font-size:11.5px}
+.legend i.dia{width:10px;height:10px;border-radius:0;transform:rotate(45deg);background:transparent!important;border:2px solid var(--ink)}
 .method p{font-size:13.5px;color:var(--muted);margin:0 0 8px}
 .method p:last-child{margin:0}
 .data{max-width:1380px;margin:0 auto;padding:6px 20px 28px}
@@ -147,13 +167,23 @@ summary{cursor:pointer;font-weight:600}
 <body data-mode="dmg">
 <header class="top">
   <h1>Ландшафт угроз в двух логиках: ущерб и бюджет, 2023 — декабрь 2026</h1>
-  <p class="lede only-dmg">Логика ущерба. Пол куба — эпидемическая карта угроз: токсичность (X) и частота (Z). Рельеф — потенциальный ущерб без защиты при полном «созревании» атаки. Точка — остаточный ущерб при фактическом распределении бюджета, полая точка — при оптимальном распределении того же бюджета. Зелёный отрезок от рельефа до точки — ущерб, предотвращённый затратами.</p>
-  <p class="lede only-bud">Логика бюджета. Пол тот же, но по вертикали отложены затраты. Синий рельеф — затраты, которые нужны, чтобы опустить ущерб угрозы до приемлемого уровня. Точка — фактические затраты, полая точка — оптимальные. Отрезок от точки до её требуемого уровня показывает разрыв: красный — недофинансирование, зелёный — перерасход. Стрелка вверх означает, что никакие затраты на этот тип мер угрозу не опустят.</p>
+  <p class="lede only-dmg">Логика ущерба. Пол куба — эпидемическая карта угроз: токсичность (X) и частота (Z). Рельеф — потенциальный ущерб без защиты при полном «созревании» атаки. Точка — остаточный ущерб при выбранном правиле распределения бюджета, полая точка — при оптимальном распределении того же бюджета. Зелёный отрезок от рельефа до точки — ущерб, предотвращённый затратами.</p>
+  <p class="lede only-bud">Логика бюджета. Пол тот же, но по вертикали отложены затраты. Синий рельеф — затраты, которые нужны, чтобы опустить ущерб угрозы до приемлемого уровня. Точка — затраты по выбранному правилу, полая точка — оптимальные. Отрезок от точки до её требуемого уровня показывает разрыв: красный — недофинансирование, зелёный — перерасход. Стрелка вверх означает, что никакие затраты на этот тип мер угрозу не опустят.</p>
   <div class="modebar">
     <span class="lbl">Логика ландшафта:</span>
-    <div class="switch" role="group" aria-label="Логика ландшафта">
+    <div class="switch modes" role="group" aria-label="Логика ландшафта">
       <button type="button" data-mode="dmg" aria-pressed="true">1 · Ущерб</button>
       <button type="button" data-mode="bud" aria-pressed="false">2 · Бюджет</button>
+    </div>
+  </div>
+  <div class="modebar">
+    <span class="lbl">Правило распределения бюджета:</span>
+    <div class="switch rules" role="group" aria-label="Правило распределения бюджета">
+      <button type="button" data-rule="fact" aria-pressed="true">Факт</button>
+      <button type="button" data-rule="px" aria-pressed="false">PARETO-X</button>
+      <button type="button" data-rule="pxd" aria-pressed="false">PARETO-X·D</button>
+      <button type="button" data-rule="gl" aria-pressed="false">Гордон — Лёб</button>
+      <button type="button" data-rule="opt" aria-pressed="false">Оптимум</button>
     </div>
   </div>
 </header>
@@ -187,6 +217,7 @@ summary{cursor:pointer;font-weight:600}
         <label class="only-dmg"><input type="checkbox" id="optRipe" checked> созревание</label>
         <label><input type="checkbox" id="optTrails"> траектории</label>
         <label><input type="checkbox" id="optLabels"> названия угроз</label>
+        <label><input type="checkbox" id="optEmp" checked> эмпирика 2024</label>
       </div>
     </div>
     <div class="legend">
@@ -196,6 +227,7 @@ summary{cursor:pointer;font-weight:600}
       <span><i style="background:#1D9E75"></i>низкий</span>
       <span><i style="background:#7F56D9"></i>угрозы ИИ-агентов (с октября 2026)</span>
       <span><i class="ghost"></i>оптимальное распределение</span>
+      <span><i class="dia"></i>частота 2024 по данным (на полу, около узла 2024)</span>
       <span class="only-dmg"><i class="bar" style="background:var(--prevent)"></i>предотвращено затратами</span>
       <span class="only-dmg"><i class="ring"></i>выше приемлемого</span>
       <span class="only-dmg"><i class="plane"></i>приемлемый ущерб</span>
@@ -215,17 +247,32 @@ summary{cursor:pointer;font-weight:600}
     </section>
     <section>
       <h2>Бюджет</h2>
+      <div class="prm2"><label for="pRub">Фактический бюджет ИБ, тыс. ₽/год</label><input type="number" id="pRub" min="10" step="10" value="300"></div>
+      <div class="prm2"><label for="pLoss">Ущерб при <i>D</i> = 1, тыс. ₽/год</label><input type="number" id="pLoss" min="100" step="100" value="3000"></div>
       <div class="prm"><label for="pBud">Общий бюджет <i>B</i>, % от фактического</label><output id="oBud"></output><input type="range" id="pBud" min="20" max="250" step="5" value="100"></div>
       <div class="bars" id="bars"></div>
       <table class="realloc" id="realloc"></table>
-      <p class="note">Оптимум минимизирует суммарный остаточный ущерб при том же общем бюджете. Деньги добавляются порциями туда, где следующая порция предотвращает больше ущерба.</p>
+      <p class="note">Полосы показывают, как один и тот же бюджет делится между угрозами при фактических долях, при выбранном правиле и при оптимуме. Таблица — наибольшие отличия выбранного правила от факта.</p>
+    </section>
+    <section>
+      <h2>Сравнение правил распределения</h2>
+      <table class="cmp" id="cmp"></table>
+      <p class="note"><i>Q</i> — доля выигрыша оптимума, которую забирает правило: <i>Q</i> = (<i>D</i><sup>факт</sup> − <i>D</i><sup>правило</sup>) / (<i>D</i><sup>факт</sup> − <i>D</i><sup>опт</sup>). <i>Q</i> = 1 — правило равно оптимуму, 0 — не лучше факта, меньше 0 — хуже факта. Щелчок по строке переключает правило. * Остаточный ущерб и потраченные деньги — тыс. ₽; «&gt;D<sub>a</sub>» — число угроз выше приемлемого ущерба; «ядро» — угрозы ядра из общего числа.</p>
+    </section>
+    <section>
+      <h2 id="smetaTitle">Смета мер защиты</h2>
+      <table class="smeta" id="smeta"></table>
+      <p class="note">Деньги, выделенные угрозе по правилу, превращаются в спрос на её меры (первая мера списка получает наибольший вес). Меры покупаются по убыванию отношения спроса к цене, пока хватает бюджета; общая мера оплачивается один раз и закрывает несколько угроз. Порядок строк — порядок покупки. Цены — каталог «Щит-МСП» для предприятия на 25 работников; меры с пометкой «оценка» в каталоге отсутствуют, их цена задана экспертно. Эффект в модели считается по кривой «доза — эффект», а смета показывает, во что превращаются деньги.</p>
     </section>
     <section>
       <h2>Кривая отдачи бюджета</h2>
       <svg class="curve" id="curve" viewBox="0 0 340 190" role="img" aria-label="Суммарный остаточный ущерб в зависимости от бюджета"></svg>
       <div class="curvelegend">
-        <span><i></i>оптимальное распределение</span>
-        <span><i class="d"></i>фактические доли</span>
+        <span><i class="c"></i>оптимум</span>
+        <span><i class="d"></i>факт</span>
+        <span><i style="border-color:var(--plane)"></i>PARETO-X</span>
+        <span><i style="border-color:var(--ax-y)"></i>PARETO-X·D</span>
+        <span><i style="border-color:var(--terrain)"></i>Гордон — Лёб</span>
         <span><i class="v"></i>текущий бюджет</span>
         <span><i class="m"></i>минимум для приемлемого ущерба</span>
       </div>
@@ -246,6 +293,12 @@ summary{cursor:pointer;font-weight:600}
       <p class="note">Корреляция Пирсона между фактическими долями затрат и потенциальным ущербом в том же узле и в предыдущем. На реконструированных и прогнозных узлах это иллюстрация метода, а не проверка гипотезы.</p>
     </section>
     <section>
+      <h2>Проверка узла 2024 года по данным</h2>
+      <div class="kpi" id="empKpi"></div>
+      <div style="overflow-x:auto"><table class="emp" id="empT"></table></div>
+      <p class="note" id="empNote"></p>
+    </section>
+    <section>
       <h2 id="topTitle">Наибольший остаточный ущерб</h2>
       <ol id="top"></ol>
     </section>
@@ -256,6 +309,9 @@ summary{cursor:pointer;font-weight:600}
       <p>Отложенная атака: злоумышленник максимизирует <i>D</i>(<i>τ</i>)·e<sup>−<i>λτ</i></sup>, отсюда доля созревания <i>ρ</i> = max(<i>ρ</i><sub>0</sub>; 1 − <i>λ</i>/<i>g</i>), <i>λ</i> = 1 / (время обнаружения). Остаточный ущерб: <i>D</i><sub>r</sub> = <i>D</i><sub>p</sub>·<i>ρ</i>·(1 − <i>E</i>(<i>y</i>)).</p>
       <p>Требуемые затраты получены обращением уравнения Хилла: при <i>r</i> = 1 − <i>D</i><sub>a</sub> / (<i>D</i><sub>p</sub><i>ρ</i>) имеем <i>y</i>* = <i>EC</i><sub>50</sub>·[<i>r</i> / (<i>kE</i><sub>max</sub> − <i>r</i>)]<sup>1/<i>h</i></sup>. Если <i>r</i> ≤ 0, угроза уже в пределах приемлемого и <i>y</i>* = 0. Если <i>r</i> ≥ <i>kE</i><sub>max</sub> или требуемые затраты превышают предел 1,5 на одну угрозу, угроза считается резистентной к этому типу мер. Синий рельеф построен для угрозы с <i>ρ</i> = 1 и <i>k</i> = 1; маркер требуемого уровня у каждой точки учитывает её собственные <i>ρ</i> и <i>k</i>.</p>
       <p>Бюджет <i>B</i> — сумма затрат по угрозам. Фактическое распределение сохраняет доли из данных и масштабирует их на <i>B</i>. Оптимальное распределение ищется жадным алгоритмом с упреждением: бюджет делится на 300 порций, на каждом шаге выбираются угроза и число порций (до 40) с наибольшим предотвращённым ущербом на порцию. При <i>h</i> > 1 кривая Хилла S-образна, поэтому алгоритм даёт хорошее, но не гарантированно глобальное решение. Затраты на одну угрозу ограничены значением 1,5.</p>
+      <p><b>Правила распределения бюджета.</b> «Факт» сохраняет доли затрат из данных. «PARETO-X» — авторский затратный метод в формализации модели: ядро — минимальный набор угроз, дающий не менее 80 % суммарной токсичности (TDI, ось X); 90 % бюджета делится внутри ядра пропорционально TDI, 10 % — поровну вне ядра как гигиенический минимум. «PARETO-X·D» — вариант, предложенный в ходе построения модели: ядро строится по реализуемому ущербу <i>D</i><sub>p</sub>·<i>ρ</i>; угрозы ядра, кроме резистентных, финансируются до требуемого уровня <i>y</i>*, при нехватке — пропорционально <i>y</i>*; остаток идёт на угрозы вне ядра до их <i>y</i>*, неизрасходованное остаётся резервом. «Гордон — Лёб» — практическая форма результата Гордона и Лёба (2002): затраты на угрозу не превышают 1/e её ожидаемого ущерба; если сумма превышает бюджет, она пропорционально уменьшается, если меньше — остаток не тратится. «Оптимум» — эталон, минимизирующий суммарный остаточный ущерб.</p>
+      <p>Денежная шкала: одна нормированная единица затрат равна фактическому бюджету в рублях, делённому на сумму фактических долей в текущем узле; единица ущерба задаётся полем «Ущерб при <i>D</i> = 1». Обе величины — параметры конкретного предприятия.</p>
+      <p><b>Эмпирическая проверка 2024 года.</b> Частота <i>s</i> — доля успешных атак на организации, в которых встречается класс угрозы, по открытым отчётам: Positive Technologies «Актуальные киберугрозы в странах СНГ 2023—2024» (2023 г. — I полугодие 2024 г., 73 % атак — на Россию), BI.ZONE Threat Zone 2025, Solar 4RAYS, «Лаборатория Касперского» (реагирование на инциденты 2024), Qrator Labs. Для отображения на полу куба <i>z</i><sub>эмп</sub> = 0,95·<i>s</i>/max <i>s</i>. Классы, по которым счётчиков нет, оценены экспертно и помечены. Структура затрат 2024 года — пропорции стоимостей 16 мер из анкеты одного розничного предприятия (срез осени 2025 г.), распределённые поровну между классами угроз, которые закрывает мера; это экспертная оценка, а не выборка. Согласие модели и данных измеряется ранговой корреляцией Спирмена.</p>
       <p>Узлы 2023 и 2024 годов реконструированы по направлению трендов, узел 2025 года взят из версии v3. Значения октября — декабря 2026 года для прежних 16 классов получены линейной экстраполяцией тренда 2024→2025. Классы угроз ИИ-агентов опираются на инцидент, о котором Positive Technologies сообщила 2 ноября 2026 года, на демонстрацию червя в Copilot for Word (Malwarebytes, июль 2026) и на сводку Cloud Security Alliance о косвенных промпт-инъекциях (2026); их координаты — экспертная оценка. Между узлами координаты интерполируются монотонным сплайном Фрича — Карлсона.</p>
     </section>
   </aside>
@@ -300,13 +356,73 @@ THREATS.forEach(th=>{if(th.p.length===NN)return;
   const a=th.p[1],b=th.p[2];
   [0.8,0.9,1].forEach(k=>th.p.push(b.map((v,i)=>+clampN(v+(b[i]-a[i])*k,0.01,0.98).toFixed(3))));});
 const CLS={crit:"критический",high:"высокий",ai:"новые угрозы ИИ",low:"низкий",agent:"угрозы ИИ-агентов"};
+// каталог мер: c — руб./год для предприятия на 25 работников; o:1 — цена задана экспертно (в каталоге «Щит-МСП» меры нет)
+const MEAS={
+ mfa:{n:"MFA для почты, облаков, банка и администраторов",c:18000},
+ backup:{n:"Резервное копирование с проверкой восстановления",c:42000},
+ mailsec:{n:"Защита почтового домена: SPF/DKIM/DMARC, антифишинг",c:26000},
+ access:{n:"Разграничение доступа к CRM, файлам и базе клиентов",c:36000},
+ pdnlaw:{n:"Правовой комплект ПДн",c:65000},
+ ir:{n:"Процедура реагирования на инциденты и утечки",c:32000},
+ training:{n:"Практическое обучение сотрудников",c:24000},
+ webmon:{n:"Мониторинг сайта, обновлений CMS и форм",c:30000},
+ sla:{n:"Договорные SLA и резервные поставщики",c:45000},
+ fund:{n:"Резерв средств на восстановление",c:80000},
+ patch:{n:"Управление уязвимостями и обновлениями",c:30000},
+ vendor:{n:"Контроль доступа подрядчиков",c:25000},
+ aipol:{n:"Политика ИИ-ассистентов: изоляция инструментов, подтверждение действий",c:20000},
+ edr:{n:"Защита рабочих мест от вредоносного ПО (EDR)",c:30000,o:1},
+ siem:{n:"Централизованный журнал событий и оповещения",c:48000,o:1},
+ antiddos:{n:"Сервис защиты от DDoS",c:36000,o:1},
+ segm:{n:"Сегментация сети и изоляция IoT/OT",c:40000,o:1},
+ pqc:{n:"Инвентаризация криптографии и план перехода на постквантовые алгоритмы",c:35000,o:1},
+ paycheck:{n:"Подтверждение платежей и запросов по второму каналу",c:8000,o:1}
+};
+const MAP={"Ransomware / APT":["backup","patch","ir","edr","fund"],"Triple Extortion":["backup","access","ir","pdnlaw"],
+ "Supply Chain":["vendor","sla","patch"],"Quantum-Decrypt":["pqc"],"Phishing / BEC":["mailsec","training","mfa","paycheck"],
+ "XSS / инъекции":["webmon","patch"],"Brute Force":["mfa","access"],"DDoS":["antiddos","sla"],"Deepfake-атаки":["paycheck","training"],
+ "LLM Jailbreaking":["aipol"],"Data Poisoning":["aipol","access"],"Token Theft":["mfa","access","ir"],"Cryptojacking":["edr","webmon"],
+ "Ghost Logging":["siem","ir"],"IoT / OT":["segm","patch"],"Config Drift":["patch","siem"],
+ "Заражение ИИ-агентов":["aipol","access","siem"],"Автономные атаки ИИ-агентов":["siem","ir","patch","edr"]};
+const RK=["fact","px","pxd","gl","opt"];
+const RULES={fact:{n:"Факт",s:"факт"},px:{n:"PARETO-X",s:"PARETO-X"},pxd:{n:"PARETO-X·D",s:"PARETO-X·D"},gl:{n:"Гордон — Лёб",s:"Г — Л"},opt:{n:"Оптимум",s:"оптимум"}};
+const HYG=0.10,CORE=0.8;
+// эмпирика 2024: s — доля успешных атак на организации с участием класса; lo–hi — разброс источников; e:1 — экспертная оценка (счётчика нет);
+// ya — доля затрат класса по анкете (руб. стоимости 16 мер, поровну между закрываемыми классами)
+const EMP24={
+ "Ransomware / APT":{s:.28,lo:.12,hi:.42,ya:.165,src:"PT СНГ: шифровальщики 22 % атак с ВПО (ВПО — 54 %), кибершпионаж 18 %; Kaspersky IR 2024: шифровальщики 41,6 % инцидентов"},
+ "Triple Extortion":{s:.05,lo:.02,hi:.10,ya:.120,e:1,src:"доля вымогательства с утечкой отдельно не публикуется"},
+ "Supply Chain":{s:.055,lo:.05,hi:.06,ya:.061,src:"BI.ZONE: подрядчики 5 %; Solar 4RAYS: 6 %"},
+ "Quantum-Decrypt":{s:0,lo:0,hi:0,ya:.032,src:"реальных атак нет"},
+ "Phishing / BEC":{s:.50,lo:.11,hi:.57,ya:.024,src:"PT СНГ: социальная инженерия 48 % (Россия 56 %); BI.ZONE: фишинг 57 %; Solar: 11 %"},
+ "XSS / инъекции":{s:.32,lo:.13,hi:.46,ya:.063,src:"PT СНГ: эксплуатация уязвимостей 32 %; BI.ZONE 13 %; Solar: веб-уязвимости 46 %"},
+ "Brute Force":{s:.20,lo:.07,hi:.37,ya:.029,src:"PT СНГ: компрометация учётных данных 7 %; BI.ZONE: легитимные учётные записи 27 %; Solar 37 %"},
+ "DDoS":{s:.18,lo:.18,hi:.18,ya:.135,src:"PT СНГ: DDoS 18 % атак на организации (в мире 8 %); Qrator: +53 % за 2024 г."},
+ "Deepfake-атаки":{s:.05,lo:.01,hi:.10,ya:.009,e:1,src:"счётчика нет; опрос MTS AI и Б1: пострадала каждая пятая компания"},
+ "LLM Jailbreaking":{s:.01,lo:0,hi:.02,ya:0,e:1,src:"в отчётах за 2024 г. не выделяется"},
+ "Data Poisoning":{s:.005,lo:0,hi:.01,ya:0,e:1,src:"в отчётах за 2024 г. не выделяется"},
+ "Token Theft":{s:.22,lo:.07,hi:.22,ya:.129,src:"PT СНГ: шпионское ПО (инфостилеры) 41 % атак с ВПО; учётные данные — 24 % украденных данных"},
+ "Cryptojacking":{s:.005,lo:.005,hi:.01,ya:0,src:"PT СНГ: майнеры 1 % атак с ВПО на организации (18 % — на частных лиц)"},
+ "Ghost Logging":{s:.05,lo:.02,hi:.10,ya:.072,e:1,src:"скрытое присутствие в атаках кибершпионов (18 % атак), отдельно не считается"},
+ "IoT / OT":{s:.05,lo:.02,hi:.10,ya:.124,e:1,src:"промышленность — 11 % жертв, доля атак на IoT/OT не выделяется"},
+ "Config Drift":{s:.03,lo:.01,hi:.05,ya:.037,e:1,src:"ошибки конфигурации отдельно не считаются"}
+};
+const EMPMAX=Math.max(...Object.values(EMP24).map(o=>o.s));
+const zEmp=l=>EMP24[l]?0.95*EMP24[l].s/EMPMAX:null;
+function rankArr(v){const o=v.map((a,i)=>[a,i]).sort((a,b)=>a[0]-b[0]),r=new Array(v.length);
+  for(let i=0;i<o.length;){let j=i;while(j+1<o.length&&o[j+1][0]===o[i][0])j++;for(let k=i;k<=j;k++)r[o[k][1]]=(i+j)/2+1;i=j+1;}return r;}
+function spearman(a,b){const ra=rankArr(a),rb=rankArr(b),n=a.length,m=(n+1)/2;let num=0,da=0,db=0;
+  for(let i=0;i<n;i++){num+=(ra[i]-m)*(rb[i]-m);da+=(ra[i]-m)**2;db+=(rb[i]-m)**2;}
+  const r=num/Math.sqrt(da*db),t=r*Math.sqrt((n-2)/Math.max(1e-12,1-r*r)),df=n-2;
+  const z=t*(1-1/(4*df))/Math.sqrt(1+t*t/(2*df));return {r,p:2*(1-Phi(Math.abs(z)))};}
+function Phi(x){const t=1/(1+.3275911*Math.abs(x)/Math.SQRT2);const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x/2);return x>=0?.5*(1+y):.5*(1-y);}
 
 const $=id=>document.getElementById(id);
 const cv=$("cv"),ctx=cv.getContext("2d"),wrap=$("wrap");
 const tIn=$("t"),playBtn=$("play"),badge=$("yearBadge");
-const opt={terrain:$("optTerrain"),plane:$("optPlane"),stem:$("optStem"),ghost:$("optGhost"),ripe:$("optRipe"),trails:$("optTrails"),labels:$("optLabels")};
-const P={mttd:$("pMttd"),emax:$("pEmax"),ec50:$("pEc50"),h:$("pH"),da:$("pDa"),bud:$("pBud")};
-let W=0,H=0,dpr=1,t=0,zoom=1,playing=false,lastTs=0,mode="dmg";
+const opt={terrain:$("optTerrain"),plane:$("optPlane"),stem:$("optStem"),ghost:$("optGhost"),ripe:$("optRipe"),trails:$("optTrails"),labels:$("optLabels"),emp:$("optEmp")};
+const P={mttd:$("pMttd"),emax:$("pEmax"),ec50:$("pEc50"),h:$("pH"),da:$("pDa"),bud:$("pBud"),rub:$("pRub"),loss:$("pLoss")};
+let W=0,H=0,dpr=1,t=0,zoom=1,playing=false,lastTs=0,mode="dmg",rule="fact";
 let rot={x:0.38,y:-0.70},target=null;
 let sel=THREATS[8];
 const VIEWS={iso:{x:0.38,y:-0.70},xy:{x:0,y:0},zy:{x:0,y:-Math.PI/2},top:{x:-Math.PI/2+0.0001,y:0}};
@@ -322,7 +438,8 @@ const fmt=(v,d=2)=>!isFinite(v)?"∞":(v<0?"−":"")+Math.abs(v).toFixed(d).repl
 const fmtS=v=>(v>0.005?"+":v<-0.005?"−":"±")+Math.abs(v).toFixed(2).replace(".",",");
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const base=th=>th.p.findIndex(q=>q);
-function prm(){return {lam:1/(+P.mttd.value),emax:+P.emax.value,ec50:+P.ec50.value,h:+P.h.value,da:+P.da.value,kB:+P.bud.value/100};}
+function prm(){return {lam:1/(+P.mttd.value),emax:+P.emax.value,ec50:+P.ec50.value,h:+P.h.value,da:+P.da.value,kB:+P.bud.value/100,rub:Math.max(1,+P.rub.value)*1000,loss:Math.max(1,+P.loss.value)*1000};}
+const tr=v=>!isFinite(v)?"∞":(v<0?"−":"")+Math.round(Math.abs(v)/1000).toString().replace(/\B(?=(\d{3})+(?!\d))/g,"\u202f");
 
 // монотонная кубическая интерполяция (Фрич — Карлсон) по равноотстоящим узлам
 function pchip(ys,u){
@@ -351,10 +468,10 @@ function yReq(dp,rho,ek,m){
 const drOf=(s,y,m)=>s.dp*s.rho*(1-eff(y,m,s.th.ek));
 
 // оптимальное распределение бюджета: жадный алгоритм с упреждением
-function optimize(list,Btot,m){
+function optimize(list,Btot,m,steps){
   const n=list.length,y=new Array(n).fill(0);
   if(Btot<=0||!n)return {y,left:Btot};
-  const steps=300,d=Btot/steps,K=40;let left=steps;
+  steps=steps||300;const d=Btot/steps,K=40;let left=steps;
   const cur=list.map(s=>drOf(s,0,m));
   while(left>0){
     let best=-1,bk=0,bg=1e-12;
@@ -372,17 +489,60 @@ function stateList(tt,m){
   return THREATS.filter(th=>vis(th,tt)>0.5).map(th=>{const q=pos(th,tt);
     return {th,x:q[0],z:q[2],y0:q[1],dp:Dpot(q[0],q[2]),rho:ripe(th,m)};});
 }
-function snapshot(){
-  const m=prm(),list=stateList(t,m);
-  const S0=list.reduce((s,o)=>s+o.y0,0),Btot=S0*m.kB;
-  list.forEach(s=>{s.yf=s.y0*m.kB;s.drf=drOf(s,s.yf,m);s.e=eff(s.yf,m,s.th.ek);
-    s.req=yReq(s.dp,s.rho,s.th.ek,m);s.resist=!isFinite(s.req);s.over=s.drf>m.da;s.tau=tauStar(s.th,s.rho);});
-  const o=optimize(list,Btot,m);
-  list.forEach((s,i)=>{s.yo=o.y[i];s.dro=drOf(s,s.yo,m);});
-  const byTh=new Map(list.map(s=>[s.th,s]));
-  return {m,list,byTh,S0,Btot,left:o.left};
+function prepList(list,m){list.forEach(s=>{s.req=yReq(s.dp,s.rho,s.th.ek,m);s.resist=!isFinite(s.req);s.tau=tauStar(s.th,s.rho);});}
+function coreSet(list,val){
+  const arr=list.map((s,i)=>({i,v:val(s)})).filter(o=>o.v>0).sort((a,b)=>b.v-a.v);
+  const tot=arr.reduce((a,o)=>a+o.v,0),set=new Set();let c=0;
+  for(const o of arr){set.add(o.i);c+=o.v;if(c>=CORE*tot)break;}
+  return set;
 }
-
+// правила распределения бюджета Btot (в нормированных единицах затрат); kR — рублей на единицу затрат
+function allocate(list,Btot,m,rl,kR,fast){
+  const n=list.length,y=new Array(n).fill(0);
+  if(!n||Btot<=0)return {y,left:Math.max(Btot,0),core:new Set()};
+  const S0=list.reduce((a,s)=>a+s.y0,0);
+  if(rl==="fact"){list.forEach((s,i)=>y[i]=s.y0*Btot/S0);return {y,left:0,core:new Set()};}
+  if(rl==="opt"){const o=optimize(list,Btot,m,fast?120:300);return {y:o.y,left:o.left,core:new Set()};}
+  if(rl==="gl"){
+    const z=list.map(s=>s.dp*s.rho*m.loss/Math.E/kR),sz=z.reduce((a,v)=>a+v,0),f=sz>Btot?Btot/sz:1;
+    z.forEach((v,i)=>y[i]=v*f);return {y,left:Math.max(0,Btot-sz*f),core:new Set()};
+  }
+  if(rl==="px"){
+    const core=coreSet(list,s=>s.x),out=n-core.size,hy=out?HYG*Btot:0,sx=[...core].reduce((a,i)=>a+list[i].x,0);
+    list.forEach((s,i)=>{y[i]=core.has(i)?(Btot-hy)*s.x/sx:hy/out;});return {y,left:0,core};
+  }
+  const core=coreSet(list,s=>s.dp*s.rho);
+  const fund=[...core].filter(i=>!list[i].resist),others=list.map((s,i)=>i).filter(i=>!fund.includes(i));
+  const hy=others.length?HYG*Btot:0;others.forEach(i=>y[i]=hy/others.length);
+  let rem=Btot-hy;const need=fund.reduce((a,i)=>a+list[i].req,0);
+  if(need>=rem){fund.forEach(i=>y[i]+=need>0?rem*list[i].req/need:0);rem=0;}
+  else{fund.forEach(i=>y[i]+=list[i].req);rem-=need;
+    const nc=others.filter(i=>!list[i].resist),need2=nc.reduce((a,i)=>a+Math.max(0,list[i].req-y[i]),0);
+    if(need2>0){const f=Math.min(1,rem/need2);nc.forEach(i=>{y[i]+=Math.max(0,list[i].req-y[i])*f;});rem-=need2*f;}}
+  return {y,left:Math.max(0,rem),core};
+}
+// смета: деньги угроз превращаются в спрос на меры (первая мера в списке угрозы получает больший вес),
+// меры покупаются по убыванию отношения спроса к цене, пока хватает общего бюджета
+function smeta(list,y,kR,Btot){
+  const dem={},who={};
+  list.forEach((s,i)=>{const ids=MAP[s.th.l]||[],money=y[i]*kR;if(money<=0||!ids.length)return;
+    const w=ids.map((_,k)=>1/(k+1)),sw=w.reduce((a,v)=>a+v,0);
+    ids.forEach((id,k)=>{dem[id]=(dem[id]||0)+money*w[k]/sw;(who[id]=who[id]||new Set()).add(s.th.l);});});
+  const order=Object.keys(dem).sort((a,b)=>dem[b]/MEAS[b].c-dem[a]/MEAS[a].c);
+  let left=Btot*kR;const items=[];
+  order.forEach(id=>{const me=MEAS[id];if(me.c<=left){items.push({id,me,th:who[id],dem:dem[id]});left-=me.c;}});
+  return {items,spent:Btot*kR-left,rest:left};
+}
+function snapshot(){
+  const m=prm(),list=stateList(t,m);prepList(list,m);
+  const S0=list.reduce((s,o)=>s+o.y0,0),Btot=S0*m.kB,kR=m.rub/S0;
+  const AL={};RK.forEach(r=>{AL[r]=allocate(list,Btot,m,r,kR,false);});
+  list.forEach((s,i)=>{s.al={};s.dr={};RK.forEach(r=>{s.al[r]=AL[r].y[i];s.dr[r]=drOf(s,AL[r].y[i],m);});
+    s.yf=s.al[rule];s.drf=s.dr[rule];s.yo=s.al.opt;s.dro=s.dr.opt;s.e=eff(s.yf,m,s.th.ek);s.over=s.drf>m.da;});
+  const tot={};RK.forEach(r=>{tot[r]=list.reduce((a,s)=>a+s.dr[r],0);});
+  const byTh=new Map(list.map(s=>[s.th,s]));
+  return {m,list,byTh,S0,Btot,kR,AL,tot,left:AL[rule].left};
+}
 function resize(){
   const r=wrap.getBoundingClientRect();dpr=window.devicePixelRatio||1;
   W=cv.width=Math.round(r.width*dpr);H=cv.height=Math.round(r.height*dpr);draw();
@@ -477,23 +637,27 @@ function drawPlane(da,boxes){
   rr(bx,by,w,h,5*dpr);ctx.fillStyle=hexA(C["--surface"],0.9);ctx.fill();ctx.strokeStyle=hexA(col,0.9);ctx.lineWidth=1*dpr;ctx.stroke();
   ctx.fillStyle=col;ctx.fillText(txt,bx+5*dpr,by+14*dpr);boxes.push({x:bx,y:by,w,h});
 }
-// значение по вертикали для угрозы в произвольный момент (фактическое распределение)
-function vertAt(th,u,m){
-  const list=stateList(u,m),s=list.find(o=>o.th===th);if(!s)return null;
-  const S0=list.reduce((a,o)=>a+o.y0,0);const yf=s.y0*m.kB;
-  return {x:s.x,z:s.z,v:mode==="dmg"?drOf(s,yf,m):yf};
+// траектории при выбранном правиле: кэш по параметрам и правилу
+let TRAIL={key:"",data:null};
+function trailData(m){
+  const key=JSON.stringify([m,rule]);if(TRAIL.key===key)return TRAIL.data;
+  const data=new Map();
+  for(let i=0;i<=TMAX*20;i++){const u=i/20,L=stateList(u,m);if(!L.length)continue;prepList(L,m);
+    const S0=L.reduce((a,s)=>a+s.y0,0),al=allocate(L,S0*m.kB,m,rule,m.rub/S0,true);
+    L.forEach((s,k)=>{if(!data.has(s.th))data.set(s.th,[]);data.get(s.th).push({i,x:s.x,z:s.z,y:al.y[k],dr:drOf(s,al.y[k],m)});});}
+  TRAIL={key,data};return data;
 }
 function drawTrail(th,m,strong){
-  const b=base(th);
-  const seg=(u0,u1,dash)=>{const pts=[];for(let u=u0;u<=u1+1e-4;u+=0.05){const r=vertAt(th,u,m);if(r)pts.push(pv(r.x,r.v,r.z));}
-    if(pts.length<2)return;
+  const arr=trailData(m).get(th);if(!arr||arr.length<2)return;
+  const v=o=>mode==="dmg"?o.dr:o.y,cut=(TMAX-1)*20;
+  const seg=(a,b,dash)=>{const pts=arr.filter(o=>o.i>=a&&o.i<=b).map(o=>pv(o.x,v(o),o.z));if(pts.length<2)return;
     ctx.beginPath();pts.forEach((Q,i)=>i?ctx.lineTo(Q.px,Q.py):ctx.moveTo(Q.px,Q.py));
     ctx.strokeStyle=hexA(th.c,strong?0.95:0.4);ctx.lineWidth=(strong?2.4:1.3)*dpr;ctx.setLineDash(dash?[5*dpr,4*dpr]:[]);ctx.stroke();ctx.setLineDash([]);};
-  seg(b,Math.max(b,TMAX-1),false);seg(Math.max(b,TMAX-1),TMAX,true);
-  for(let k=b;k<=TMAX;k++){const r=vertAt(th,k,m);if(!r)continue;const Q=pv(r.x,r.v,r.z);
+  seg(0,cut,false);seg(cut,TMAX*20,true);
+  arr.filter(o=>o.i%20===0).forEach(o=>{const k=o.i/20,Q=pv(o.x,v(o),o.z);
     ctx.beginPath();ctx.arc(Q.px,Q.py,(strong?4:2.6)*dpr,0,Math.PI*2);ctx.fillStyle=C["--surface"];ctx.fill();
     ctx.strokeStyle=hexA(th.c,strong?1:0.6);ctx.lineWidth=1.3*dpr;ctx.stroke();
-    if(strong&&opt.trails.checked&&(k<3||k===TMAX)){ctx.font=font(12,600);ctx.fillStyle=th.c;ctx.fillText(NODES[k].s,Q.px+7*dpr,Q.py+15*dpr);}}
+    if(strong&&opt.trails.checked&&(k<3||k===TMAX)){ctx.font=font(12,600);ctx.fillStyle=th.c;ctx.fillText(NODES[k].s,Q.px+7*dpr,Q.py+15*dpr);}});
 }
 function placeLabel(text,Pt,r,col,boxes,force,sub){
   ctx.font=font(12.5,600);const tw=ctx.measureText(text).width;let sw=0;
@@ -533,6 +697,13 @@ function draw(){
     const vRef=mode==="dmg"?s.dp:(isFinite(s.req)?s.req:YCAP);
     const Pr=pv(s.x,vF,s.z),Po=pv(s.x,vO,s.z),Pt=pv(s.x,vRef,s.z),F=proj(s.x,0,s.z);
     const rad=(5.5+s.x*5)*dpr*Math.sqrt(zoom)*Pr.p;return {s,a,Pr,Po,Pt,F,rad};});
+  if(opt.emp.checked&&Math.abs(t-1)<0.5){const al=1-Math.abs(t-1)*1.6;
+    nodes.forEach(o=>{const ze=zEmp(o.s.th.l);if(ze===null)return;const E=proj(o.s.x,0,ze);
+      ctx.globalAlpha=Math.max(0.15,al);
+      ctx.beginPath();ctx.moveTo(o.F.px,o.F.py);ctx.lineTo(E.px,E.py);ctx.strokeStyle=hexA(C["--ink"],0.55);ctx.lineWidth=1.2*dpr;ctx.setLineDash([4*dpr,3*dpr]);ctx.stroke();ctx.setLineDash([]);
+      const d=5.5*dpr;ctx.beginPath();ctx.moveTo(E.px,E.py-d);ctx.lineTo(E.px+d,E.py);ctx.lineTo(E.px,E.py+d);ctx.lineTo(E.px-d,E.py);ctx.closePath();
+      ctx.fillStyle=hexA(C["--surface"],0.9);ctx.fill();ctx.strokeStyle=EMP24[o.s.th.l].e?hexA(o.s.th.c,0.6):o.s.th.c;ctx.lineWidth=2*dpr;
+      if(EMP24[o.s.th.l].e)ctx.setLineDash([2*dpr,2*dpr]);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;});}
   nodes.forEach(o=>{
     ctx.beginPath();ctx.moveTo(o.Pr.px,o.Pr.py);ctx.lineTo(o.F.px,o.F.py);
     ctx.strokeStyle=hexA(o.s.th.c,0.25*o.a);ctx.lineWidth=1*dpr;ctx.setLineDash([2*dpr,3*dpr]);ctx.stroke();ctx.setLineDash([]);
@@ -555,7 +726,7 @@ function draw(){
         else{ctx.beginPath();ctx.moveTo(o.Pt.px-7*dpr,o.Pt.py);ctx.lineTo(o.Pt.px+7*dpr,o.Pt.py);ctx.strokeStyle=C["--req"];ctx.lineWidth=2.5*dpr;ctx.stroke();}
       }
     }
-    if(opt.ghost.checked&&Math.abs(o.Po.py-o.Pr.py)>2*dpr){
+    if(opt.ghost.checked&&rule!=="opt"&&Math.abs(o.Po.py-o.Pr.py)>2*dpr){
       ctx.beginPath();ctx.moveTo(o.Pr.px,o.Pr.py);ctx.lineTo(o.Po.px,o.Po.py);
       ctx.strokeStyle=hexA(C["--ink"],0.45);ctx.lineWidth=1*dpr;ctx.setLineDash([2*dpr,3*dpr]);ctx.stroke();
       ctx.beginPath();ctx.arc(o.Po.px,o.Po.py,o.rad*0.85,0,Math.PI*2);ctx.fillStyle=hexA(C["--surface"],0.6);ctx.fill();
@@ -579,7 +750,7 @@ function draw(){
   const key=o=>mode==="dmg"?o.s.drf:Math.abs((isFinite(o.s.req)?o.s.req:YCAP)-o.s.yf);
   [...nodes].sort((a,b)=>(b.s.th===sel)-(a.s.th===sel)||key(b)-key(a)).forEach(o=>{const isS=o.s.th===sel;
     if(!isS&&!opt.labels.checked)return;
-    const sub=!isS?null:mode==="dmg"?`остаток: факт ${fmt(o.s.drf)} · оптимум ${fmt(o.s.dro)}`:`затраты: факт ${fmt(o.s.yf)} · нужно ${fmt(o.s.req)} · оптимум ${fmt(o.s.yo)}`;
+    const R=RULES[rule].s,kR=SNAP.kR,sub=!isS?null:mode==="dmg"?`остаточный ущерб: ${R} ${tr(o.s.drf*SNAP.m.loss)} · оптимум ${tr(o.s.dro*SNAP.m.loss)} тыс. ₽`:`затраты, тыс. ₽: ${R} ${tr(o.s.yf*kR)} · нужно ${tr(o.s.req*kR)} · оптимум ${tr(o.s.yo*kR)}`;
     placeLabel(o.s.th.l,o.Pr,o.rad+4*dpr,o.s.th.c,boxes,isS,sub);});
   const kn=Math.round(t);
   badge.innerHTML=Math.abs(t-kn)<0.03?NODES[kn].s+(kn>=3?`<small>${NODES[kn].st}</small>`:""):NODES[Math.floor(t)].s+" → "+NODES[Math.min(TMAX,Math.floor(t)+1)].s;
@@ -587,78 +758,108 @@ function draw(){
 
 function fmtTau(v){if(v===0)return "удар сразу";if(!isFinite(v))return "до полного созревания";return "≈ "+Math.round(v)+" сут.";}
 function renderCard(){
-  const el=$("card"),th=sel,m=SNAP.m,s=SNAP.byTh.get(th);
+  const el=$("card"),th=sel,m=SNAP.m,s=SNAP.byTh.get(th),kR=SNAP.kR;
   if(!th||!s){el.innerHTML="<p class='note'>Выберите точку на диаграмме. Выбранная угроза в этот момент отсутствует в модели.</p>";return;}
   let rows="";
   for(let k=0;k<NN;k++){const q=th.p[k];
-    if(!q){if(k<3)rows+=`<tr><td>${NODES[k].s}</td><td colspan="6" style="text-align:center;color:var(--muted)">класс отсутствует</td></tr>`;continue;}
-    const L=stateList(k,m),S0=L.reduce((a,o)=>a+o.y0,0),st=L.find(o=>o.th===th);
-    const yf=st.y0*m.kB,e=eff(yf,m,th.ek),dr=drOf(st,yf,m);
-    rows+=`<tr${Math.abs(t-k)<0.02?" class='cur'":""}><td title="${NODES[k].st}">${NODES[k].s}${k===TMAX?"*":""}</td><td>${fmt(st.dp)}</td><td>${fmt(yf)}</td><td>${fmt(e)}</td><td>${fmt(st.rho)}</td><td class="${dr>m.da?"bad":""}">${fmt(dr)}</td></tr>`;}
+    if(!q){if(k<3)rows+=`<tr><td>${NODES[k].s}</td><td colspan="5" style="text-align:center;color:var(--muted)">класс отсутствует</td></tr>`;continue;}
+    const L=stateList(k,m),st=L.find(o=>o.th===th),yf=st.y0*m.kB,e=eff(yf,m,th.ek),dr=drOf(st,yf,m);
+    rows+=`<tr${Math.abs(t-k)<0.02?" class='cur'":""}><td title="${NODES[k].st}">${NODES[k].s}${k===TMAX?"*":""}</td><td>${fmt(st.dp)}</td><td>${fmt(e)}</td><td>${fmt(st.rho)}</td><td class="${dr>m.da?"bad":""}">${fmt(dr)}</td></tr>`;}
   const flags=[];
   flags.push(s.over?`<span class="flag bad">выше приемлемого</span>`:`<span class="flag ok">в пределах приемлемого</span>`);
   if(s.resist)flags.push(`<span class="flag bad">резистентна: затраты на этот тип мер не помогут</span>`);
   if(th.r0<1)flags.push(`<span class="flag lat">отложенная атака: ${fmtTau(s.tau)}</span>`);
-  const gap=isFinite(s.req)?s.req-s.yf:Infinity;
+  const money=RK.map(r=>`<tr${r===rule?" class='cur'":""}><td>${RULES[r].n}</td><td>${tr(s.al[r]*kR)}</td><td class="${s.dr[r]>m.da?"bad":""}">${tr(s.dr[r]*m.loss)}</td></tr>`).join("");
+  const ms=(MAP[th.l]||[]).map(id=>`${MEAS[id].n} — ${tr(MEAS[id].c)}${MEAS[id].o?" (оценка)":""}`).join("; ");
   el.innerHTML=`<p class="card-name">${th.l}</p>
     <span class="chip"><i style="background:${th.c}"></i>${CLS[th.k]}</span>
     <div>${flags.join("")}</div>
     <div class="money">
-      <span>Затраты фактические</span><b>${fmt(s.yf)}</b>
-      <span>Требуются для <i>D</i><sub>a</sub></span><b>${fmt(s.req)}</b>
-      <span>Разрыв</span><b class="${gap>0.005?"bad":"good"}">${isFinite(gap)?fmtS(gap):"∞"}</b>
-      <span>Оптимум при том же <i>B</i></span><b>${fmt(s.yo)}</b>
-      <span>Остаточный ущерб: факт → оптимум</span><b>${fmt(s.drf)} → ${fmt(s.dro)}</b>
+      <span>Требуется для <i>D</i><sub>a</sub>, тыс. ₽</span><b>${tr(s.req*kR)}</b>
+      <span>Потенциальный ущерб, тыс. ₽</span><b>${tr(s.dp*s.rho*m.loss)}</b>
     </div>
-    <table class="yt"><thead><tr><th>Узел</th><th>D<sub>p</sub></th><th>затр.</th><th>E</th><th>ρ</th><th>D<sub>r</sub></th></tr></thead><tbody>${rows}</tbody></table>
+    <table class="yt"><thead><tr><th>Правило</th><th>затраты, тыс. ₽</th><th>ост. ущерб, тыс. ₽</th></tr></thead><tbody>${money}</tbody></table>
+    <p class="note">Меры для угрозы (тыс. ₽/год): ${ms}.</p>
+    <table class="yt"><thead><tr><th>Узел (факт)</th><th>D<sub>p</sub></th><th>E</th><th>ρ</th><th>D<sub>r</sub></th></tr></thead><tbody>${rows}</tbody></table>
     <p class="note">* декабрь 2026 года — прогноз. ${th.n}</p>`;
 }
+function qOf(r){const T=SNAP.tot,den=T.fact-T.opt;return Math.abs(den)<1e-9?NaN:(T.fact-T[r])/den;}
 function renderKpi(){
-  const {list,m,Btot,left}=SNAP;
-  const sp=list.reduce((a,s)=>a+s.dp,0),sf=list.reduce((a,s)=>a+s.drf,0),so=list.reduce((a,s)=>a+s.dro,0);
+  const {list,m,Btot,kR,tot,left}=SNAP;
+  const sp=list.reduce((a,s)=>a+s.dp*s.rho,0);
   const fin=list.filter(s=>!s.resist),need=fin.reduce((a,s)=>a+s.req,0),res=list.length-fin.length;
-  const over=list.filter(s=>s.over).length;
+  const over=list.filter(s=>s.over).length,R=RULES[rule].n;
   if(mode==="dmg"){
-    $("kpi").innerHTML=`<div><b>${fmt(sp)}</b><span>потенциальный ущерб</span></div><div><b>${fmt(sf)}</b><span>остаточный при фактическом распределении</span></div><div><b>${fmt(so)}</b><span>остаточный при оптимальном</span></div>`;
-    $("kNote").textContent=`Затраты снижают суммарный ущерб на ${Math.round((1-sf/sp)*100)} %. Перераспределение того же бюджета сняло бы ещё ${Math.round((sf-so)/sf*100)} % остаточного ущерба. Выше приемлемого: ${over} угроз, из них резистентных: ${res}.`;
+    $("kpi").innerHTML=`<div><b>${tr(sp*m.loss)}</b><span>реализуемый ущерб без защиты, тыс. ₽</span></div><div><b>${tr(tot[rule]*m.loss)}</b><span>остаточный ущерб: ${R}, тыс. ₽</span></div><div><b>${tr(tot.opt*m.loss)}</b><span>остаточный ущерб: оптимум, тыс. ₽</span></div>`;
+    const q=qOf(rule);
+    $("kNote").textContent=`Правило «${R}» снижает реализуемый ущерб на ${Math.round((1-tot[rule]/sp)*100)} %.${rule!=="opt"&&rule!=="fact"&&isFinite(q)?(q>=0?` Оно забирает ${Math.round(q*100)} % выигрыша, доступного оптимуму (Q = ${fmt(q)}).`:` По суммарному ущербу оно хуже фактического распределения (Q = ${fmt(q)}).`):""} Выше приемлемого: ${over} угроз, из них резистентных: ${res}.`;
   }else{
     const d=need-Btot;
-    $("kpi").innerHTML=`<div><b>${fmt(Btot)}</b><span>бюджет B</span></div><div><b>${fmt(need)}</b><span>требуется для приемлемого ущерба*</span></div><div><b class="${d>0?"bad":"good"}">${fmtS(-d)}</b><span>${d>0?"дефицит":"профицит"}</span></div>`;
-    $("kNote").textContent=`* Сумма требуемых затрат по угрозам, которые можно опустить до приемлемого уровня. Резистентных угроз: ${res}; для них нужен другой тип мер (страхование, отказ от уязвимого процесса, резервирование), а не наращивание тех же затрат.${d<=0?" Общего бюджета хватает, чтобы опустить все нерезистентные угрозы ниже приемлемого уровня, но только при перераспределении по требуемым уровням.":""}${left>0.01?` В оптимуме ${fmt(left)} бюджета не нашли полезного применения.`:""}`;
+    $("kpi").innerHTML=`<div><b>${tr(Btot*kR)}</b><span>бюджет B, тыс. ₽</span></div><div><b>${tr(need*kR)}</b><span>требуется для приемлемого ущерба*, тыс. ₽</span></div><div><b class="${d>0?"bad":"good"}">${d>0?"−":"+"}${tr(Math.abs(d)*kR)}</b><span>${d>0?"дефицит":"профицит"}, тыс. ₽</span></div>`;
+    $("kNote").textContent=`* Сумма требуемых затрат по угрозам, которые можно опустить до приемлемого уровня. Резистентных угроз: ${res}; для них нужен другой тип мер (страхование, отказ от уязвимого процесса, резервирование).${d<=0?" Общего бюджета хватает на все нерезистентные угрозы, но только при распределении по требуемым уровням.":""}${left*kR>=1000?` Правило «${R}» оставляет неизрасходованными ${tr(left*kR)} тыс. ₽.`:""}`;
   }
 }
 function renderBudget(){
-  const {list,Btot}=SNAP;
-  const stack=key=>{const tot=list.reduce((a,s)=>a+s[key],0)||1;
-    return [...list].sort((a,b)=>b.yf-a.yf).map(s=>`<i style="width:${(s[key]/tot*100).toFixed(2)}%;background:${s.th.c}" title="${s.th.l}: ${fmt(s[key]/tot*100,0)} %"></i>`).join("");};
-  $("bars").innerHTML=`<div class="barrow"><span>Факт</span><div class="stack">${stack("yf")}</div></div><div class="barrow"><span>Оптимум</span><div class="stack">${stack("yo")}</div></div>`;
-  const rows=[...list].map(s=>({s,d:s.yo-s.yf})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,6);
-  $("realloc").innerHTML=`<thead><tr><th>Наибольшие перестановки</th><th>факт</th><th>оптимум</th><th>Δ</th></tr></thead><tbody>`+
-    rows.map(r=>`<tr><td><i style="background:${r.s.th.c}"></i>${r.s.th.l}</td><td>${fmt(r.s.yf)}</td><td>${fmt(r.s.yo)}</td><td class="${r.d>0?"good":"bad"}">${fmtS(r.d)}</td></tr>`).join("")+"</tbody>";
+  const {list,kR}=SNAP;
+  const stack=r=>{const tot=list.reduce((a,s)=>a+s.al[r],0)||1;
+    return [...list].sort((a,b)=>b.al.fact-a.al.fact).map(s=>`<i style="width:${(s.al[r]/tot*100).toFixed(2)}%;background:${s.th.c}" title="${s.th.l}: ${tr(s.al[r]*kR)} тыс. ₽"></i>`).join("");};
+  const rows=[["fact","Факт"]];if(rule!=="fact"&&rule!=="opt")rows.push([rule,RULES[rule].n]);rows.push(["opt","Оптимум"]);
+  $("bars").innerHTML=rows.map(([r,n])=>`<div class="barrow"><span>${n}</span><div class="stack">${stack(r)}</div></div>`).join("");
+  const cmpTo=rule==="fact"?"opt":rule;
+  const rws=[...list].map(s=>({s,d:s.al[cmpTo]-s.al.fact})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,6);
+  $("realloc").innerHTML=`<thead><tr><th>Наибольшие перестановки, тыс. ₽</th><th>факт</th><th>${RULES[cmpTo].s}</th><th>Δ</th></tr></thead><tbody>`+
+    rws.map(r=>`<tr><td><i style="background:${r.s.th.c}"></i>${r.s.th.l}</td><td>${tr(r.s.al.fact*kR)}</td><td>${tr(r.s.al[cmpTo]*kR)}</td><td class="${r.d>0?"good":"bad"}">${r.d>=0?"+":"−"}${tr(Math.abs(r.d)*kR)}</td></tr>`).join("")+"</tbody>";
+}
+function renderCompare(){
+  const {list,m,kR,AL,tot,Btot}=SNAP;
+  let h=`<thead><tr><th>Правило</th><th>ущерб*</th><th>Q</th><th>&gt;D<sub>a</sub></th><th>траты*</th><th>ядро</th></tr></thead><tbody>`;
+  RK.forEach(r=>{const q=qOf(r),ov=list.filter(s=>s.dr[r]>m.da).length,sp=(Btot-AL[r].left)*kR,core=AL[r].core.size;
+    h+=`<tr data-rule="${r}" class="${r===rule?"on":""}" style="cursor:pointer"><td>${RULES[r].n}</td><td>${tr(tot[r]*m.loss)}</td><td class="${isFinite(q)&&q<0?"bad":""}">${r==="fact"?"0":r==="opt"?"1":isFinite(q)?fmt(q):"—"}</td><td>${ov}</td><td>${tr(sp)}</td><td>${core?core+"/"+list.length:"—"}</td></tr>`;});
+  $("cmp").innerHTML=h+"</tbody>";
+  $("cmp").querySelectorAll("tr[data-rule]").forEach(tr_=>tr_.addEventListener("click",()=>setRule(tr_.dataset.rule)));
+}
+function renderSmeta(){
+  const {list,AL,kR,Btot}=SNAP,sm=smeta(list,AL[rule].y,kR,Btot-AL[rule].left);
+  $("smetaTitle").textContent=`Смета мер защиты: правило «${RULES[rule].n}»`;
+  const rows=sm.items.map(v=>`<tr><td>${v.me.n}${v.me.o?' <span class="src">оценка</span>':""}<div class="src">${[...v.th].join(", ")}</div></td><td class="n">${tr(v.me.c)}</td></tr>`).join("");
+  const unbought=Object.keys(MEAS).filter(id=>!sm.items.some(v=>v.id===id)).length;
+  $("smeta").innerHTML=`<thead><tr><th>Мера и угрозы, которые она закрывает</th><th class="n">тыс. ₽/год</th></tr></thead><tbody>${rows||'<tr><td colspan="2">Бюджета не хватает ни на одну меру.</td></tr>'}</tbody>
+    <tfoot><tr><td>Куплено мер: ${sm.items.length} из ${Object.keys(MEAS).length}</td><td class="n">${tr(sm.spent)}</td></tr>
+    <tr><td style="font-weight:500;color:var(--muted)">Остаток: не хватает на следующую меру${AL[rule].left*kR>=1000?"; резерв правила "+tr(AL[rule].left*kR):""}</td><td class="n" style="font-weight:500;color:var(--muted)">${tr(sm.rest+AL[rule].left*kR)}</td></tr></tfoot>`;
 }
 function renderCurve(){
-  const m=prm(),list=stateList(t,m),S0=list.reduce((a,o)=>a+o.y0,0);
+  const m=prm(),list=stateList(t,m);prepList(list,m);const S0=list.reduce((a,o)=>a+o.y0,0),kR=m.rub/S0;
   const ks=[];for(let k=0;k<=2.5+1e-9;k+=0.1)ks.push(+k.toFixed(2));
-  const opt=ks.map(k=>{const o=optimize(list,S0*k,m);return list.reduce((a,s,i)=>a+drOf(s,o.y[i],m),0);});
-  const fac=ks.map(k=>list.reduce((a,s)=>a+drOf(s,s.y0*k,m),0));
-  const fin=list.filter(s=>isFinite(yReq(s.dp,s.rho,s.th.ek,m)));
-  const need=fin.reduce((a,s)=>a+yReq(s.dp,s.rho,s.th.ek,m),0)/S0;
-  const W2=340,H2=190,L=40,R=10,T=10,B=34,ymax=Math.max(...fac,...opt)*1.05||1;
+  const lines={};RK.forEach(r=>{lines[r]=ks.map(k=>{const al=allocate(list,S0*k,m,r,kR,false);return list.reduce((a,s,i)=>a+drOf(s,al.y[i],m),0)*m.loss;});});
+  const fin=list.filter(s=>!s.resist),need=fin.reduce((a,s)=>a+s.req,0)/S0;
+  const W2=340,H2=200,L=48,R=10,T=10,B=34,ymax=Math.max(...RK.map(r=>Math.max(...lines[r])))*1.05||1;
   const X=k=>L+(W2-L-R)*k/2.5,Y=v=>T+(H2-T-B)*(1-v/ymax);
   const path=a=>a.map((v,i)=>(i?"L":"M")+X(ks[i]).toFixed(1)+" "+Y(v).toFixed(1)).join(" ");
   const css=getComputedStyle(document.documentElement),c=n=>css.getPropertyValue(n).trim();
   let g="";
-  [0,0.5,1].forEach(f=>{const v=ymax*f/1.05;g+=`<line x1="${L}" x2="${W2-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c("--line")}" stroke-width="1"/><text x="${L-6}" y="${Y(v)+4}" font-size="11" text-anchor="end" fill="${c("--muted")}">${fmt(v,1)}</text>`;});
+  [0,0.5,1].forEach(f=>{const v=ymax*f/1.05;g+=`<line x1="${L}" x2="${W2-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c("--line")}" stroke-width="1"/><text x="${L-6}" y="${Y(v)+4}" font-size="11" text-anchor="end" fill="${c("--muted")}">${tr(v)}</text>`;});
   [0,0.5,1,1.5,2,2.5].forEach(k=>{g+=`<text x="${X(k)}" y="${H2-B+15}" font-size="11" text-anchor="middle" fill="${c("--muted")}">${Math.round(k*100)}</text>`;});
-  g+=`<text x="${(L+W2-R)/2}" y="${H2-4}" font-size="11" text-anchor="middle" fill="${c("--muted")}">бюджет, % от фактического</text>`;
+  g+=`<text x="${(L+W2-R)/2}" y="${H2-4}" font-size="11" text-anchor="middle" fill="${c("--muted")}">бюджет, % от фактического; ущерб — тыс. ₽</text>`;
   if(need<=2.5)g+=`<line x1="${X(need)}" x2="${X(need)}" y1="${T}" y2="${H2-B}" stroke="${c("--up")}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
   g+=`<line x1="${X(m.kB)}" x2="${X(m.kB)}" y1="${T}" y2="${H2-B}" stroke="${c("--ink")}" stroke-width="1.5"/>`;
-  g+=`<path d="${path(fac)}" fill="none" stroke="${c("--muted")}" stroke-width="2" stroke-dasharray="5 4"/>`;
-  g+=`<path d="${path(opt)}" fill="none" stroke="${c("--accent")}" stroke-width="2.5"/>`;
+  const sty={fact:[c("--muted"),2,"5 4"],px:[c("--plane"),2,""],pxd:[c("--ax-y"),2,""],gl:[c("--terrain"),2,""],opt:[c("--accent"),3,""]};
+  RK.forEach(r=>{const [col,w,d]=sty[r];g+=`<path d="${path(lines[r])}" fill="none" stroke="${col}" stroke-width="${r===rule?w+1.5:w}" ${d?`stroke-dasharray="${d}"`:""}/>`;});
   $("curve").innerHTML=g;
-  const i1=ks.indexOf(1),i2=ks.indexOf(2);
-  const gain=(opt[i1]-opt[i2])/opt[i1]*100;
-  $("curveNote").textContent=`Удвоение бюджета при оптимальном распределении снижает остаточный ущерб на ${Math.round(gain)} %. Минимальный бюджет, при котором все нерезистентные угрозы опускаются ниже приемлемого уровня, — ${Math.round(need*100)} % от фактического${need>2.5?" (за пределами графика)":""}. Пологий участок кривой справа — зона, где каждый следующий рубль почти не снижает ущерб.`;
+  const i1=ks.indexOf(1),i2=ks.indexOf(2),gain=(lines.opt[i1]-lines.opt[i2])/lines.opt[i1]*100;
+  $("curveNote").textContent=`Выбранное правило выделено толстой линией. Удвоение бюджета при оптимальном распределении снижает остаточный ущерб на ${Math.round(gain)} %. Минимальный бюджет, при котором все нерезистентные угрозы опускаются ниже приемлемого уровня, — ${Math.round(need*100)} % от фактического (${tr(need*m.rub)} тыс. ₽)${need>2.5?", за пределами графика":""}.`;
+}
+function renderEmp(){
+  const names=Object.keys(EMP24),th=names.map(l=>THREATS.find(x=>x.l===l));
+  const zm=th.map(x=>x.p[1][2]),ym=th.map(x=>x.p[1][1]),sy=ym.reduce((a,v)=>a+v,0);
+  const se=names.map(l=>EMP24[l].s),ya=names.map(l=>EMP24[l].ya);
+  const rz=spearman(zm,se),ry=spearman(ym.map(v=>v/sy),ya),rh=spearman(se,ya);
+  const card=(v,p,l)=>`<div><b>${fmt(v)}</b><span>${l}; p ≈ ${fmt(p,3)}</span></div>`;
+  $("empKpi").innerHTML=card(rz.r,rz.p,"ρ: частота модели и данных")+card(ry.r,ry.p,"ρ: затраты модели и анкеты")+card(rh.r,rh.p,"ρ: частота данных и затраты анкеты");
+  const rows=names.map((l,i)=>{const o=EMP24[l],dz=zEmp(l)-zm[i];
+    return `<tr><td title="${o.src}">${l}${o.e?" *":""}</td><td>${fmt(zm[i])}</td><td>${fmt(zEmp(l))}</td><td class="${Math.abs(dz)>0.3?"bad":""}">${dz>=0?"+":"−"}${fmt(Math.abs(dz))}</td><td>${Math.round(ym[i]/sy*100)}</td><td>${Math.round(o.ya*100)}</td></tr>`;}).join("");
+  $("empT").innerHTML=`<thead><tr><th>Класс</th><th>z<br>мод.</th><th>z<br>данн.</th><th>Δz</th><th>затр.<br>мод., %</th><th>затр.<br>анк., %</th></tr></thead><tbody>${rows}</tbody>`;
+  const big=names.map((l,i)=>({l,d:zEmp(l)-zm[i]})).filter(o=>Math.abs(o.d)>0.3).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
+  $("empNote").innerHTML=`* Счётчика в отчётах нет, значение экспертное. Наведите курсор на название класса, чтобы увидеть источник. Реконструкция узла 2024 года согласуется с данными по частоте слабо и незначимо (ρ = ${fmt(rz.r)}). Сильнее всего расходятся: ${big.map(o=>`${o.l} (${o.d>0?"данные выше":"модель выше"})`).join(", ")}. В данных затраты анкеты умеренно следуют за частотой атак (ρ = ${fmt(rh.r)}), но фишинг — самая частая угроза — получает лишь ${Math.round(EMP24["Phishing / BEC"].ya*100)} % затрат.`;
 }
 function pearson(a,b){const n=a.length;if(n<3)return NaN;const ma=a.reduce((s,v)=>s+v,0)/n,mb=b.reduce((s,v)=>s+v,0)/n;
   let sab=0,sa=0,sb=0;for(let i=0;i<n;i++){sab+=(a[i]-ma)*(b[i]-mb);sa+=(a[i]-ma)**2;sb+=(b[i]-mb)**2;}return sab/Math.sqrt(sa*sb);}
@@ -700,11 +901,12 @@ function renderParams(){
   $("oH").textContent=fmt(+P.h.value,1);$("oDa").textContent=fmt(+P.da.value);$("oBud").textContent=P.bud.value+" %";
 }
 function scheduleCurve(){clearTimeout(curveTimer);curveTimer=setTimeout(renderCurve,playing?400:60);}
-function update(){SNAP=snapshot();draw();renderCard();renderKpi();renderBudget();renderTop();if(!playing)scheduleCurve();}
+function update(){SNAP=snapshot();draw();renderCard();renderKpi();renderBudget();renderCompare();renderSmeta();renderTop();if(!playing)scheduleCurve();}
+function setRule(r){rule=r;document.querySelectorAll(".switch.rules button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.rule===r)));update();}
 function updateAll(){renderParams();update();renderTable();}
 function setMode(md){
   mode=md;document.body.dataset.mode=md;
-  document.querySelectorAll(".switch button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===md)));
+  document.querySelectorAll(".switch.modes button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===md)));
   $("modeTag").textContent=md==="dmg"?"Логика ущерба":"Логика бюджета";
   update();
 }
@@ -723,7 +925,8 @@ playBtn.addEventListener("click",()=>setPlay(!playing));
 tIn.addEventListener("input",()=>{t=+tIn.value;if(playing)setPlay(false);update();});
 Object.values(opt).forEach(o=>o.addEventListener("change",draw));
 Object.values(P).forEach(o=>o.addEventListener("input",updateAll));
-document.querySelectorAll(".switch button").forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
+document.querySelectorAll(".switch.modes button").forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
+document.querySelectorAll(".switch.rules button").forEach(b=>b.addEventListener("click",()=>setRule(b.dataset.rule)));
 document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
   target={...VIEWS[b.dataset.view]};
@@ -763,7 +966,7 @@ new MutationObserver(onTheme).observe(document.documentElement,{attributes:true,
 new ResizeObserver(resize).observe(wrap);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
 
-readColors();renderParams();renderLag();renderTable();SNAP=snapshot();resize();update();
+readColors();renderParams();renderLag();renderTable();renderEmp();SNAP=snapshot();resize();update();
 })();
 </script>
 </body>
