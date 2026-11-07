@@ -55,6 +55,8 @@ canvas:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
 canvas.dragging{cursor:grabbing}
 .yearbadge{position:absolute;right:14px;top:10px;font-size:clamp(28px,4vw,46px);font-weight:700;line-height:1;color:var(--ink);opacity:.18;pointer-events:none;font-variant-numeric:tabular-nums;text-align:right}
 .yearbadge small{display:block;font-size:15px;font-weight:600;opacity:.9}
+.print-fig #modeTag{display:none}
+.print-fig .yearbadge{font-size:44px}
 .modetag{position:absolute;left:12px;top:10px;font-size:13px;font-weight:700;padding:4px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--line);pointer-events:none}
 .controls{display:flex;gap:14px;align-items:center;padding:12px 6px 4px;flex-wrap:wrap}
 .btn{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--surface2);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer}
@@ -270,6 +272,8 @@ summary{cursor:pointer;font-weight:600}
         <label class="only-dmg"><input type="checkbox" id="optRipe" checked> созревание</label>
         <label><input type="checkbox" id="optTrails"> траектории</label>
         <label><input type="checkbox" id="optLabels"> названия угроз</label>
+        <label><input type="checkbox" id="optReach"> цвет по достижимости порога</label>
+        <label><input type="checkbox" id="optPrint"> режим рисунка для статьи</label>
         <label><input type="checkbox" id="optEmp" checked> эмпирика 2024</label>
         <label><input type="checkbox" id="optSect" checked> сдвиг отрасли</label>
       </div>
@@ -595,7 +599,7 @@ function Phi(x){const t=1/(1+.3275911*Math.abs(x)/Math.SQRT2);const y=1-(((((1.0
 const $=id=>document.getElementById(id);
 const cv=$("cv"),ctx=cv.getContext("2d"),wrap=$("wrap");
 const tIn=$("t"),playBtn=$("play"),badge=$("yearBadge");
-const opt={terrain:$("optTerrain"),plane:$("optPlane"),stem:$("optStem"),ghost:$("optGhost"),ripe:$("optRipe"),trails:$("optTrails"),labels:$("optLabels"),emp:$("optEmp"),sect:$("optSect")};
+const opt={terrain:$("optTerrain"),plane:$("optPlane"),stem:$("optStem"),ghost:$("optGhost"),ripe:$("optRipe"),trails:$("optTrails"),labels:$("optLabels"),emp:$("optEmp"),sect:$("optSect"),reach:$("optReach"),print:$("optPrint")};
 const P={mttd:$("pMttd"),emax:$("pEmax"),ec50:$("pEc50"),h:$("pH"),da:$("pDa"),bud:$("pBud"),rub:$("pRub"),loss:$("pLoss"),okv:$("pOkv"),rev:$("pRev")};
 OKVED.forEach(o=>P.okv.add(new Option(o.n,o.k)));
 let W=0,H=0,dpr=1,t=0,zoom=1,playing=false,lastTs=0,mode="dmg",rule="fact";
@@ -744,7 +748,16 @@ function arrowHead(A,B,col,size){
   ctx.lineTo(B.px-al*Math.cos(ang+0.42),B.py-al*Math.sin(ang+0.42));
   ctx.closePath();ctx.fillStyle=col;ctx.fill();
 }
-function font(sz,w){return `${w||500} ${sz*dpr}px "Golos Text", system-ui, sans-serif`;}
+let PRINT=false;
+function font(sz,w){return `${w||500} ${sz*dpr*(PRINT?1.4:1)}px "Golos Text", system-ui, sans-serif`;}
+// классы достижимости порога при интервальной неопределённости параметров (Emax ±0,10; EC50 ±0,10; h ±0,3)
+const REACH={robust:"#2e7d4f",cond:"#e0a030",none:"#a12b2b",below:"#9aa5b1"};
+function yReqP(A,k,em,ec,h,da){if(A<=da)return 0;const r=1-da/A,e=em*k;if(r>=e)return Infinity;return ec*Math.pow(r/(e-r),1/h);}
+function reachClass(s,m){const A=s.dp*s.rho,k=s.th.ek||1;if(A<=m.da)return "below";
+  const hs=[Math.max(.5,m.h-.3),m.h+.3],worst=Math.max(...hs.map(h=>yReqP(A,k,m.emax-.1,m.ec50+.1,h,m.da))),best=Math.min(...hs.map(h=>yReqP(A,k,Math.min(.99,m.emax+.1),Math.max(.01,m.ec50-.1),h,m.da)));
+  if(worst<=YCAP)return "robust";if(best<=YCAP)return "cond";return "none";}
+function applyReach(){THREATS.forEach(th=>{if(th.c0===undefined)th.c0=th.c;th.c=th.c0;});
+  if(!opt.reach.checked||!SNAP)return;SNAP.list.forEach(s=>{s.th.c=REACH[reachClass(s,SNAP.m)];});}
 function toHex(c){
   if(!c)return "#888888";
   if(c.startsWith("#"))return c.length===4?"#"+[...c.slice(1)].map(ch=>ch+ch).join(""):c.slice(0,7);
@@ -865,7 +878,7 @@ function draw(){
   if(opt.terrain.checked)drawTerrain(m);
   if(mode==="dmg"&&opt.plane.checked)drawPlane(m.da,boxes);
   if(opt.trails.checked&&OKA>=1)THREATS.forEach(th=>{if(th!==sel)drawTrail(th,m,false);});
-  if(sel&&OKA>=1)drawTrail(sel,m,true);
+  if(sel&&OKA>=1&&!PRINT)drawTrail(sel,m,true);
   const nodes=SNAP.list.map(s=>{
     const a=vis(s.th,t);
     const vF=mode==="dmg"?s.drf:s.yf,vO=mode==="dmg"?s.dro:s.yo;
@@ -891,7 +904,7 @@ function draw(){
     ctx.beginPath();ctx.ellipse(o.F.px,o.F.py,3.5*dpr,2*dpr,0,0,Math.PI*2);ctx.fillStyle=hexA(o.s.th.c,0.35*o.a);ctx.fill();
   });
   nodes.sort((a,b)=>b.Pr.d-a.Pr.d).forEach(o=>{
-    const s=o.s,isS=s.th===sel;ctx.globalAlpha=o.a;
+    const s=o.s,isS=!PRINT&&s.th===sel;ctx.globalAlpha=o.a;
     if(opt.stem.checked){
       if(mode==="dmg"){
         ctx.beginPath();ctx.moveTo(o.Pt.px,o.Pt.py);ctx.lineTo(o.Pr.px,o.Pr.py);
@@ -929,7 +942,7 @@ function draw(){
     boxes.push({x:o.Pr.px-o.rad,y:o.Pr.py-o.rad,w:o.rad*2,h:o.rad*2});
   });
   const key=o=>mode==="dmg"?o.s.drf:Math.abs((isFinite(o.s.req)?o.s.req:YCAP)-o.s.yf);
-  [...nodes].sort((a,b)=>(b.s.th===sel)-(a.s.th===sel)||key(b)-key(a)).forEach(o=>{const isS=o.s.th===sel;
+  [...nodes].sort((a,b)=>(b.s.th===sel)-(a.s.th===sel)||key(b)-key(a)).forEach(o=>{const isS=!PRINT&&o.s.th===sel;
     if(!isS&&!opt.labels.checked)return;
     const R=RULES[rule].s,kR=SNAP.kR,sub=!isS?null:mode==="dmg"?`остаточный ущерб: ${R} ${tr(o.s.drf*SNAP.m.loss)} · оптимум ${tr(o.s.dro*SNAP.m.loss)} тыс. ₽`:`затраты, тыс. ₽: ${R} ${tr(o.s.yf*kR)} · нужно ${tr(o.s.req*kR)} · оптимум ${tr(o.s.yo*kR)}`;
     placeLabel(o.s.th.l,o.Pr,o.rad+4*dpr,o.s.th.c,boxes,isS,sub);});
@@ -1218,7 +1231,7 @@ function renderParams(){
   $("oH").textContent=fmt(+P.h.value,1);$("oDa").textContent=fmt(+P.da.value);$("oBud").textContent=P.bud.value+" %";
 }
 function scheduleCurve(){clearTimeout(curveTimer);curveTimer=setTimeout(renderCurve,playing?400:60);}
-function update(){SNAP=snapshot();draw();renderCard();renderKpi();renderBudget();renderCompare();renderSmeta();renderTop();renderNorma();if(STATS&&!playing)renderLedger();if(!playing)scheduleCurve();}
+function update(){SNAP=snapshot();applyReach();draw();renderCard();renderKpi();renderBudget();renderCompare();renderSmeta();renderTop();renderNorma();if(STATS&&!playing)renderLedger();if(!playing)scheduleCurve();}
 function tagText(){const o=OKVED.find(v=>v.k===OKV_TO);$("modeTag").textContent=(mode==="dmg"?"Логика ущерба":"Логика бюджета")+(o&&o.k?" · "+o.n:" · без отраслевой поправки");}
 function setOkv(k){OKV_FROM=OKV_TO;OKV_TO=k;OKA=0;tagText();
   const o=OKVED.find(v=>v.k===k);$("okvHint").textContent=o&&o.k?"Стрелки на полу куба показывают, как угрозы сдвигаются для вашей отрасли.":"Выберите вид деятельности — ландшафт перестроится под ваше предприятие.";kick();}
@@ -1306,6 +1319,8 @@ $("splashSkip").addEventListener("click",closeSplash);
 $("aboutBtn").addEventListener("click",openSplash);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("splash").hidden)closeSplash();});
 let noSplash=false;try{noSplash=localStorage.getItem("ks_nosplash")==="1";}catch(e){}
+opt.reach.addEventListener("change",update);
+opt.print.addEventListener("change",()=>{PRINT=opt.print.checked;document.body.classList.toggle("print-fig",PRINT);update();});
 readColors();renderParams();renderLag();renderTable();renderEmp();tagText();SNAP=snapshot();resize();update();
 if(!noSplash)openSplash();
 })();
