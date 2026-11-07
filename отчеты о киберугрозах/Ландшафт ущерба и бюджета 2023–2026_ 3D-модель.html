@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ландшафт ущерба и бюджета</title>
+<title>Аппарат КиберСметы</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -147,6 +147,31 @@ canvas.dragging{cursor:grabbing}
 .mv i{width:10px;height:10px;border-radius:50%}
 .mv b{font-variant-numeric:tabular-nums;font-weight:600}
 .bad{color:var(--up)} .good{color:var(--down)}
+.tabs{max-width:1380px;margin:10px auto 0;padding:0 20px;display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{font:inherit;font-size:15px;font-weight:600;border:0;background:transparent;color:var(--muted);padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tabs button:hover{color:var(--ink)}
+.tabs .aboutbtn{margin-left:auto;font-weight:500;font-size:14px}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.tabpane[hidden]{display:none}
+.cards{max-width:1380px;margin:0 auto;padding:14px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:16px;align-items:start}
+.cards>section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}
+.cards h2{font-size:15px;font-weight:600;margin:0 0 8px}
+.cards>section.method{grid-column:1 / -1}
+.splash{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,20,30,.55);backdrop-filter:blur(3px)}
+.splash[hidden]{display:none}
+.splashcard{background:var(--surface);color:var(--ink);border-radius:18px;max-width:760px;width:100%;padding:28px 28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.35);max-height:calc(100vh - 32px);overflow:auto}
+.splashtag{display:inline-block;font-size:12.5px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:2px 10px}
+.splashcard h2{font-size:clamp(22px,3vw,30px);line-height:1.2;margin:12px 0 8px;letter-spacing:-.01em}
+.splashsub{color:var(--muted);margin:0 0 16px}
+.mods{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:18px}
+.mods div{background:var(--surface2);border-radius:12px;padding:12px}
+.mods b{display:block;font-size:16px;margin-bottom:4px;color:var(--accent)}
+.mods span{font-size:13.5px;color:var(--muted)}
+.splashlbl{display:block;font-weight:600;margin-bottom:6px}
+.splashcard select{font:inherit;font-size:15px;width:100%;padding:9px 12px;border:2px solid var(--accent);border-radius:10px;background:var(--surface);color:var(--ink)}
+.splashbtns{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 10px}
+.splashno{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
 .norma{border:2px solid var(--accent)!important}
 .okvbar select{font:inherit;font-size:15px;font-weight:600;padding:8px 12px;border:2px solid var(--accent);border-radius:10px;background:var(--surface);color:var(--ink);min-width:min(420px,100%)}
 .okvhint{font-size:13px;color:var(--muted)}
@@ -177,7 +202,8 @@ summary{cursor:pointer;font-weight:600}
 </head>
 <body data-mode="dmg">
 <header class="top">
-  <h1>Ландшафт угроз в двух логиках: ущерб и бюджет, 2023 — декабрь 2026</h1>
+  <h1>Учётно-аналитический аппарат калькулятора КиберСмета</h1>
+  <p class="lede" style="font-weight:600;color:var(--ink);margin-bottom:4px">Ландшафт угроз в двух логиках — ущерб и бюджет, 2023 — декабрь 2026 года</p>
   <p class="lede only-dmg">Логика ущерба. Пол куба — эпидемическая карта угроз: токсичность (X) и частота (Z). Рельеф — потенциальный ущерб без защиты при полном «созревании» атаки. Точка — остаточный ущерб при выбранном правиле распределения бюджета, полая точка — при оптимальном распределении того же бюджета. Зелёный отрезок от рельефа до точки — ущерб, предотвращённый затратами.</p>
   <p class="lede only-bud">Логика бюджета. Пол тот же, но по вертикали отложены затраты. Синий рельеф — затраты, которые нужны, чтобы опустить ущерб угрозы до приемлемого уровня. Точка — затраты по выбранному правилу, полая точка — оптимальные. Отрезок от точки до её требуемого уровня показывает разрыв: красный — недофинансирование, зелёный — перерасход. Стрелка вверх означает, что никакие затраты на этот тип мер угрозу не опустят.</p>
   <div class="modebar">
@@ -204,6 +230,17 @@ summary{cursor:pointer;font-weight:600}
   </div>
 </header>
 
+<nav class="tabs" role="tablist" aria-label="Разделы аппарата">
+  <button type="button" role="tab" data-tab="relief" aria-selected="true">КиберРельеф</button>
+  <button type="button" role="tab" data-tab="norma" aria-selected="false">КиберНорма и бюджет</button>
+  <button type="button" role="tab" data-tab="rules" aria-selected="false">Правила и смета мер</button>
+  <button type="button" role="tab" data-tab="check" aria-selected="false">Проверка данными</button>
+  <button type="button" role="tab" data-tab="ledger" aria-selected="false">Учёт: журнал и реестр</button>
+  <button type="button" role="tab" data-tab="method" aria-selected="false">Параметры и методика</button>
+  <button type="button" class="aboutbtn" id="aboutBtn">О программе</button>
+</nav>
+
+<div class="tabpane" data-pane="relief">
 <main class="grid">
   <section class="stage">
     <div class="canvas-wrap" id="wrap">
@@ -257,18 +294,28 @@ summary{cursor:pointer;font-weight:600}
   </section>
 
   <aside class="panel">
+    <section id="card" aria-live="polite"></section>
+    <section>
+      <h2>Итог по ландшафту</h2>
+      <div class="kpi" id="kpi"></div>
+      <p class="note" id="kNote"></p>
+    </section>
+    <section>
+      <h2 id="topTitle">Наибольший остаточный ущерб</h2>
+      <ol id="top"></ol>
+    </section>
+  </aside>
+</main>
+</div>
+
+<div class="tabpane" data-pane="norma" hidden>
+<div class="cards">
     <section class="norma">
       <h2>КиберНорма: норматив затрат для вашей отрасли</h2>
       <div class="prm2"><label for="pRev">Выручка предприятия, млн ₽/год</label><input type="number" id="pRev" min="1" step="1" value="36"></div>
       <div id="normaOut"></div>
       <div id="normaChg"></div>
       <p class="note" id="normaNote"></p>
-    </section>
-    <section id="card" aria-live="polite"></section>
-    <section>
-      <h2>Итог по ландшафту</h2>
-      <div class="kpi" id="kpi"></div>
-      <p class="note" id="kNote"></p>
     </section>
     <section>
       <h2>Бюджет</h2>
@@ -278,16 +325,6 @@ summary{cursor:pointer;font-weight:600}
       <div class="bars" id="bars"></div>
       <table class="realloc" id="realloc"></table>
       <p class="note">Полосы показывают, как один и тот же бюджет делится между угрозами при фактических долях, при выбранном правиле и при оптимуме. Таблица — наибольшие отличия выбранного правила от факта.</p>
-    </section>
-    <section>
-      <h2>Сравнение правил распределения</h2>
-      <table class="cmp" id="cmp"></table>
-      <p class="note"><i>Q</i> — доля выигрыша оптимума, которую забирает правило: <i>Q</i> = (<i>D</i><sup>факт</sup> − <i>D</i><sup>правило</sup>) / (<i>D</i><sup>факт</sup> − <i>D</i><sup>опт</sup>). <i>Q</i> = 1 — правило равно оптимуму, 0 — не лучше факта, меньше 0 — хуже факта. Щелчок по строке переключает правило. * Остаточный ущерб и потраченные деньги — тыс. ₽; «&gt;D<sub>a</sub>» — число угроз выше приемлемого ущерба; «ядро» — угрозы ядра из общего числа.</p>
-    </section>
-    <section>
-      <h2 id="smetaTitle">Смета мер защиты</h2>
-      <table class="smeta" id="smeta"></table>
-      <p class="note">Деньги, выделенные угрозе по правилу, превращаются в спрос на её меры (первая мера списка получает наибольший вес). Меры покупаются по убыванию отношения спроса к цене, пока хватает бюджета; общая мера оплачивается один раз и закрывает несколько угроз. Порядок строк — порядок покупки. Цены — каталог «Щит-МСП» для предприятия на 25 работников; меры с пометкой «оценка» в каталоге отсутствуют, их цена задана экспертно. Эффект в модели считается по кривой «доза — эффект», а смета показывает, во что превращаются деньги.</p>
     </section>
     <section>
       <h2>Кривая отдачи бюджета</h2>
@@ -303,6 +340,80 @@ summary{cursor:pointer;font-weight:600}
       </div>
       <p class="note" id="curveNote"></p>
     </section>
+</div>
+</div>
+
+<div class="tabpane" data-pane="rules" hidden>
+<div class="cards">
+    <section>
+      <h2>Сравнение правил распределения</h2>
+      <table class="cmp" id="cmp"></table>
+      <p class="note"><i>Q</i> — доля выигрыша оптимума, которую забирает правило: <i>Q</i> = (<i>D</i><sup>факт</sup> − <i>D</i><sup>правило</sup>) / (<i>D</i><sup>факт</sup> − <i>D</i><sup>опт</sup>). <i>Q</i> = 1 — правило равно оптимуму, 0 — не лучше факта, меньше 0 — хуже факта. Щелчок по строке переключает правило. * Остаточный ущерб и потраченные деньги — тыс. ₽; «&gt;D<sub>a</sub>» — число угроз выше приемлемого ущерба; «ядро» — угрозы ядра из общего числа.</p>
+    </section>
+    <section>
+      <h2 id="smetaTitle">Смета мер защиты</h2>
+      <table class="smeta" id="smeta"></table>
+      <p class="note">Деньги, выделенные угрозе по правилу, превращаются в спрос на её меры (первая мера списка получает наибольший вес). Меры покупаются по убыванию отношения спроса к цене, пока хватает бюджета; общая мера оплачивается один раз и закрывает несколько угроз. Порядок строк — порядок покупки. Цены — каталог «Щит-МСП» для предприятия на 25 работников; меры с пометкой «оценка» в каталоге отсутствуют, их цена задана экспертно. Эффект в модели считается по кривой «доза — эффект», а смета показывает, во что превращаются деньги.</p>
+    </section>
+</div>
+</div>
+
+<div class="tabpane" data-pane="check" hidden>
+<div class="cards">
+    <section>
+      <h2>Проверка узла 2024 года по данным</h2>
+      <div class="kpi" id="empKpi"></div>
+      <div style="overflow-x:auto"><table class="emp" id="empT"></table></div>
+      <p class="note" id="empNote"></p>
+    </section>
+    <section>
+      <h2>Запаздывание затрат (гипотеза H1)</h2>
+      <table class="lag" id="lag"></table>
+      <p class="note">Корреляция Пирсона между фактическими долями затрат и потенциальным ущербом в том же узле и в предыдущем. На реконструированных и прогнозных узлах это иллюстрация метода, а не проверка гипотезы.</p>
+    </section>
+</div>
+<section class="data">
+  <details>
+    <summary>Таблица расчёта по узлам</summary>
+    <div class="tablewrap"><table class="full" id="tbl"></table></div>
+  </details>
+</section>
+</div>
+
+<div class="tabpane" data-pane="ledger" hidden>
+<div class="cards">
+  <section class="norma">
+    <h2>Источник данных</h2>
+    <p class="note" style="margin-top:0">Анкету заполняют студенты-аудиторы (ОТЗИ, бизнес-информатика) и руководители МСП через Google Форму. Ответы попадают в Google Таблицу владельца КиберСметы. Отсюда таблица читается от имени того, кто открыл страницу, поэтому полные данные видит только владелец.</p>
+    <div class="prm2" id="gsRow"><label for="gsId">Google Таблица (ID или ссылка)</label><input type="text" id="gsId" style="text-align:left"></div>
+    <div class="splashbtns" style="margin:8px 0">
+      <button type="button" class="btn primary" id="gsLoad">Загрузить из Google Таблицы</button>
+      <label class="btn" for="csvIn" style="display:inline-flex;align-items:center">Загрузить CSV</label>
+      <input type="file" id="csvIn" accept=".csv,text/csv" hidden>
+    </div>
+    <p class="note" id="ledgerStatus">Данные ещё не загружены.</p>
+  </section>
+  <section>
+    <h2>Итоги учёта</h2>
+    <div class="kpi" id="ledgerKpi"></div>
+    <p class="note" id="ledgerKpiNote"></p>
+  </section>
+  <section style="grid-column:1 / -1">
+    <h2>Журнал инцидентов по классам угроз (контур ОТЗИ)</h2>
+    <div style="overflow-x:auto"><table class="emp" id="incT"></table></div>
+    <p class="note" id="incNote"></p>
+  </section>
+  <section style="grid-column:1 / -1">
+    <h2>Норма — факт — отклонение по угрозам (контур бизнес-информатики)</h2>
+    <div class="prm2"><label for="ledYear">Год затрат</label><select id="ledYear" style="font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);color:var(--ink)"><option>2026</option><option>2025</option><option>2024</option><option>2023</option></select></div>
+    <div style="overflow-x:auto"><table class="emp" id="nffT"></table></div>
+    <p class="note" id="nffNote"></p>
+  </section>
+</div>
+</div>
+
+<div class="tabpane" data-pane="method" hidden>
+<div class="cards">
     <section>
       <h2>Параметры модели</h2>
       <div class="prm"><label for="pMttd">Среднее время обнаружения, сут.</label><output id="oMttd"></output><input type="range" id="pMttd" min="1" max="180" step="1" value="30"></div>
@@ -311,21 +422,6 @@ summary{cursor:pointer;font-weight:600}
       <div class="prm"><label for="pH">Крутизна кривой «доза — эффект» <i>h</i></label><output id="oH"></output><input type="range" id="pH" min="0.5" max="4" step="0.1" value="1.5"></div>
       <div class="prm"><label for="pDa">Приемлемый ущерб <i>D</i><sub>a</sub></label><output id="oDa"></output><input type="range" id="pDa" min="0.02" max="0.4" step="0.01" value="0.12"></div>
       <p class="note">Параметры заданы экспертно. Вывод считается устойчивым, если он сохраняется при сдвиге параметров в разумных пределах.</p>
-    </section>
-    <section>
-      <h2>Запаздывание затрат (гипотеза H1)</h2>
-      <table class="lag" id="lag"></table>
-      <p class="note">Корреляция Пирсона между фактическими долями затрат и потенциальным ущербом в том же узле и в предыдущем. На реконструированных и прогнозных узлах это иллюстрация метода, а не проверка гипотезы.</p>
-    </section>
-    <section>
-      <h2>Проверка узла 2024 года по данным</h2>
-      <div class="kpi" id="empKpi"></div>
-      <div style="overflow-x:auto"><table class="emp" id="empT"></table></div>
-      <p class="note" id="empNote"></p>
-    </section>
-    <section>
-      <h2 id="topTitle">Наибольший остаточный ущерб</h2>
-      <ol id="top"></ol>
     </section>
     <section class="method">
       <h2>Как построена модель</h2>
@@ -340,15 +436,30 @@ summary{cursor:pointer;font-weight:600}
       <p><b>КиберНорма по ОКВЭД 2.</b> Отраслевой профиль берётся из симулятора РНФ-2027 (каталог «Щит-МСП»): зависимость отрасли от восьми классов активов <i>a</i><sub>k</sub> и отраслевые множители частоты <i>f</i>. Для угрозы <i>i</i> со сценарием каталога <i>c</i>(<i>i</i>) частота умножается на <i>f</i><sub><i>c</i>(<i>i</i>)</sub>, токсичность — на <i>D<sub>i</sub></i>/0,7, где <i>D<sub>i</sub></i> — средняя зависимость отрасли от активов сценария, 0,7 — средняя зависимость по всем отраслям. Норматив затрат — минимальный бюджет, при котором все нерезистентные угрозы опускаются ниже приемлемого ущерба; верхняя граница окна — бюджет, после которого каждая следующая добавка в 10 % норматива снижает остаточный ущерб при оптимальном распределении меньше чем на 2 %. Отраслевые множители — экспертные допущения симулятора и подлежат калибровке по данным предприятий.</p>
       <p>Узлы 2023 и 2024 годов реконструированы по направлению трендов, узел 2025 года взят из версии v3. Значения октября — декабря 2026 года для прежних 16 классов получены линейной экстраполяцией тренда 2024→2025. Классы угроз ИИ-агентов опираются на инцидент, о котором Positive Technologies сообщила 2 ноября 2026 года, на демонстрацию червя в Copilot for Word (Malwarebytes, июль 2026) и на сводку Cloud Security Alliance о косвенных промпт-инъекциях (2026); их координаты — экспертная оценка. Между узлами координаты интерполируются монотонным сплайном Фрича — Карлсона.</p>
     </section>
-  </aside>
-</main>
+</div>
+</div>
 
-<section class="data">
-  <details>
-    <summary>Таблица расчёта по узлам</summary>
-    <div class="tablewrap"><table class="full" id="tbl"></table></div>
-  </details>
-</section>
+<div class="splash" id="splash" role="dialog" aria-modal="true" aria-labelledby="splashTitle" hidden>
+  <div class="splashcard">
+    <div class="splashtag">КиберСмета · версия 3.0</div>
+    <h2 id="splashTitle">Учётно-аналитический аппарат калькулятора КиберСмета</h2>
+    <p class="splashsub">Трёхмерный ландшафт угроз, ущерба и затрат на защиту информации для субъектов малого и среднего предпринимательства, 2023 — декабрь 2026 года.</p>
+    <div class="mods">
+      <div><b>КиберРельеф</b><span>ландшафт угроз: где и насколько сильно может ударить, где сейчас стоит защита</span></div>
+      <div><b>КиберНорма</b><span>норматив затрат на защиту информации для вашей отрасли и окно бюджета</span></div>
+      <div><b>Правила распределения</b><span>факт, PARETO-X, PARETO-X·D, Гордон — Лёб и оптимум на одном бюджете; смета мер в рублях</span></div>
+    </div>
+    <label class="splashlbl" for="splashOkv">С чего начнём: ваш вид деятельности по ОКВЭД 2</label>
+    <select id="splashOkv"></select>
+    <div class="splashbtns">
+      <button type="button" class="btn primary" id="splashGo">Построить мой ландшафт</button>
+      <button type="button" class="btn" id="splashSkip">Пропустить</button>
+    </div>
+    <label class="splashno"><input type="checkbox" id="splashNo"> больше не показывать заставку</label>
+  </div>
+</div>
+
+
 
 <script>
 (function(){
@@ -942,6 +1053,119 @@ function renderNorma(){
   else $("normaChg").innerHTML=`<p class="note">Выберите отрасль в шапке страницы, чтобы увидеть, какие угрозы для неё опаснее среднего.</p>`;
   $("normaNote").textContent=`${o.k?`Профиль «${o.n}».`:"Отраслевая поправка выключена."} Узел времени — ${NODES[Math.round(t)].s}. ${res.length?`Норматив не покрывает ${res.length} резистентные угрозы (${res.map(s=>s.th.l).join(", ")}): для них нужен другой тип мер или страхование, их ущерб в норматив не входит.`:""} ${fact<need?"Фактический бюджет ниже норматива.":"Фактического бюджета хватает на норматив при распределении по требуемым уровням."}`;
 }
+// ===== Учёт: журнал инцидентов и реестр затрат =====
+const GS_DEFAULT="1-Rb7Wk-0x5C8XM1iOEf_5uiPLY_QGsBaCyJtCh9uoQo";
+const MEAS_BY_NAME=Object.fromEntries(Object.entries(MEAS).map(([id,m])=>[m.n.toLowerCase(),id]));
+const THR_BY_MEAS={};Object.entries(MAP).forEach(([l,ids])=>ids.forEach(id=>{(THR_BY_MEAS[id]=THR_BY_MEAS[id]||[]).push(l);}));
+let LEDGER=null,LEDGER_SRC="",STATS=null,DBH=null,USR=null;
+const COLS={code:"код предприятия",who:"кто заполняет",okv:"вид деятельности",staff:"численность",rev:"выручка за год",what:"что вносите",
+ date:"дата инцидента",cls:"класс угрозы",ubi:"номер уби",vec:"как злоумышленник",dwell:"через сколько дней",down:"простой",dmg:"прямой ущерб",
+ had:"меры защиты на момент",year:"год затрат",meas:"мера защиты",sum:"сумма за год",qual:"состояние меры"};
+const num=v=>{if(v==null)return NaN;const x=parseFloat(String(v).replace(/\s/g,"").replace(",","."));return isFinite(x)?x:NaN;};
+function parseCSV(t){const rows=[];let row=[],f="",q=false;for(let i=0;i<t.length;i++){const c=t[i];
+  if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+  else if(c==='"')q=true;else if(c===","){row.push(f);f="";}else if(c==="\n"||c==="\r"){if(c==="\r"&&t[i+1]==="\n")i++;row.push(f);rows.push(row);row=[];f="";}else f+=c;}
+  if(f.length||row.length){row.push(f);rows.push(row);}return rows.filter(r=>r.some(x=>String(x).trim()!==""));}
+function parseRows(values){
+  if(!values||values.length<2)return {inc:[],cost:[],err:"В таблице нет ответов."};
+  const h=values[0].map(x=>String(x).toLowerCase().trim()),idx={};
+  Object.entries(COLS).forEach(([k,key])=>{
+    let i=h.findIndex(x=>x.startsWith(key));
+    if(k==="meas")i=h.findIndex(x=>x.startsWith("мера защиты")&&!x.includes("на момент"));
+    idx[k]=i;});
+  if(idx.what<0)return {inc:[],cost:[],err:"Не найден столбец «Что вносите»: проверьте названия вопросов формы."};
+  const g=(r,k)=>idx[k]>=0?String(r[idx[k]]??"").trim():"";
+  const inc=[],cost=[];
+  values.slice(1).forEach(r=>{const base={code:g(r,"code").toUpperCase(),who:g(r,"who"),okv:g(r,"okv")};
+    const w=g(r,"what").toLowerCase();
+    if(w.startsWith("инцидент"))inc.push({...base,cls:g(r,"cls"),ubi:g(r,"ubi"),vec:g(r,"vec"),dwell:num(g(r,"dwell")),down:num(g(r,"down")),dmg:num(g(r,"dmg")),date:g(r,"date")});
+    else if(w.startsWith("затрат"))cost.push({...base,year:g(r,"year"),meas:MEAS_BY_NAME[g(r,"meas").toLowerCase()]||null,measName:g(r,"meas"),sum:num(g(r,"sum")),qual:g(r,"qual")});});
+  return {inc,cost,err:null};
+}
+const f1=v=>isFinite(v)?String(Math.round(v*10)/10).replace('.',','):'—';
+const med=a=>{const b=a.filter(isFinite).sort((x,y)=>x-y);if(!b.length)return NaN;const m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2;};
+function ledgerStats(L){
+  const ent=new Set([...L.inc,...L.cost].map(r=>r.code).filter(Boolean));
+  const byCls={};L.inc.forEach(r=>{const o=byCls[r.cls]=byCls[r.cls]||{n:0,dw:[],dn:[],dm:0};o.n++;o.dw.push(r.dwell);o.dn.push(r.down);if(isFinite(r.dmg))o.dm+=r.dmg;});
+  const cls={};Object.entries(byCls).forEach(([k,o])=>{cls[k]={n:o.n,dwell:med(o.dw),down:med(o.dn),dmg:o.dm};});
+  const vec={};L.inc.forEach(r=>{if(r.vec)vec[r.vec]=(vec[r.vec]||0)+1;});
+  const years={};L.cost.forEach(r=>{if(!r.meas||!isFinite(r.sum))return;const y=years[r.year]=years[r.year]||{ent:new Set(),thr:{}};y.ent.add(r.code);
+    const th=THR_BY_MEAS[r.meas]||[];th.forEach(l=>{y.thr[l]=(y.thr[l]||0)+r.sum*1000/th.length;});});
+  const yrs={};Object.entries(years).forEach(([y,o])=>{const n=Math.max(1,o.ent.size);yrs[y]={ent:o.ent.size,thr:Object.fromEntries(Object.entries(o.thr).map(([l,v])=>[l,v/n]))};});
+  const who={};[...L.inc,...L.cost].forEach(r=>{const k=r.who.includes("ОТЗИ")?"otzi":r.who.includes("бизнес")?"bi":r.who?"smb":"?";who[k]=(who[k]||0)+1;});
+  return {nInc:L.inc.length,nCost:L.cost.length,nEnt:ent.size,cls,vec,yrs,who,unmatched:L.cost.filter(r=>!r.meas).length};
+}
+function setLedger(L,src){LEDGER=L;LEDGER_SRC=src;STATS=ledgerStats(L);renderLedger();saveStats();}
+async function saveStats(){
+  if(!DBH||!USR||!(USR.isOwner&&USR.isOwner())||!STATS)return;
+  const doc={updated:new Date().toISOString().slice(0,10),...STATS};
+  try{const ref=DBH.doc("stats/summary"),cur=await ref.get();const old=cur&&cur.exists?cur.data():null;
+    const strip=o=>JSON.stringify({...o,updated:0});if(!old||strip(old)!==strip(doc))await ref.set(doc);}catch(e){}
+}
+function renderLedger(){
+  const S=STATS;
+  if(!S){$("ledgerKpi").innerHTML="";$("incT").innerHTML="";$("nffT").innerHTML="";
+    $("incNote").textContent="Журнал появится после загрузки ответов.";$("nffNote").textContent="";return;}
+  $("ledgerKpi").innerHTML=`<div><b>${S.nInc}</b><span>записей об инцидентах</span></div><div><b>${S.nCost}</b><span>записей о затратах</span></div><div><b>${S.nEnt}</b><span>предприятий (по кодам)</span></div>`;
+  const w=S.who||{};
+  $("ledgerKpiNote").textContent=`Заполнили: студенты ОТЗИ — ${w.otzi||0}, студенты бизнес-информатики — ${w.bi||0}, руководители и сотрудники МСП — ${w.smb||0}.${S.unmatched?` Не распознано мер в ${S.unmatched} записях о затратах: название меры не совпало со справочником.`:""} ${LEDGER_SRC}`;
+  // журнал по классам
+  const tot=S.nInc||1,m=SNAP.m;
+  const rows=THREATS.map(th=>{const c=S.cls[th.l]||{n:0},st=SNAP.byTh.get(th);return {th,c,z:st?st.z:null};});
+  const other=Object.keys(S.cls).filter(k=>!THREATS.some(t=>t.l===k));
+  $("incT").innerHTML=`<thead><tr><th>Класс угрозы</th><th>инцидентов</th><th>доля, %</th><th>z<br>модели</th><th>медиана дней до обнаружения</th><th>медиана простоя, ч</th><th>ущерб, тыс. ₽</th></tr></thead><tbody>`+
+    rows.filter(r=>r.c.n>0||r.z!==null).sort((a,b)=>b.c.n-a.c.n).map(r=>`<tr><td>${r.th.l}</td><td>${r.c.n||0}</td><td>${r.c.n?Math.round(r.c.n/tot*100):0}</td><td>${r.z===null?"—":fmt(r.z)}</td><td>${f1(r.c.dwell)}</td><td>${f1(r.c.down)}</td><td>${r.c.dmg?tr(r.c.dmg*1000):"—"}</td></tr>`).join("")+
+    other.map(k=>`<tr><td>${k}</td><td>${S.cls[k].n}</td><td>${Math.round(S.cls[k].n/tot*100)}</td><td>—</td><td>${f1(S.cls[k].dwell)}</td><td>${f1(S.cls[k].down)}</td><td>${S.cls[k].dmg?tr(S.cls[k].dmg*1000):"—"}</td></tr>`).join("")+"</tbody>";
+  const common=rows.filter(r=>r.z!==null),nOk=common.filter(r=>r.c.n>0).length;
+  let corr="";if(S.nInc>=10&&nOk>=5){const sp=spearman(common.map(r=>r.z),common.map(r=>r.c.n));corr=` Ранговая корреляция частоты в модели и в журнале: ρ = ${fmt(sp.r)} (p ≈ ${fmt(sp.p,3)}).`;}
+  const vec=Object.entries(S.vec).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k} — ${Math.round(v/tot*100)} %`).join("; ");
+  $("incNote").textContent=`${vec?"Пути проникновения: "+vec+".":""}${corr||(S.nInc<10?" Для сравнения с моделью нужно не меньше 10 инцидентов.":"")} Узел модели — ${NODES[Math.round(t)].s}.`;
+  // норма — факт — отклонение
+  const y=$("ledYear").value,Y=S.yrs[y],kR=SNAP.kR;
+  const nr=SNAP.list.map(st=>{const norm=isFinite(st.req)?st.req*kR:Infinity,fact=Y&&Y.thr[st.th.l]||0;return {st,norm,fact,dev:fact-norm};});
+  $("nffT").innerHTML=`<thead><tr><th>Угроза</th><th>норматив, тыс. ₽</th><th>факт на предприятие, тыс. ₽</th><th>отклонение, тыс. ₽</th><th>исполнение, %</th></tr></thead><tbody>`+
+    nr.sort((a,b)=>(isFinite(b.norm)?b.norm:1e12)-(isFinite(a.norm)?a.norm:1e12)).map(r=>{const fin=isFinite(r.norm);
+      return `<tr><td>${r.st.th.l}</td><td>${fin?tr(r.norm):"резист."}</td><td>${tr(r.fact)}</td><td class="${fin&&r.dev<-500?"bad":fin&&r.dev>500?"good":""}">${fin?(r.dev>=0?"+":"−")+tr(Math.abs(r.dev)):"—"}</td><td>${fin&&r.norm>0?Math.round(r.fact/r.norm*100):"—"}</td></tr>`;}).join("")+"</tbody>";
+  const sumN=nr.filter(r=>isFinite(r.norm)).reduce((a,r)=>a+r.norm,0),sumF=nr.reduce((a,r)=>a+r.fact,0);
+  $("nffNote").textContent=Y?`За ${y} год: затраты по ${Y.ent} предприятиям, в среднем ${tr(sumF)} тыс. ₽ на предприятие при нормативе ${tr(sumN)} тыс. ₽. Затраты на меру делятся поровну между угрозами, которые она закрывает. Норматив рассчитан для узла «${NODES[Math.round(t)].s}» и отрасли, выбранной в шапке.`:`За ${y} год записей о затратах нет.`;
+}
+async function loadFromSheets(){
+  const raw=$("gsId").value.trim(),m=raw.match(/\/d\/([A-Za-z0-9_-]+)/),id=m?m[1]:raw;
+  if(!id){$("ledgerStatus").textContent="Укажите ID или ссылку на Google Таблицу.";return;}
+  try{localStorage.setItem("ks_gs",id);}catch(e){}
+  const mcp=(window.claude&&window.claude.use)?await window.claude.use("mcp").catch(()=>null):null;
+  if(!mcp){$("ledgerStatus").textContent="Чтение Google Таблицы доступно только на опубликованной странице КиберСметы у её владельца. Здесь загрузите CSV: в Google Таблице «Файл → Скачать → CSV» на листе с ответами.";return;}
+  $("ledgerStatus").textContent="Читаю таблицу…";
+  try{
+    const meta=await mcp.callTool("Google Sheets","get_spreadsheet",{spreadsheetId:id,fields:["sheets.properties.title"]});
+    const titles=((meta.payload||{}).sheets||[]).map(x=>x.properties&&x.properties.title).filter(Boolean);
+    const sheet=titles.find(x=>/ответы на форму|form responses/i.test(x));
+    if(!sheet){$("ledgerStatus").textContent="В таблице пока нет листа с ответами формы. Свяжите Google Форму с этой таблицей (инструкция — на первом листе таблицы).";setLedger({inc:[],cost:[]},"");return;}
+    const res=await mcp.callTool("Google Sheets","get_values",{spreadsheetId:id,range:`'${sheet}'!A1:Z5000`});
+    const P=parseRows((res.payload||{}).values);
+    if(P.err){$("ledgerStatus").textContent=P.err;return;}
+    setLedger(P,`Источник: лист «${sheet}».`);
+    $("ledgerStatus").textContent=`Загружено ${P.inc.length+P.cost.length} ответов. Обезличенные итоги сохранены для остальных посетителей.`;
+  }catch(e){
+    const c=e&&e.code;
+    $("ledgerStatus").textContent=c==="server_not_connected"||c==="not_granted"?"Подключите Google Sheets к claude.ai и разрешите странице доступ к нему, затем нажмите кнопку ещё раз.":`Не удалось прочитать таблицу (${c||"ошибка"}). Проверьте, что таблица принадлежит вашей учётной записи Google.`;}
+}
+$("gsLoad").addEventListener("click",loadFromSheets);
+$("csvIn").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{const P=parseRows(parseCSV(String(r.result)));if(P.err){$("ledgerStatus").textContent=P.err;return;}
+    setLedger(P,`Источник: файл «${f.name}».`);$("ledgerStatus").textContent=`Загружено ${P.inc.length+P.cost.length} ответов из файла.`;};r.readAsText(f,"utf-8");});
+$("ledYear").addEventListener("change",renderLedger);
+(function(){let v=GS_DEFAULT;try{v=localStorage.getItem("ks_gs")||GS_DEFAULT;}catch(e){}$("gsId").value=v;})();
+// возможности опубликованной страницы: владелец читает таблицу, остальные видят сохранённые итоги
+(async()=>{
+  if(!window.claude||!claude.use)return;
+  USR=await claude.use("user").catch(()=>null);DBH=await claude.use("db").catch(()=>null);
+  const owner=!!(USR&&USR.isOwner&&USR.isOwner());
+  if(!owner){$("gsRow").hidden=true;$("gsLoad").hidden=true;}
+  if(DBH&&!LEDGER){try{const d=await DBH.doc("stats/summary").get();
+    if(d&&d.exists&&!LEDGER){STATS=d.data();LEDGER_SRC=`Обезличенные итоги на ${STATS.updated}.`;renderLedger();
+      $("ledgerStatus").textContent=owner?"Показаны сохранённые итоги; нажмите «Загрузить», чтобы обновить их из таблицы.":"Показаны обезличенные итоги учёта. Полные записи видит только владелец КиберСметы.";}}catch(e){}}
+})();
 function renderEmp(){
   const names=Object.keys(EMP24),th=names.map(l=>THREATS.find(x=>x.l===l));
   const zm=th.map(x=>x.p[1][2]),ym=th.map(x=>x.p[1][1]),sy=ym.reduce((a,v)=>a+v,0);
@@ -995,7 +1219,7 @@ function renderParams(){
   $("oH").textContent=fmt(+P.h.value,1);$("oDa").textContent=fmt(+P.da.value);$("oBud").textContent=P.bud.value+" %";
 }
 function scheduleCurve(){clearTimeout(curveTimer);curveTimer=setTimeout(renderCurve,playing?400:60);}
-function update(){SNAP=snapshot();draw();renderCard();renderKpi();renderBudget();renderCompare();renderSmeta();renderTop();renderNorma();if(!playing)scheduleCurve();}
+function update(){SNAP=snapshot();draw();renderCard();renderKpi();renderBudget();renderCompare();renderSmeta();renderTop();renderNorma();if(STATS&&!playing)renderLedger();if(!playing)scheduleCurve();}
 function tagText(){const o=OKVED.find(v=>v.k===OKV_TO);$("modeTag").textContent=(mode==="dmg"?"Логика ущерба":"Логика бюджета")+(o&&o.k?" · "+o.n:" · без отраслевой поправки");}
 function setOkv(k){OKV_FROM=OKV_TO;OKV_TO=k;OKA=0;tagText();
   const o=OKVED.find(v=>v.k===k);$("okvHint").textContent=o&&o.k?"Стрелки на полу куба показывают, как угрозы сдвигаются для вашей отрасли.":"Выберите вид деятельности — ландшафт перестроится под ваше предприятие.";kick();}
@@ -1065,7 +1289,26 @@ new MutationObserver(onTheme).observe(document.documentElement,{attributes:true,
 new ResizeObserver(resize).observe(wrap);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
 
+// вкладки
+function showTab(id){
+  document.querySelectorAll(".tabs button[data-tab]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===id)));
+  document.querySelectorAll(".tabpane").forEach(pn=>pn.hidden=pn.dataset.pane!==id);
+  if(id==="relief")requestAnimationFrame(resize);
+  if(id==="norma")renderCurve();
+  try{localStorage.setItem("ks_tab",id);}catch(e){}
+}
+document.querySelectorAll(".tabs button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+// заставка
+OKVED.forEach(o=>$("splashOkv").add(new Option(o.n,o.k)));
+function openSplash(){$("splashOkv").value=P.okv.value;$("splash").hidden=false;$("splashGo").focus();}
+function closeSplash(){$("splash").hidden=true;try{if($("splashNo").checked)localStorage.setItem("ks_nosplash","1");}catch(e){}}
+$("splashGo").addEventListener("click",()=>{const k=$("splashOkv").value;closeSplash();showTab("relief");if(k!==P.okv.value){P.okv.value=k;setOkv(k);}});
+$("splashSkip").addEventListener("click",closeSplash);
+$("aboutBtn").addEventListener("click",openSplash);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("splash").hidden)closeSplash();});
+let noSplash=false;try{noSplash=localStorage.getItem("ks_nosplash")==="1";}catch(e){}
 readColors();renderParams();renderLag();renderTable();renderEmp();tagText();SNAP=snapshot();resize();update();
+if(!noSplash)openSplash();
 })();
 </script>
 </body>
