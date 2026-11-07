@@ -147,6 +147,11 @@ canvas.dragging{cursor:grabbing}
 .mv i{width:10px;height:10px;border-radius:50%}
 .mv b{font-variant-numeric:tabular-nums;font-weight:600}
 .bad{color:var(--up)} .good{color:var(--down)}
+.norma{border:2px solid var(--accent)!important}
+.norma select{font:inherit;font-size:14px;width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);color:var(--ink);margin:4px 0 8px}
+.nrow{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:14px;font-variant-numeric:tabular-nums;margin-top:8px}
+.nrow b{text-align:right}
+.nbig{font-size:24px;font-weight:700;line-height:1.2}
 .emp{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
 .emp th,.emp td{padding:4px 3px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 .emp th:first-child,.emp td:first-child{text-align:left;white-space:normal;min-width:96px}
@@ -239,6 +244,14 @@ summary{cursor:pointer;font-weight:600}
   </section>
 
   <aside class="panel">
+    <section class="norma">
+      <h2>КиберНорма: норматив затрат по отрасли</h2>
+      <label for="pOkv" style="font-size:13px;color:var(--muted)">Вид деятельности по ОКВЭД 2</label>
+      <select id="pOkv"></select>
+      <div class="prm2"><label for="pRev">Выручка предприятия, млн ₽/год</label><input type="number" id="pRev" min="1" step="1" value="36"></div>
+      <div id="normaOut"></div>
+      <p class="note" id="normaNote"></p>
+    </section>
     <section id="card" aria-live="polite"></section>
     <section>
       <h2>Итог по ландшафту</h2>
@@ -310,8 +323,9 @@ summary{cursor:pointer;font-weight:600}
       <p>Требуемые затраты получены обращением уравнения Хилла: при <i>r</i> = 1 − <i>D</i><sub>a</sub> / (<i>D</i><sub>p</sub><i>ρ</i>) имеем <i>y</i>* = <i>EC</i><sub>50</sub>·[<i>r</i> / (<i>kE</i><sub>max</sub> − <i>r</i>)]<sup>1/<i>h</i></sup>. Если <i>r</i> ≤ 0, угроза уже в пределах приемлемого и <i>y</i>* = 0. Если <i>r</i> ≥ <i>kE</i><sub>max</sub> или требуемые затраты превышают предел 1,5 на одну угрозу, угроза считается резистентной к этому типу мер. Синий рельеф построен для угрозы с <i>ρ</i> = 1 и <i>k</i> = 1; маркер требуемого уровня у каждой точки учитывает её собственные <i>ρ</i> и <i>k</i>.</p>
       <p>Бюджет <i>B</i> — сумма затрат по угрозам. Фактическое распределение сохраняет доли из данных и масштабирует их на <i>B</i>. Оптимальное распределение ищется жадным алгоритмом с упреждением: бюджет делится на 300 порций, на каждом шаге выбираются угроза и число порций (до 40) с наибольшим предотвращённым ущербом на порцию. При <i>h</i> > 1 кривая Хилла S-образна, поэтому алгоритм даёт хорошее, но не гарантированно глобальное решение. Затраты на одну угрозу ограничены значением 1,5.</p>
       <p><b>Правила распределения бюджета.</b> «Факт» сохраняет доли затрат из данных. «PARETO-X» — авторский затратный метод в формализации модели: ядро — минимальный набор угроз, дающий не менее 80 % суммарной токсичности (TDI, ось X); 90 % бюджета делится внутри ядра пропорционально TDI, 10 % — поровну вне ядра как гигиенический минимум. «PARETO-X·D» — вариант, предложенный в ходе построения модели: ядро строится по реализуемому ущербу <i>D</i><sub>p</sub>·<i>ρ</i>; угрозы ядра, кроме резистентных, финансируются до требуемого уровня <i>y</i>*, при нехватке — пропорционально <i>y</i>*; остаток идёт на угрозы вне ядра до их <i>y</i>*, неизрасходованное остаётся резервом. «Гордон — Лёб» — практическая форма результата Гордона и Лёба (2002): затраты на угрозу не превышают 1/e её ожидаемого ущерба; если сумма превышает бюджет, она пропорционально уменьшается, если меньше — остаток не тратится. «Оптимум» — эталон, минимизирующий суммарный остаточный ущерб.</p>
-      <p>Денежная шкала: одна нормированная единица затрат равна фактическому бюджету в рублях, делённому на сумму фактических долей в текущем узле; единица ущерба задаётся полем «Ущерб при <i>D</i> = 1». Обе величины — параметры конкретного предприятия.</p>
+      <p>Денежная шкала: одна нормированная единица затрат равна средней стоимости полного списка мер одной угрозы по каталогу (около 85 тыс. ₽/год для предприятия на 25 работников) и не зависит от введённого бюджета, поэтому норматив не подстраивается под фактические траты. Фактический бюджет делится между угрозами в пропорциях данных; единица ущерба задаётся полем «Ущерб при <i>D</i> = 1». Обе величины — параметры конкретного предприятия.</p>
       <p><b>Эмпирическая проверка 2024 года.</b> Частота <i>s</i> — доля успешных атак на организации, в которых встречается класс угрозы, по открытым отчётам: Positive Technologies «Актуальные киберугрозы в странах СНГ 2023—2024» (2023 г. — I полугодие 2024 г., 73 % атак — на Россию), BI.ZONE Threat Zone 2025, Solar 4RAYS, «Лаборатория Касперского» (реагирование на инциденты 2024), Qrator Labs. Для отображения на полу куба <i>z</i><sub>эмп</sub> = 0,95·<i>s</i>/max <i>s</i>. Классы, по которым счётчиков нет, оценены экспертно и помечены. Структура затрат 2024 года — пропорции стоимостей 16 мер из анкеты одного розничного предприятия (срез осени 2025 г.), распределённые поровну между классами угроз, которые закрывает мера; это экспертная оценка, а не выборка. Согласие модели и данных измеряется ранговой корреляцией Спирмена.</p>
+      <p><b>КиберНорма по ОКВЭД 2.</b> Отраслевой профиль берётся из симулятора РНФ-2027 (каталог «Щит-МСП»): зависимость отрасли от восьми классов активов <i>a</i><sub>k</sub> и отраслевые множители частоты <i>f</i>. Для угрозы <i>i</i> со сценарием каталога <i>c</i>(<i>i</i>) частота умножается на <i>f</i><sub><i>c</i>(<i>i</i>)</sub>, токсичность — на <i>D<sub>i</sub></i>/0,7, где <i>D<sub>i</sub></i> — средняя зависимость отрасли от активов сценария, 0,7 — средняя зависимость по всем отраслям. Норматив затрат — минимальный бюджет, при котором все нерезистентные угрозы опускаются ниже приемлемого ущерба; верхняя граница окна — бюджет, после которого каждая следующая добавка в 10 % норматива снижает остаточный ущерб при оптимальном распределении меньше чем на 2 %. Отраслевые множители — экспертные допущения симулятора и подлежат калибровке по данным предприятий.</p>
       <p>Узлы 2023 и 2024 годов реконструированы по направлению трендов, узел 2025 года взят из версии v3. Значения октября — декабря 2026 года для прежних 16 классов получены линейной экстраполяцией тренда 2024→2025. Классы угроз ИИ-агентов опираются на инцидент, о котором Positive Technologies сообщила 2 ноября 2026 года, на демонстрацию червя в Copilot for Word (Malwarebytes, июль 2026) и на сводку Cloud Security Alliance о косвенных промпт-инъекциях (2026); их координаты — экспертная оценка. Между узлами координаты интерполируются монотонным сплайном Фрича — Карлсона.</p>
     </section>
   </aside>
@@ -387,6 +401,38 @@ const MAP={"Ransomware / APT":["backup","patch","ir","edr","fund"],"Triple Extor
 const RK=["fact","px","pxd","gl","opt"];
 const RULES={fact:{n:"Факт",s:"факт"},px:{n:"PARETO-X",s:"PARETO-X"},pxd:{n:"PARETO-X·D",s:"PARETO-X·D"},gl:{n:"Гордон — Лёб",s:"Г — Л"},opt:{n:"Оптимум",s:"оптимум"}};
 const HYG=0.10,CORE=0.8;
+// отраслевые профили ОКВЭД 2 (симулятор РНФ-2027): зависимость от активов и множители частоты по сценариям каталога
+const A8=(e,w,p,c,d,cl,b,em)=>({email:e,website:w,pos:p,crm:c,personal_data:d,cloud:cl,bank:b,employees:em});
+const OKVED=[
+ {k:"",n:"Без отраслевой поправки"},
+ {k:"47",n:"47 — Розничная торговля",a:A8(.7,.45,1,.65,.7,.55,.85,.7),fm:{pos:1.2}},
+ {k:"47.91",n:"47.91 — Торговля через интернет",a:A8(.85,1,.7,.9,.9,.85,.8,.75),fm:{web:1.3,ato:1.2,pdn:1.2}},
+ {k:"46",n:"46 — Оптовая торговля",a:A8(.9,.5,.3,.85,.6,.7,.9,.8),fm:{phishing:1.2,third:1.2}},
+ {k:"56",n:"56 — Общественное питание",a:A8(.6,.5,1,.5,.6,.45,.8,.75),fm:{pos:1.3,phishing:.8}},
+ {k:"55",n:"55 — Гостиницы",a:A8(.75,.85,.85,.8,.95,.6,.8,.8),fm:{pdn:1.3,web:1.1}},
+ {k:"10-33",n:"10–33 — Обрабатывающие производства",a:A8(.75,.45,.2,.6,.55,.55,.75,.8),fm:{ransom:1.3,vuln:1.2,supplier:1.2}},
+ {k:"41-43",n:"41–43 — Строительство",a:A8(.85,.4,.15,.6,.6,.5,.9,.85),fm:{phishing:1.2,insider:.9}},
+ {k:"49-53",n:"49–53 — Транспорт и логистика",a:A8(.8,.6,.3,.8,.7,.75,.8,.85),fm:{ransom:1.2,supplier:1.3}},
+ {k:"62-63",n:"62–63 — Разработка ПО и ИТ-услуги",a:A8(.95,.8,.1,.9,.75,1,.8,.9),fm:{vuln:1.4,ai:1.5,third:1.3,ato:1.2}},
+ {k:"69-74",n:"69–74 — Бухгалтерские, юридические, консалтинговые услуги",a:A8(.95,.55,.25,.9,.9,.8,.85,.85),fm:{phishing:1.3,pdn:1.2,insider:1.2}},
+ {k:"85",n:"85 — Образование",a:A8(.85,.7,.4,.75,1,.8,.6,.85),fm:{pdn:1.2,legal:1.3}},
+ {k:"86",n:"86 — Здравоохранение",a:A8(.85,.6,.6,.8,1,.75,.65,.85),fm:{ransom:1.3,pdn:1.4,legal:1.2}}
+];
+// сценарий каталога и атакуемые активы для каждого класса угроз модели
+const SCN={"Ransomware / APT":["ransom",["cloud","crm","personal_data"]],"Triple Extortion":["ransom",["crm","personal_data","cloud"]],
+ "Supply Chain":["third",["cloud","crm","email"]],"Quantum-Decrypt":["pdn",["personal_data","crm","cloud"]],"Phishing / BEC":["phishing",["email","bank","crm"]],
+ "XSS / инъекции":["vuln",["website","cloud","crm"]],"Brute Force":["ato",["cloud","website","bank","email"]],"DDoS":["web",["website"]],
+ "Deepfake-атаки":["phishing",["email","bank","employees"]],"LLM Jailbreaking":["ai",["email","crm","cloud"]],"Data Poisoning":["ai",["crm","cloud"]],
+ "Token Theft":["ato",["cloud","website","bank","email"]],"Cryptojacking":["vuln",["cloud","website"]],"Ghost Logging":["insider",["crm","personal_data","employees"]],
+ "IoT / OT":["pos",["pos"]],"Config Drift":["vuln",["website","cloud"]],"Заражение ИИ-агентов":["ai",["email","crm","cloud"]],"Автономные атаки ИИ-агентов":["vuln",["website","cloud","crm"]]};
+function sectorAdj(th,x,z,okv){
+  const o=OKVED.find(v=>v.k===okv);if(!o||!o.a)return [x,z];
+  const [sc,as]=SCN[th.l]||["",[]];const D=as.length?as.reduce((a,k)=>a+o.a[k],0)/as.length:0.7;
+  return [clamp(x*D/0.7,0.01,0.99),clamp(z*(o.fm[sc]||1),0.005,0.98)];
+}
+let NORMA={need:0,upper:NaN};
+// рублёвая цена единицы затрат: средняя стоимость полного списка мер одной угрозы по каталогу (не зависит от введённого бюджета)
+const KR=THREATS.reduce((a,th)=>a+(MAP[th.l]||[]).reduce((b,id)=>b+MEAS[id].c,0),0)/THREATS.length;
 // эмпирика 2024: s — доля успешных атак на организации с участием класса; lo–hi — разброс источников; e:1 — экспертная оценка (счётчика нет);
 // ya — доля затрат класса по анкете (руб. стоимости 16 мер, поровну между закрываемыми классами)
 const EMP24={
@@ -421,7 +467,8 @@ const $=id=>document.getElementById(id);
 const cv=$("cv"),ctx=cv.getContext("2d"),wrap=$("wrap");
 const tIn=$("t"),playBtn=$("play"),badge=$("yearBadge");
 const opt={terrain:$("optTerrain"),plane:$("optPlane"),stem:$("optStem"),ghost:$("optGhost"),ripe:$("optRipe"),trails:$("optTrails"),labels:$("optLabels"),emp:$("optEmp")};
-const P={mttd:$("pMttd"),emax:$("pEmax"),ec50:$("pEc50"),h:$("pH"),da:$("pDa"),bud:$("pBud"),rub:$("pRub"),loss:$("pLoss")};
+const P={mttd:$("pMttd"),emax:$("pEmax"),ec50:$("pEc50"),h:$("pH"),da:$("pDa"),bud:$("pBud"),rub:$("pRub"),loss:$("pLoss"),okv:$("pOkv"),rev:$("pRev")};
+OKVED.forEach(o=>P.okv.add(new Option(o.n,o.k)));
 let W=0,H=0,dpr=1,t=0,zoom=1,playing=false,lastTs=0,mode="dmg",rule="fact";
 let rot={x:0.38,y:-0.70},target=null;
 let sel=THREATS[8];
@@ -438,7 +485,7 @@ const fmt=(v,d=2)=>!isFinite(v)?"∞":(v<0?"−":"")+Math.abs(v).toFixed(d).repl
 const fmtS=v=>(v>0.005?"+":v<-0.005?"−":"±")+Math.abs(v).toFixed(2).replace(".",",");
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const base=th=>th.p.findIndex(q=>q);
-function prm(){return {lam:1/(+P.mttd.value),emax:+P.emax.value,ec50:+P.ec50.value,h:+P.h.value,da:+P.da.value,kB:+P.bud.value/100,rub:Math.max(1,+P.rub.value)*1000,loss:Math.max(1,+P.loss.value)*1000};}
+function prm(){return {lam:1/(+P.mttd.value),emax:+P.emax.value,ec50:+P.ec50.value,h:+P.h.value,da:+P.da.value,kB:+P.bud.value/100,rub:Math.max(1,+P.rub.value)*1000,loss:Math.max(1,+P.loss.value)*1000,okv:P.okv.value,rev:Math.max(1,+P.rev.value)*1e6};}
 const tr=v=>!isFinite(v)?"∞":(v<0?"−":"")+Math.round(Math.abs(v)/1000).toString().replace(/\B(?=(\d{3})+(?!\d))/g,"\u202f");
 
 // монотонная кубическая интерполяция (Фрич — Карлсон) по равноотстоящим узлам
@@ -486,8 +533,8 @@ function optimize(list,Btot,m,steps){
   return {y,left:left*d};
 }
 function stateList(tt,m){
-  return THREATS.filter(th=>vis(th,tt)>0.5).map(th=>{const q=pos(th,tt);
-    return {th,x:q[0],z:q[2],y0:q[1],dp:Dpot(q[0],q[2]),rho:ripe(th,m)};});
+  return THREATS.filter(th=>vis(th,tt)>0.5).map(th=>{const q=pos(th,tt),[x,z]=sectorAdj(th,q[0],q[2],m.okv);
+    return {th,x,z,y0:q[1],dp:Dpot(x,z),rho:ripe(th,m)};});
 }
 function prepList(list,m){list.forEach(s=>{s.req=yReq(s.dp,s.rho,s.th.ek,m);s.resist=!isFinite(s.req);s.tau=tauStar(s.th,s.rho);});}
 function coreSet(list,val){
@@ -535,7 +582,7 @@ function smeta(list,y,kR,Btot){
 }
 function snapshot(){
   const m=prm(),list=stateList(t,m);prepList(list,m);
-  const S0=list.reduce((s,o)=>s+o.y0,0),Btot=S0*m.kB,kR=m.rub/S0;
+  const S0=list.reduce((s,o)=>s+o.y0,0),kR=KR,Btot=m.rub*m.kB/KR;
   const AL={};RK.forEach(r=>{AL[r]=allocate(list,Btot,m,r,kR,false);});
   list.forEach((s,i)=>{s.al={};s.dr={};RK.forEach(r=>{s.al[r]=AL[r].y[i];s.dr[r]=drOf(s,AL[r].y[i],m);});
     s.yf=s.al[rule];s.drf=s.dr[rule];s.yo=s.al.opt;s.dro=s.dr.opt;s.e=eff(s.yf,m,s.th.ek);s.over=s.drf>m.da;});
@@ -643,7 +690,7 @@ function trailData(m){
   const key=JSON.stringify([m,rule]);if(TRAIL.key===key)return TRAIL.data;
   const data=new Map();
   for(let i=0;i<=TMAX*20;i++){const u=i/20,L=stateList(u,m);if(!L.length)continue;prepList(L,m);
-    const S0=L.reduce((a,s)=>a+s.y0,0),al=allocate(L,S0*m.kB,m,rule,m.rub/S0,true);
+    const S0=L.reduce((a,s)=>a+s.y0,0),al=allocate(L,m.rub*m.kB/KR,m,rule,KR,true);
     L.forEach((s,k)=>{if(!data.has(s.th))data.set(s.th,[]);data.get(s.th).push({i,x:s.x,z:s.z,y:al.y[k],dr:drOf(s,al.y[k],m)});});}
   TRAIL={key,data};return data;
 }
@@ -828,10 +875,10 @@ function renderSmeta(){
     <tr><td style="font-weight:500;color:var(--muted)">Остаток: не хватает на следующую меру${AL[rule].left*kR>=1000?"; резерв правила "+tr(AL[rule].left*kR):""}</td><td class="n" style="font-weight:500;color:var(--muted)">${tr(sm.rest+AL[rule].left*kR)}</td></tr></tfoot>`;
 }
 function renderCurve(){
-  const m=prm(),list=stateList(t,m);prepList(list,m);const S0=list.reduce((a,o)=>a+o.y0,0),kR=m.rub/S0;
+  const m=prm(),list=stateList(t,m);prepList(list,m);const S0=list.reduce((a,o)=>a+o.y0,0),kR=KR;
   const ks=[];for(let k=0;k<=2.5+1e-9;k+=0.1)ks.push(+k.toFixed(2));
-  const lines={};RK.forEach(r=>{lines[r]=ks.map(k=>{const al=allocate(list,S0*k,m,r,kR,false);return list.reduce((a,s,i)=>a+drOf(s,al.y[i],m),0)*m.loss;});});
-  const fin=list.filter(s=>!s.resist),need=fin.reduce((a,s)=>a+s.req,0)/S0;
+  const lines={};RK.forEach(r=>{lines[r]=ks.map(k=>{const al=allocate(list,m.rub*k/KR,m,r,KR,false);return list.reduce((a,s,i)=>a+drOf(s,al.y[i],m),0)*m.loss;});});
+  const fin=list.filter(s=>!s.resist),need=fin.reduce((a,s)=>a+s.req,0)*KR/m.rub;
   const W2=340,H2=200,L=48,R=10,T=10,B=34,ymax=Math.max(...RK.map(r=>Math.max(...lines[r])))*1.05||1;
   const X=k=>L+(W2-L-R)*k/2.5,Y=v=>T+(H2-T-B)*(1-v/ymax);
   const path=a=>a.map((v,i)=>(i?"L":"M")+X(ks[i]).toFixed(1)+" "+Y(v).toFixed(1)).join(" ");
@@ -846,7 +893,25 @@ function renderCurve(){
   RK.forEach(r=>{const [col,w,d]=sty[r];g+=`<path d="${path(lines[r])}" fill="none" stroke="${col}" stroke-width="${r===rule?w+1.5:w}" ${d?`stroke-dasharray="${d}"`:""}/>`;});
   $("curve").innerHTML=g;
   const i1=ks.indexOf(1),i2=ks.indexOf(2),gain=(lines.opt[i1]-lines.opt[i2])/lines.opt[i1]*100;
+  // верхняя граница окна в абсолютных единицах: шаг — 10 % норматива, независимо от введённого бюджета
+  const nU=need*m.rub/KR;let up=NaN,prev=null;
+  if(nU>0)for(let j=10;j<=40;j++){const B=nU*j/10,al=allocate(list,B,m,"opt",KR,true),v=list.reduce((a,s,i)=>a+drOf(s,al.y[i],m),0);
+    if(prev!==null&&prev-v<0.02*prev){up=(B-nU/10)*KR/m.rub;break;}prev=v;}
+  NORMA={need,upper:up};renderNorma();
   $("curveNote").textContent=`Выбранное правило выделено толстой линией. Удвоение бюджета при оптимальном распределении снижает остаточный ущерб на ${Math.round(gain)} %. Минимальный бюджет, при котором все нерезистентные угрозы опускаются ниже приемлемого уровня, — ${Math.round(need*100)} % от фактического (${tr(need*m.rub)} тыс. ₽)${need>2.5?", за пределами графика":""}.`;
+}
+function renderNorma(){
+  if(!SNAP)return;const m=SNAP.m,list=SNAP.list,kR=SNAP.kR;
+  const o=OKVED.find(v=>v.k===m.okv)||OKVED[0];
+  const fin=list.filter(s=>!s.resist),need=fin.reduce((a,s)=>a+s.req,0)*kR,res=list.filter(s=>s.resist);
+  const upR=isFinite(NORMA.upper)?NORMA.upper*m.rub:NaN,fact=m.rub,pct=v=>(v/m.rev*100).toFixed(2).replace(".",",");
+  const top=[...fin].sort((a,b)=>b.req-a.req).slice(0,5);
+  $("normaOut").innerHTML=`<div class="nrow"><span>Норматив затрат (минимум)</span><b class="nbig">${tr(need)} тыс. ₽</b>
+    <span>то же, % выручки</span><b>${pct(need)} %</b>
+    <span>Окно бюджета (минимум — насыщение)</span><b>${tr(need)} — ${isFinite(upR)?tr(upR):"> "+tr(4*need)} тыс. ₽</b>
+    <span>Фактический бюджет</span><b class="${fact<need?"bad":"good"}">${tr(fact)} тыс. ₽ (${pct(fact)} %)</b></div>
+    <p class="note" style="margin-top:8px">Наибольшие нормативы по угрозам, тыс. ₽: ${top.map(s=>`${s.th.l} — ${tr(s.req*kR)}`).join("; ")}.</p>`;
+  $("normaNote").textContent=`${o.k?`Профиль «${o.n}».`:"Отраслевая поправка выключена."} Узел времени — ${NODES[Math.round(t)].s}. ${res.length?`Норматив не покрывает ${res.length} резистентные угрозы (${res.map(s=>s.th.l).join(", ")}): для них нужен другой тип мер или страхование, их ущерб в норматив не входит.`:""} ${fact<need?"Фактический бюджет ниже норматива.":"Фактического бюджета хватает на норматив при распределении по требуемым уровням."}`;
 }
 function renderEmp(){
   const names=Object.keys(EMP24),th=names.map(l=>THREATS.find(x=>x.l===l));
@@ -901,7 +966,7 @@ function renderParams(){
   $("oH").textContent=fmt(+P.h.value,1);$("oDa").textContent=fmt(+P.da.value);$("oBud").textContent=P.bud.value+" %";
 }
 function scheduleCurve(){clearTimeout(curveTimer);curveTimer=setTimeout(renderCurve,playing?400:60);}
-function update(){SNAP=snapshot();draw();renderCard();renderKpi();renderBudget();renderCompare();renderSmeta();renderTop();if(!playing)scheduleCurve();}
+function update(){SNAP=snapshot();draw();renderCard();renderKpi();renderBudget();renderCompare();renderSmeta();renderTop();renderNorma();if(!playing)scheduleCurve();}
 function setRule(r){rule=r;document.querySelectorAll(".switch.rules button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.rule===r)));update();}
 function updateAll(){renderParams();update();renderTable();}
 function setMode(md){
