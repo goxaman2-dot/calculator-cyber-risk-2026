@@ -148,6 +148,12 @@ canvas.dragging{cursor:grabbing}
 .mv b{font-variant-numeric:tabular-nums;font-weight:600}
 .bad{color:var(--up)} .good{color:var(--down)}
 .norma{border:2px solid var(--accent)!important}
+.okvbar select{font:inherit;font-size:15px;font-weight:600;padding:8px 12px;border:2px solid var(--accent);border-radius:10px;background:var(--surface);color:var(--ink);min-width:min(420px,100%)}
+.okvhint{font-size:13px;color:var(--muted)}
+.chg{list-style:none;margin:6px 0 0;padding:0;font-size:13.5px}
+.chg li{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
+.chg i{width:10px;height:10px;border-radius:50%}
+.chg b{font-variant-numeric:tabular-nums}
 .norma select{font:inherit;font-size:14px;width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);color:var(--ink);margin:4px 0 8px}
 .nrow{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:14px;font-variant-numeric:tabular-nums;margin-top:8px}
 .nrow b{text-align:right}
@@ -191,6 +197,11 @@ summary{cursor:pointer;font-weight:600}
       <button type="button" data-rule="opt" aria-pressed="false">Оптимум</button>
     </div>
   </div>
+  <div class="modebar okvbar">
+    <label class="lbl" for="pOkv">Ваша отрасль (ОКВЭД 2):</label>
+    <select id="pOkv"></select>
+    <span class="okvhint" id="okvHint">Выберите вид деятельности — ландшафт перестроится под ваше предприятие.</span>
+  </div>
 </header>
 
 <main class="grid">
@@ -223,6 +234,7 @@ summary{cursor:pointer;font-weight:600}
         <label><input type="checkbox" id="optTrails"> траектории</label>
         <label><input type="checkbox" id="optLabels"> названия угроз</label>
         <label><input type="checkbox" id="optEmp" checked> эмпирика 2024</label>
+        <label><input type="checkbox" id="optSect" checked> сдвиг отрасли</label>
       </div>
     </div>
     <div class="legend">
@@ -233,6 +245,7 @@ summary{cursor:pointer;font-weight:600}
       <span><i style="background:#7F56D9"></i>угрозы ИИ-агентов (с октября 2026)</span>
       <span><i class="ghost"></i>оптимальное распределение</span>
       <span><i class="dia"></i>частота 2024 по данным (на полу, около узла 2024)</span>
+      <span><i class="bar" style="background:var(--accent);height:3px;width:16px"></i>сдвиг угрозы под вашу отрасль (на полу)</span>
       <span class="only-dmg"><i class="bar" style="background:var(--prevent)"></i>предотвращено затратами</span>
       <span class="only-dmg"><i class="ring"></i>выше приемлемого</span>
       <span class="only-dmg"><i class="plane"></i>приемлемый ущерб</span>
@@ -245,11 +258,10 @@ summary{cursor:pointer;font-weight:600}
 
   <aside class="panel">
     <section class="norma">
-      <h2>КиберНорма: норматив затрат по отрасли</h2>
-      <label for="pOkv" style="font-size:13px;color:var(--muted)">Вид деятельности по ОКВЭД 2</label>
-      <select id="pOkv"></select>
+      <h2>КиберНорма: норматив затрат для вашей отрасли</h2>
       <div class="prm2"><label for="pRev">Выручка предприятия, млн ₽/год</label><input type="number" id="pRev" min="1" step="1" value="36"></div>
       <div id="normaOut"></div>
+      <div id="normaChg"></div>
       <p class="note" id="normaNote"></p>
     </section>
     <section id="card" aria-live="polite"></section>
@@ -425,7 +437,13 @@ const SCN={"Ransomware / APT":["ransom",["cloud","crm","personal_data"]],"Triple
  "Deepfake-атаки":["phishing",["email","bank","employees"]],"LLM Jailbreaking":["ai",["email","crm","cloud"]],"Data Poisoning":["ai",["crm","cloud"]],
  "Token Theft":["ato",["cloud","website","bank","email"]],"Cryptojacking":["vuln",["cloud","website"]],"Ghost Logging":["insider",["crm","personal_data","employees"]],
  "IoT / OT":["pos",["pos"]],"Config Drift":["vuln",["website","cloud"]],"Заражение ИИ-агентов":["ai",["email","crm","cloud"]],"Автономные атаки ИИ-агентов":["vuln",["website","cloud","crm"]]};
-function sectorAdj(th,x,z,okv){
+let OKV_FROM="",OKV_TO="",OKA=1;
+function sectorAdj(th,x,z){
+  const a=adjFor(th,x,z,OKV_TO);if(OKA>=1)return a;
+  const b=adjFor(th,x,z,OKV_FROM),e=OKA<.5?2*OKA*OKA:1-Math.pow(-2*OKA+2,2)/2;
+  return [b[0]+(a[0]-b[0])*e,b[1]+(a[1]-b[1])*e];
+}
+function adjFor(th,x,z,okv){
   const o=OKVED.find(v=>v.k===okv);if(!o||!o.a)return [x,z];
   const [sc,as]=SCN[th.l]||["",[]];const D=as.length?as.reduce((a,k)=>a+o.a[k],0)/as.length:0.7;
   return [clamp(x*D/0.7,0.01,0.99),clamp(z*(o.fm[sc]||1),0.005,0.98)];
@@ -466,7 +484,7 @@ function Phi(x){const t=1/(1+.3275911*Math.abs(x)/Math.SQRT2);const y=1-(((((1.0
 const $=id=>document.getElementById(id);
 const cv=$("cv"),ctx=cv.getContext("2d"),wrap=$("wrap");
 const tIn=$("t"),playBtn=$("play"),badge=$("yearBadge");
-const opt={terrain:$("optTerrain"),plane:$("optPlane"),stem:$("optStem"),ghost:$("optGhost"),ripe:$("optRipe"),trails:$("optTrails"),labels:$("optLabels"),emp:$("optEmp")};
+const opt={terrain:$("optTerrain"),plane:$("optPlane"),stem:$("optStem"),ghost:$("optGhost"),ripe:$("optRipe"),trails:$("optTrails"),labels:$("optLabels"),emp:$("optEmp"),sect:$("optSect")};
 const P={mttd:$("pMttd"),emax:$("pEmax"),ec50:$("pEc50"),h:$("pH"),da:$("pDa"),bud:$("pBud"),rub:$("pRub"),loss:$("pLoss"),okv:$("pOkv"),rev:$("pRev")};
 OKVED.forEach(o=>P.okv.add(new Option(o.n,o.k)));
 let W=0,H=0,dpr=1,t=0,zoom=1,playing=false,lastTs=0,mode="dmg",rule="fact";
@@ -533,7 +551,7 @@ function optimize(list,Btot,m,steps){
   return {y,left:left*d};
 }
 function stateList(tt,m){
-  return THREATS.filter(th=>vis(th,tt)>0.5).map(th=>{const q=pos(th,tt),[x,z]=sectorAdj(th,q[0],q[2],m.okv);
+  return THREATS.filter(th=>vis(th,tt)>0.5).map(th=>{const q=pos(th,tt),[x,z]=sectorAdj(th,q[0],q[2]);
     return {th,x,z,y0:q[1],dp:Dpot(x,z),rho:ripe(th,m)};});
 }
 function prepList(list,m){list.forEach(s=>{s.req=yReq(s.dp,s.rho,s.th.ek,m);s.resist=!isFinite(s.req);s.tau=tauStar(s.th,s.rho);});}
@@ -736,14 +754,20 @@ function draw(){
   const boxes=[];drawAxes(boxes);
   if(opt.terrain.checked)drawTerrain(m);
   if(mode==="dmg"&&opt.plane.checked)drawPlane(m.da,boxes);
-  if(opt.trails.checked)THREATS.forEach(th=>{if(th!==sel)drawTrail(th,m,false);});
-  if(sel)drawTrail(sel,m,true);
+  if(opt.trails.checked&&OKA>=1)THREATS.forEach(th=>{if(th!==sel)drawTrail(th,m,false);});
+  if(sel&&OKA>=1)drawTrail(sel,m,true);
   const nodes=SNAP.list.map(s=>{
     const a=vis(s.th,t);
     const vF=mode==="dmg"?s.drf:s.yf,vO=mode==="dmg"?s.dro:s.yo;
     const vRef=mode==="dmg"?s.dp:(isFinite(s.req)?s.req:YCAP);
     const Pr=pv(s.x,vF,s.z),Po=pv(s.x,vO,s.z),Pt=pv(s.x,vRef,s.z),F=proj(s.x,0,s.z);
     const rad=(5.5+s.x*5)*dpr*Math.sqrt(zoom)*Pr.p;return {s,a,Pr,Po,Pt,F,rad};});
+  if(opt.sect.checked&&(OKV_TO||OKA<1)){
+    nodes.forEach(o=>{const q=pos(o.s.th,t),B=proj(q[0],0,q[2]),E=o.F,len=Math.hypot(E.px-B.px,E.py-B.py);if(len<4*dpr)return;
+      ctx.beginPath();ctx.arc(B.px,B.py,2.5*dpr,0,Math.PI*2);ctx.fillStyle=hexA(C["--accent"],0.5);ctx.fill();
+      ctx.beginPath();ctx.moveTo(B.px,B.py);ctx.lineTo(E.px,E.py);ctx.strokeStyle=hexA(C["--accent"],0.85);ctx.lineWidth=2*dpr;ctx.stroke();
+      arrowHead(B,E,hexA(C["--accent"],0.9),8);});
+  }
   if(opt.emp.checked&&Math.abs(t-1)<0.5){const al=1-Math.abs(t-1)*1.6;
     nodes.forEach(o=>{const ze=zEmp(o.s.th.l);if(ze===null)return;const E=proj(o.s.x,0,ze);
       ctx.globalAlpha=Math.max(0.15,al);
@@ -911,6 +935,11 @@ function renderNorma(){
     <span>Окно бюджета (минимум — насыщение)</span><b>${tr(need)} — ${isFinite(upR)?tr(upR):"> "+tr(4*need)} тыс. ₽</b>
     <span>Фактический бюджет</span><b class="${fact<need?"bad":"good"}">${tr(fact)} тыс. ₽ (${pct(fact)} %)</b></div>
     <p class="note" style="margin-top:8px">Наибольшие нормативы по угрозам, тыс. ₽: ${top.map(s=>`${s.th.l} — ${tr(s.req*kR)}`).join("; ")}.</p>`;
+  if(o.k){const ch=list.map(s=>{const q=pos(s.th,t),b=Dpot(q[0],q[2])*s.rho;return {s,r:b>0?(s.dp*s.rho)/b-1:0};}).filter(c=>Math.abs(c.r)>=0.02).sort((a,b)=>b.r-a.r);
+    const up=ch.filter(c=>c.r>0).slice(0,5),dn=ch.filter(c=>c.r<0).slice(-3).reverse();
+    $("normaChg").innerHTML=`<p class="note" style="margin:10px 0 0;color:var(--ink);font-weight:600">Для вашей отрасли потенциальный ущерб выше среднего:</p><ul class="chg">${up.map(c=>`<li><i style="background:${c.s.th.c}"></i><span>${c.s.th.l}</span><b class="bad">+${Math.round(c.r*100)} %</b></li>`).join("")||"<li><span></span><span>нет заметных отличий</span><b></b></li>"}</ul>`+
+      (dn.length?`<p class="note" style="margin:8px 0 0">Ниже среднего: ${dn.map(c=>`${c.s.th.l} (${Math.round(c.r*100)} %)`).join(", ")}.</p>`:"");}
+  else $("normaChg").innerHTML=`<p class="note">Выберите отрасль в шапке страницы, чтобы увидеть, какие угрозы для неё опаснее среднего.</p>`;
   $("normaNote").textContent=`${o.k?`Профиль «${o.n}».`:"Отраслевая поправка выключена."} Узел времени — ${NODES[Math.round(t)].s}. ${res.length?`Норматив не покрывает ${res.length} резистентные угрозы (${res.map(s=>s.th.l).join(", ")}): для них нужен другой тип мер или страхование, их ущерб в норматив не входит.`:""} ${fact<need?"Фактический бюджет ниже норматива.":"Фактического бюджета хватает на норматив при распределении по требуемым уровням."}`;
 }
 function renderEmp(){
@@ -967,21 +996,25 @@ function renderParams(){
 }
 function scheduleCurve(){clearTimeout(curveTimer);curveTimer=setTimeout(renderCurve,playing?400:60);}
 function update(){SNAP=snapshot();draw();renderCard();renderKpi();renderBudget();renderCompare();renderSmeta();renderTop();renderNorma();if(!playing)scheduleCurve();}
+function tagText(){const o=OKVED.find(v=>v.k===OKV_TO);$("modeTag").textContent=(mode==="dmg"?"Логика ущерба":"Логика бюджета")+(o&&o.k?" · "+o.n:" · без отраслевой поправки");}
+function setOkv(k){OKV_FROM=OKV_TO;OKV_TO=k;OKA=0;tagText();
+  const o=OKVED.find(v=>v.k===k);$("okvHint").textContent=o&&o.k?"Стрелки на полу куба показывают, как угрозы сдвигаются для вашей отрасли.":"Выберите вид деятельности — ландшафт перестроится под ваше предприятие.";kick();}
 function setRule(r){rule=r;document.querySelectorAll(".switch.rules button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.rule===r)));update();}
 function updateAll(){renderParams();update();renderTable();}
 function setMode(md){
   mode=md;document.body.dataset.mode=md;
   document.querySelectorAll(".switch.modes button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===md)));
-  $("modeTag").textContent=md==="dmg"?"Логика ущерба":"Логика бюджета";
+  tagText();
   update();
 }
 
 function loop(ts){
   const dt=lastTs?Math.min(ts-lastTs,50):16;lastTs=ts;let again=false;
   if(playing){t+=dt/2600;if(t>=TMAX){t=TMAX;setPlay(false);}tIn.value=t;again=true;}
+  let okvDone=false;if(OKA<1){OKA=Math.min(1,OKA+dt/900);again=true;if(OKA>=1)okvDone=true;}
   if(target){rot.x+=(target.x-rot.x)*0.16;rot.y+=(target.y-rot.y)*0.16;
     if(Math.abs(target.x-rot.x)<0.002&&Math.abs(target.y-rot.y)<0.002){rot={...target};target=null;}else again=true;}
-  playing?update():draw();
+  (playing||OKA<1||okvDone)?update():draw();if(okvDone){renderParams();renderTable();renderCurve();}
   if(again)requestAnimationFrame(loop);else lastTs=0;
 }
 function kick(){if(!lastTs)requestAnimationFrame(loop);}
@@ -989,7 +1022,8 @@ function setPlay(on){playing=on;playBtn.textContent=on?"Пауза":"Воспр�
 playBtn.addEventListener("click",()=>setPlay(!playing));
 tIn.addEventListener("input",()=>{t=+tIn.value;if(playing)setPlay(false);update();});
 Object.values(opt).forEach(o=>o.addEventListener("change",draw));
-Object.values(P).forEach(o=>o.addEventListener("input",updateAll));
+Object.entries(P).forEach(([k,o])=>{if(k!=="okv")o.addEventListener("input",updateAll);});
+P.okv.addEventListener("change",()=>setOkv(P.okv.value));
 document.querySelectorAll(".switch.modes button").forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
 document.querySelectorAll(".switch.rules button").forEach(b=>b.addEventListener("click",()=>setRule(b.dataset.rule)));
 document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
@@ -1031,7 +1065,7 @@ new MutationObserver(onTheme).observe(document.documentElement,{attributes:true,
 new ResizeObserver(resize).observe(wrap);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
 
-readColors();renderParams();renderLag();renderTable();renderEmp();SNAP=snapshot();resize();update();
+readColors();renderParams();renderLag();renderTable();renderEmp();tagText();SNAP=snapshot();resize();update();
 })();
 </script>
 </body>
